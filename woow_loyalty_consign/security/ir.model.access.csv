@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_loyalty_consign_line_salesman,loyalty.consign.line.salesman,model_loyalty_consign_line,sales_team.group_sale_salesman,1,1,1,0
+access_loyalty_consign_line_manager,loyalty.consign.line.manager,model_loyalty_consign_line,sales_team.group_sale_manager,1,1,1,1
+access_loyalty_consign_redemption_salesman,loyalty.consign.redemption.salesman,model_loyalty_consign_redemption,sales_team.group_sale_salesman,1,1,1,0
+access_loyalty_consign_redemption_manager,loyalty.consign.redemption.manager,model_loyalty_consign_redemption,sales_team.group_sale_manager,1,1,1,1
+access_loyalty_consign_redemption_line_salesman,loyalty.consign.redemption.line.salesman,model_loyalty_consign_redemption_line,sales_team.group_sale_salesman,1,1,1,0
+access_loyalty_consign_redemption_line_manager,loyalty.consign.redemption.line.manager,model_loyalty_consign_redemption_line,sales_team.group_sale_manager,1,1,1,1
+access_consign_redeem_wizard_salesman,consign.redeem.wizard.salesman,model_consign_redeem_wizard,sales_team.group_sale_salesman,1,1,1,1
+access_consign_redeem_wizard_line_salesman,consign.redeem.wizard.line.salesman,model_consign_redeem_wizard_line,sales_team.group_sale_salesman,1,1,1,1
+access_loyalty_card_portal,loyalty.card.portal,loyalty.model_loyalty_card,base.group_portal,1,0,0,0
+access_loyalty_consign_line_portal,loyalty.consign.line.portal,model_loyalty_consign_line,base.group_portal,1,0,0,0
+access_loyalty_consign_redemption_portal,loyalty.consign.redemption.portal,model_loyalty_consign_redemption,base.group_portal,1,0,0,0
+access_loyalty_consign_redemption_line_portal,loyalty.consign.redemption.line.portal,model_loyalty_consign_redemption_line,base.group_portal,1,0,0,0

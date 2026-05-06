@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 繼承寄品方案表單 -->
+    <record id="loyalty_program_view_form_consign" model="ir.ui.view">
+        <field name="name">loyalty.program.form.consign</field>
+        <field name="model">loyalty.program</field>
+        <field name="inherit_id" ref="loyalty.loyalty_program_view_form"/>
+        <field name="arch" type="xml">
+            <!-- 在 program_type 後加入寄品卡類型 -->
+            <xpath expr="//field[@name='program_type']" position="after">
+                <field name="consign_card_type"
+                       invisible="program_type != 'consign'"/>
+            </xpath>
+
+            <!-- 在右側欄位群組加入寄品設定 -->
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="consign_one_card_per_partner"
+                       invisible="program_type != 'consign'"/>
+                <field name="consign_expiry_months"
+                       invisible="program_type != 'consign'"/>
+                <field name="consign_send_mail"
+                       invisible="program_type != 'consign'"/>
+                <field name="consign_mail_template_id"
+                       invisible="program_type != 'consign' or not consign_send_mail"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 繼承方案清單檢視 -->
+    <record id="loyalty_program_view_tree_consign" model="ir.ui.view">
+        <field name="name">loyalty.program.list.consign</field>
+        <field name="model">loyalty.program</field>
+        <field name="inherit_id" ref="loyalty.loyalty_program_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='program_type']" position="after">
+                <field name="consign_card_type" optional="hide"
+                       invisible="program_type != 'consign'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 寄品方案動作 -->
+    <record id="loyalty_program_consign_action" model="ir.actions.act_window">
+        <field name="name">寄品方案</field>
+        <field name="res_model">loyalty.program</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('program_type', '=', 'consign')]</field>
+        <field name="context">{'default_program_type': 'consign'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                建立您的第一個寄品方案
+            </p>
+            <p>
+                寄品卡讓客戶購買後寄存商品或服務，日後分次取用。
+            </p>
+        </field>
+    </record>
+
+</odoo>

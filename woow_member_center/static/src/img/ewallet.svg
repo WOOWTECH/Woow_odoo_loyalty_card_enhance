@@ -1,0 +1,31 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Shadow -->
+<ellipse cx="32" cy="58" rx="14" ry="4" fill="#C1DBF6"/>
+<!-- Wallet body back -->
+<path d="M10 22L30 11L54 24V44L34 55L10 42V22Z" fill="white"/>
+<!-- Wallet right face -->
+<path d="M34 35L54 24V44L34 55V35Z" fill="#FBDBD0"/>
+<!-- Wallet left face -->
+<path d="M10 22L30 11L54 24L34 35L10 22Z" fill="#C1DBF6"/>
+<!-- Wallet front face -->
+<path d="M10 22L34 35V55L10 42V22Z" fill="white"/>
+<!-- Wallet flap -->
+<path d="M10 22L30 11L54 24L34 35L10 22Z" fill="#C1DBF6"/>
+<!-- Clasp -->
+<path d="M38 29L46 25V31L38 35V29Z" fill="white" stroke="#374874" stroke-width="0.8"/>
+<circle cx="42" cy="30" r="1.5" fill="#374874"/>
+<!-- Coin 1 -->
+<ellipse cx="24" cy="16" rx="5" ry="3" transform="rotate(-30 24 16)" fill="#FBDBD0" stroke="#374874" stroke-width="0.8"/>
+<ellipse cx="24" cy="15" rx="5" ry="3" transform="rotate(-30 24 15)" fill="white" stroke="#374874" stroke-width="0.8"/>
+<text x="22" y="16.5" font-size="5" fill="#374874" font-weight="bold">$</text>
+<!-- Coin 2 -->
+<ellipse cx="30" cy="8" rx="4" ry="2.5" transform="rotate(-30 30 8)" fill="#FBDBD0" stroke="#374874" stroke-width="0.8"/>
+<ellipse cx="30" cy="7" rx="4" ry="2.5" transform="rotate(-30 30 7)" fill="white" stroke="#374874" stroke-width="0.8"/>
+<!-- Card slot line -->
+<line x1="16" y1="32" x2="28" y2="39" stroke="#374874" stroke-width="0.6" opacity="0.4"/>
+<line x1="16" y1="35" x2="28" y2="42" stroke="#374874" stroke-width="0.6" opacity="0.4"/>
+<!-- Outline -->
+<path d="M10 22L30 11L54 24V44L34 55L10 42V22Z" stroke="#374874" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+<path d="M10 22L34 35L54 24" stroke="#374874" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+<path d="M34 35V55" stroke="#374874" stroke-width="1.2"/>
+</svg>

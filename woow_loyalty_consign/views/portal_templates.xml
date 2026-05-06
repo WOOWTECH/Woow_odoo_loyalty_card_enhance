@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portal 導覽列加入寄品卡 -->
+    <template id="portal_my_home_consign" name="Portal: 寄品卡入口"
+              inherit_id="portal.portal_my_home"
+              priority="40">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/woow_loyalty_consign/static/description/icon.png'"/>
+                <t t-set="title">寄品卡</t>
+                <t t-set="url" t-value="'/my/consign-cards'"/>
+                <t t-set="text">查看您的寄品卡與寄存品項</t>
+                <t t-set="placeholder_count" t-value="'consign_card_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- 寄品卡列表頁 -->
+    <template id="portal_my_consign_cards" name="Portal: 寄品卡列表">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">寄品卡</t>
+            </t>
+            <t t-if="not cards">
+                <div class="alert alert-warning" role="alert">
+                    目前沒有寄品卡。
+                </div>
+            </t>
+            <t t-if="cards">
+                <div class="table-responsive">
+                    <table class="table table-hover o_portal_my_doc_table">
+                        <thead>
+                            <tr class="active">
+                                <th>卡號</th>
+                                <th>方案</th>
+                                <th class="text-center">有效品項</th>
+                                <th class="text-center">剩餘數量</th>
+                                <th class="text-end">剩餘金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="cards" t-as="card">
+                                <tr>
+                                    <td>
+                                        <a t-attf-href="/my/consign-cards/#{card.id}">
+                                            <t t-out="card.code"/>
+                                        </a>
+                                    </td>
+                                    <td><t t-out="card.program_id.name"/></td>
+                                    <td class="text-center">
+                                        <t t-out="card.consign_active_lines"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <t t-out="card.consign_total_remaining_qty"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-out="card.consign_total_remaining_value"
+                                           t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- 寄品卡明細頁 -->
+    <template id="portal_consign_card_detail" name="Portal: 寄品卡明細">
+        <t t-call="portal.portal_layout">
+            <t t-set="o_portal_fullwidth_alert" groups="sales_team.group_sale_salesman">
+                <t t-call="portal.portal_back_in_edit_mode">
+                    <t t-set="backend_url"
+                       t-value="'/odoo/loyalty-card/%s' % card.id"/>
+                </t>
+            </t>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-12 col-md-6">
+                            <h3 class="mb-0">
+                                寄品卡 <t t-out="card.code"/>
+                            </h3>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <span class="badge bg-info fs-6">
+                                <t t-out="card.program_id.name"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>有效品項：</strong>
+                            <t t-out="card.consign_active_lines"/>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>剩餘數量：</strong>
+                            <t t-out="card.consign_total_remaining_qty"/>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>剩餘金額：</strong>
+                            <t t-out="card.consign_total_remaining_value"
+                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                        </div>
+                    </div>
+
+                    <h5>寄存品項</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>品項</th>
+                                    <th class="text-center">存入</th>
+                                    <th class="text-center">已核銷</th>
+                                    <th class="text-center">剩餘</th>
+                                    <th class="text-center">到期日</th>
+                                    <th class="text-center">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
+                                   t-as="line">
+                                    <tr t-attf-class="#{
+                                        'text-muted' if line.state == 'depleted' else
+                                        'text-danger' if line.state == 'expired' else ''
+                                    }">
+                                        <td>
+                                            <t t-out="line.product_desc or line.product_id.name"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-out="line.qty_deposited"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-out="line.qty_redeemed"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <strong><t t-out="line.qty_remaining"/></strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-if="line.date_expiry">
+                                                <t t-out="line.date_expiry"/>
+                                            </t>
+                                            <t t-else="">—</t>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-if="line.state == 'active'"
+                                                  class="badge bg-success">有效</span>
+                                            <span t-if="line.state == 'depleted'"
+                                                  class="badge bg-secondary">已用完</span>
+                                            <span t-if="line.state == 'expired'"
+                                                  class="badge bg-danger">已過期</span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <t t-if="card.consign_redemption_ids">
+                        <h5 class="mt-4">核銷紀錄</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>單號</th>
+                                        <th>日期</th>
+                                        <th>服務人員</th>
+                                        <th class="text-end">金額</th>
+                                        <th class="text-center">狀態</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="card.consign_redemption_ids" t-as="redemption">
+                                        <tr>
+                                            <td>
+                                                <a t-attf-href="/my/consign-redemptions/#{redemption.id}">
+                                                    <t t-out="redemption.name"/>
+                                                </a>
+                                            </td>
+                                            <td><t t-out="redemption.date_redemption"
+                                                   t-options="{'widget': 'datetime'}"/></td>
+                                            <td><t t-out="redemption.staff_user_id.name"/></td>
+                                            <td class="text-end">
+                                                <t t-out="redemption.total_redeemed_value"
+                                                   t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-if="redemption.state == 'draft'"
+                                                      class="badge bg-warning">草稿</span>
+                                                <span t-if="redemption.state == 'done'"
+                                                      class="badge bg-success">已完成</span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Portal Chatter -->
+            <div class="mt-4">
+                <h5>溝通紀錄</h5>
+                <t t-call="portal.message_thread"/>
+            </div>
+        </t>
+    </template>
+
+    <!-- 核銷單詳情頁 -->
+    <template id="portal_consign_redemption_detail" name="Portal: 核銷單明細">
+        <t t-call="portal.portal_layout">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-12 col-md-6">
+                            <h3 class="mb-0">
+                                核銷單 <t t-out="redemption.name"/>
+                            </h3>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <span t-if="redemption.state == 'draft'"
+                                  class="badge bg-warning fs-6">草稿</span>
+                            <span t-if="redemption.state == 'done'"
+                                  class="badge bg-success fs-6">已完成</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>寄品卡：</strong>
+                            <a t-attf-href="/my/consign-cards/#{redemption.card_id.id}">
+                                <t t-out="redemption.card_id.code"/>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>核銷日期：</strong>
+                            <t t-out="redemption.date_redemption"
+                               t-options="{'widget': 'datetime'}"/>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>服務人員：</strong>
+                            <t t-out="redemption.staff_user_id.name"/>
+                        </div>
+                    </div>
+
+                    <t t-if="redemption.service_note">
+                        <div class="mb-3">
+                            <strong>服務備註：</strong>
+                            <p class="mb-0"><t t-out="redemption.service_note"/></p>
+                        </div>
+                    </t>
+
+                    <h5>核銷明細</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>品項</th>
+                                    <th class="text-center">核銷數量</th>
+                                    <th class="text-end">單價</th>
+                                    <th class="text-end">小計</th>
+                                    <th>備註</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="redemption.line_ids" t-as="line">
+                                    <tr>
+                                        <td><t t-out="line.product_desc or line.product_id.name"/></td>
+                                        <td class="text-center"><t t-out="line.qty_redeemed"/></td>
+                                        <td class="text-end">
+                                            <t t-out="line.unit_price"
+                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-out="line.subtotal"
+                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                        </td>
+                                        <td><t t-out="line.note or ''"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>合計</strong></td>
+                                    <td class="text-end">
+                                        <strong>
+                                            <t t-out="redemption.total_redeemed_value"
+                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                        </strong>
+                                    </td>
+                                    <td/>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portal Chatter -->
+            <div class="mt-4">
+                <h5>溝通紀錄</h5>
+                <t t-call="portal.message_thread"/>
+            </div>
+        </t>
+    </template>
+
+</odoo>
