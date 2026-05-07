@@ -1,0 +1,47 @@
+version: '3.8'
+name: odoo-loyaltycard
+
+services:
+  db:
+    image: postgres:16
+    container_name: odoo-loyaltycard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: odooloyaltycard
+      POSTGRES_USER: odooloyaltycard
+      POSTGRES_PASSWORD: odooloyaltycard
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - odoo-loyaltycard-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odooloyaltycard -d odooloyaltycard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:18.0
+    container_name: odoo-loyaltycard-web
+    restart: unless-stopped
+    ports:
+      - "9100:8069"
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: odooloyaltycard
+      PASSWORD: odooloyaltycard
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+      - ./data/odoo:/var/lib/odoo
+    networks:
+      - odoo-loyaltycard-net
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  odoo-loyaltycard-net:
+    name: odoo-loyaltycard-network
+    driver: bridge
