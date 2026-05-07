@@ -2,7 +2,7 @@
     'name': '會員中心 (Member Center)',
     'version': '18.0.1.0.0',
     'category': 'Sales/Loyalty',
-    'summary': '會員中心入口 — 電子錢包、集點卡、禮品卡、優惠券、會員資格、寄品卡',
+    'summary': '會員中心入口 — 電子錢包、集點卡、禮品卡、優惠券、會員資格',
     'description': """
         會員中心 Portal Hub
         ===================
@@ -12,7 +12,6 @@
         - 禮品卡 (Gift Card) — 餘額查詢
         - 優惠券 (Coupon) — 可用券查詢
         - 會員資格 (Membership) — 狀態與期限
-        - 寄品卡 (Consignment) — 連結至現有寄品卡頁面
     """,
     'author': 'WoowTech',
     'website': 'https://www.woowtech.com',
@@ -20,7 +19,6 @@
         'portal',
         'loyalty',
         'membership',
-        'woow_loyalty_consign',
     ],
     'data': [
         'security/ir.model.access.csv',

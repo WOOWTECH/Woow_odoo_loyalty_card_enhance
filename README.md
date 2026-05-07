@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/icon_member_center.png" alt="Woow Loyalty Card Enhance" width="120">
+  <img src="docs/images/icon_member_center.png" alt="Woow Member Center" width="120">
 </p>
 
-<h1 align="center">Woow Odoo Loyalty Card Enhance</h1>
+<h1 align="center">Woow Odoo Member Center</h1>
 
 <p align="center">
   <a href="https://www.odoo.com"><img src="https://img.shields.io/badge/Odoo-18.0-714B67?logo=odoo&logoColor=white" alt="Odoo 18.0"></a>
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <b>Consignment Card & Member Center — extending Odoo 18 Loyalty for wine cellars, med-spa prepaid treatments, and more.</b>
+  <b>Unified Member Center Portal — extending Odoo 18 Loyalty with a single hub for eWallet, loyalty points, gift cards, coupons, and membership.</b>
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ## Table of Contents
 
-[Overview](#overview) · [Modules](#modules) · [Architecture](#architecture) · [Features](#features) · [Screenshots](#screenshots) · [Installation](#installation) · [Configuration](#configuration) · [Usage](#usage) · [Technical Details](#technical-details) · [Roadmap](#roadmap) · [Contributing](#contributing) · [License](#license) · [Author](#author)
+[Overview](#overview) · [Features](#features) · [Screenshots](#screenshots) · [Installation](#installation) · [Configuration](#configuration) · [Usage](#usage) · [Technical Details](#technical-details) · [Roadmap](#roadmap) · [Contributing](#contributing) · [License](#license) · [Author](#author)
 
 ---
 
@@ -31,216 +31,39 @@
 
 | | |
 |---|---|
-| **Problem** | Odoo 18's built-in loyalty module supports points, eWallets, gift cards, and coupons — but lacks a mechanism for customers to **pre-purchase physical items** (wine bottles, spa sessions) and **redeem them later** one by one. |
-| **Solution** | This add-on suite introduces a **Consignment Card** (`consign`) program type that tracks per-item quantities, supports POS barcode scanning for in-store redemption, and provides a unified **Member Center** portal for customers to check all their loyalty benefits. |
+| **Problem** | Odoo 18's portal scatters loyalty-related information across separate pages — customers must navigate individually to check their eWallet balance, loyalty points, gift cards, coupons, and membership status. |
+| **Solution** | This module provides a **unified Member Center** portal hub that aggregates all loyalty card types and membership status into a single responsive page with quick-glance metrics. |
 
 ### Key Capabilities
 
-- **Consignment Card** — Pre-purchase items, store them at the merchant, redeem individually via POS barcode scan or backend wizard
-- **Automatic Card Creation** — Confirmed sale orders with trigger products automatically generate consignment cards
-- **POS Integration** — Staff scans the card barcode → selects items → $0 redemption lines added to the order
-- **Customer Portal** — Self-service card balance and redemption history
-- **Member Center Hub** — Unified portal page aggregating eWallet, loyalty points, gift cards, coupons, membership, and consignment cards
-
----
-
-## Modules
-
-| Module | Summary | Dependencies |
-|--------|---------|-------------|
-| **`woow_loyalty_consign`** | Consignment card engine: program type, card model, consign lines, redemption records, POS integration, portal page, PDF report | `loyalty`, `sale_loyalty`, `pos_loyalty`, `stock`, `portal`, `mail` |
-| **`woow_member_center`** | Unified member center portal hub aggregating all loyalty card types into a single responsive page | `portal`, `loyalty`, `membership`, `woow_loyalty_consign` |
-
----
-
-## Architecture
-
-### System Architecture
-
-```mermaid
-flowchart TB
-    subgraph Backend["🖥️ Backend (Python)"]
-        LP["loyalty.program\n(type=consign)"]
-        LC["loyalty.card\n(is_consign=True)"]
-        CL["loyalty.consign.line\n(item + qty)"]
-        CR["loyalty.consign.redemption"]
-        CRL["loyalty.consign.redemption.line"]
-        SO["sale.order"]
-        TP["Trigger Products"]
-    end
-
-    subgraph POS["📱 POS (OWL JS)"]
-        PS["ProductScreen\nbarcode scan"]
-        PP["ConsignCardPopup\nitem selection"]
-        PAY["PaymentScreen\npost-push hook"]
-    end
-
-    subgraph Portal["🌐 Customer Portal"]
-        MC["Member Center Hub"]
-        CP["Consign Card Page"]
-        EW["eWallet / Loyalty / Gift Card"]
-    end
-
-    SO -->|"confirm → auto-create"| LC
-    TP -.->|"trigger"| SO
-    LP -->|"has many"| LC
-    LC -->|"contains"| CL
-    LC -->|"tracks"| CR
-    CR -->|"details"| CRL
-    CRL -.->|"redeems"| CL
-
-    PS -->|"scan 044*"| PP
-    PP -->|"$0 lines"| PAY
-    PAY -->|"confirm_consign_redemptions()"| CR
-
-    MC --> CP
-    MC --> EW
-    CP -.->|"read-only"| LC
-```
-
-### Data Model
-
-```mermaid
-erDiagram
-    loyalty_program {
-        string program_type
-        many2many trigger_product_ids
-        boolean is_consign
-    }
-    loyalty_card {
-        string code
-        boolean is_consign
-        many2one program_id
-        many2one partner_id
-    }
-    loyalty_consign_line {
-        many2one card_id
-        many2one product_id
-        float qty_total
-        float qty_remaining
-        string state
-    }
-    loyalty_consign_redemption {
-        many2one card_id
-        string name
-        many2one pos_order_id
-        string state
-    }
-    loyalty_consign_redemption_line {
-        many2one redemption_id
-        many2one consign_line_id
-        float qty_redeemed
-    }
-
-    loyalty_program ||--o{ loyalty_card : "has"
-    loyalty_card ||--o{ loyalty_consign_line : "contains"
-    loyalty_card ||--o{ loyalty_consign_redemption : "tracks"
-    loyalty_consign_redemption ||--o{ loyalty_consign_redemption_line : "details"
-    loyalty_consign_line ||--o{ loyalty_consign_redemption_line : "redeems"
-```
-
-### POS Redemption Flow
-
-```mermaid
-sequenceDiagram
-    participant Staff as POS Staff
-    participant PS as ProductScreen
-    participant API as pos.config RPC
-    participant Popup as ConsignCardPopup
-    participant Pay as PaymentScreen
-    participant DB as Backend DB
-
-    Staff->>PS: Scan barcode (044*)
-    PS->>API: use_consign_card_code()
-    API-->>PS: card data + consign lines
-    PS->>Popup: Open with available items
-    Staff->>Popup: Select items & quantities
-    Popup->>PS: Add $0 redemption lines to order
-    Staff->>Pay: Complete payment
-    Pay->>DB: confirm_consign_redemptions()
-    DB-->>Pay: Success ✓
-```
-
----
-
-## Features
-
-### Consignment Card (`woow_loyalty_consign`)
-
-- **New Program Type** — `consign` added to `loyalty.program` selection alongside existing types (loyalty, ewallet, gift_card, etc.)
-- **Trigger Product Mechanism** — Link products to a consign program; when a sale order containing these products is confirmed, a consignment card is automatically created with per-item quantity lines
-- **Consign Lines** — Track individual items with `qty_total`, `qty_remaining`, product reference, and state (`available` / `depleted`)
-- **Backend Redemption Wizard** — Staff can redeem items via a wizard directly from the card form view
-- **POS Barcode Integration** — Scan the card barcode at POS → popup shows available items → select quantities → $0 lines added to the POS order → redemption confirmed on payment
-- **Redemption Records** — Full audit trail with sequence-numbered documents, linked to POS orders or manual operations
-- **Customer Portal** — Card holders can view their cards, remaining items, and redemption history through the Odoo portal
-- **PDF Report** — Printable card report with barcode, item list, and remaining quantities
-- **Email Notification** — Automatic email sent to the customer when a consignment card is created
-
-### Member Center (`woow_member_center`)
-
-- **Unified Portal Hub** — Single responsive page aggregating all loyalty card types
-- **Supported Card Types** — eWallet balance, loyalty points, gift cards, coupons, membership status, consignment cards
+- **Unified Portal Hub** — Single page aggregating eWallet, loyalty points, gift cards, coupons, and membership
+- **Quick-Glance Metrics** — Balances, point totals, coupon counts, and membership status displayed at a glance
 - **Mobile-First Design** — Responsive layout with SVG icons, optimized for both desktop and mobile
 - **Deep Links** — Each card type links to its detailed page for full information
 
 ---
 
+## Features
+
+### Member Center (`woow_member_center`)
+
+- **Unified Portal Hub** — Single responsive page aggregating all loyalty card types
+- **Supported Card Types**:
+  - **eWallet** — Balance display with currency formatting
+  - **Loyalty Points** — Accumulated points with custom point names
+  - **Gift Cards** — Balance display with currency formatting
+  - **Coupons** — Available coupon count
+  - **Membership** — Current membership status and state
+- **Individual Detail Pages** — Each card type has list and detail views
+- **Portal Home Integration** — Member Center entry point added to the main portal home page
+- **Breadcrumb Navigation** — Full breadcrumb support for all sub-pages
+- **Mobile-First Design** — Responsive card grid layout with SVG icons
+
+---
+
 ## Screenshots
 
-### Backend Views
-
-<p align="center">
-  <img src="docs/images/backend-consign-program-form.png" alt="Consign Program Form" width="700"><br>
-  <em>Consignment program form — trigger products and configuration</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-program-type-consign.png" alt="Consign Program Type" width="700"><br>
-  <em>Consignment type in loyalty program type dropdown</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-consign-card-list.png" alt="Consign Card List" width="700"><br>
-  <em>Consignment card list view — all cards with status overview</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-consign-card-form.png" alt="Consign Card Form" width="700"><br>
-  <em>Consignment card form — items, quantities, and card details</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-consign-line-form.png" alt="Consign Line Form" width="700"><br>
-  <em>Consignment line form — tracking item quantities</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-consign-redemption.png" alt="Redemption Record" width="700"><br>
-  <em>Redemption record — audit trail of redeemed items</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-sale-order-consign.png" alt="Sale Order with Consign" width="700"><br>
-  <em>Sale order with consignment card indicator</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-menu-structure.png" alt="Backend Menu" width="700"><br>
-  <em>Backend menu structure — Consignment Cards under Sales</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/backend-program-type-giftcard.png" alt="Gift Card Program Type" width="700"><br>
-  <em>Gift Card / eWallet program type dropdown (for comparison)</em>
-</p>
-
 ### Portal / Member Center
-
-<p align="center">
-  <img src="docs/images/portal-consign-card-detail.png" alt="Portal Consign Card Detail" width="700"><br>
-  <em>Customer portal — consignment card detail with items and redemption history</em>
-</p>
 
 <p align="center">
   <img src="docs/images/member-center-hub-mobile.png" alt="Member Center Hub" width="350"><br>
@@ -288,8 +111,7 @@ sequenceDiagram
    odoo -u base --stop-after-init
    ```
 
-4. Install modules from the Odoo Apps menu:
-   - Search for **"寄品卡"** or **"Consignment Card"** → Install `woow_loyalty_consign`
+4. Install the module from the Odoo Apps menu:
    - Search for **"會員中心"** or **"Member Center"** → Install `woow_member_center`
 
 ### Prerequisites
@@ -298,60 +120,35 @@ sequenceDiagram
 |-------------|---------|
 | Odoo | 18.0 (Community or Enterprise) |
 | Python | 3.12+ |
-| Required Odoo modules | `loyalty`, `sale_loyalty`, `pos_loyalty`, `stock`, `portal`, `mail`, `membership` |
+| Required Odoo modules | `loyalty`, `portal`, `membership` |
 
 ---
 
 ## Configuration
 
-### 1. Create a Consign Program
+No special configuration is needed. Once installed, the Member Center portal hub is automatically available to all portal users.
 
-1. Navigate to **Sales → Products → Loyalty Cards & Gift Cards**
-2. Click **New** and select program type **Consignment Card (寄品卡)**
-3. In the **Trigger Products** tab, add the products that should generate consignment cards when sold
-4. Configure email template and card validity as needed
+### Portal Access
 
-### 2. POS Setup
-
-1. The POS barcode rules (prefix `044`) are automatically configured
-2. Ensure the **Consignment Redemption Product** (auto-created data record) is available in your POS product list
-3. POS users need the **Point of Sale / User** group (ACLs are pre-configured)
-
-### 3. Portal Access
-
-- Portal users automatically see their consignment cards under **My Account → Consignment Cards**
-- Install `woow_member_center` for the unified member center hub
+- Portal users will see a **Member Center** entry on their portal home page
+- Clicking it opens the unified hub page with all their loyalty card types
+- Each card type links to its detailed page
 
 ---
 
 ## Usage
 
-### Create a Consign Program
-
-1. Go to **Sales → Products → Loyalty Cards & Gift Cards**
-2. Create a new program with type **Consignment Card**
-3. Add trigger products (e.g., "Wine Case — 6 bottles")
-
-### Sale Order → Auto Card Creation
-
-1. Create a sale order with trigger products
-2. Confirm the sale order
-3. A consignment card is automatically created with individual item lines
-4. Customer receives an email notification with their card details
-
-### POS Barcode Redemption
-
-1. At the POS, scan the customer's consignment card barcode
-2. A popup displays available items with remaining quantities
-3. Select items and quantities to redeem
-4. Confirm — $0 redemption lines are added to the order
-5. Complete payment — redemption is recorded in the backend
-
 ### Customer Portal
 
 1. Customer logs into the Odoo portal
-2. Navigates to **My Account → Consignment Cards** (or **Member Center**)
-3. Views card balance, item list, and redemption history
+2. Clicks **Member Center** on the portal home page
+3. Views all loyalty card types at a glance:
+   - eWallet balance
+   - Loyalty points
+   - Gift card balance
+   - Available coupons
+   - Membership status
+4. Clicks any card to see detailed information
 
 ---
 
@@ -361,86 +158,69 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    WLC[woow_loyalty_consign] --> loyalty
-    WLC --> sale_loyalty
-    WLC --> pos_loyalty
-    WLC --> stock
-    WLC --> portal
-    WLC --> mail
     WMC[woow_member_center] --> portal
     WMC --> loyalty
     WMC --> membership
-    WMC --> WLC
 ```
 
 ### File Structure
 
 ```
 Woow_odoo_loyalty_card_enhance/
-├── woow_loyalty_consign/
-│   ├── __manifest__.py
-│   ├── __init__.py
-│   ├── models/
-│   │   ├── loyalty_program.py          # consign program type
-│   │   ├── loyalty_card.py             # card extension
-│   │   ├── loyalty_consign_line.py     # per-item tracking
-│   │   ├── loyalty_consign_redemption.py  # redemption documents
-│   │   ├── sale_order.py               # auto card creation
-│   │   ├── pos_config.py              # POS barcode RPC
-│   │   ├── pos_order.py              # POS redemption confirmation
-│   │   └── pos_order_line.py         # POS line extension
-│   ├── wizard/
-│   │   └── consign_redeem_wizard.py   # backend redemption wizard
-│   ├── controllers/
-│   │   └── portal.py                 # customer portal controllers
-│   ├── views/                        # XML views, menus, portal templates
-│   ├── security/                     # ACLs and record rules
-│   ├── data/                         # sequences, email templates, products
-│   ├── report/                       # PDF report templates
-│   └── static/src/                   # POS OWL components (JS/XML)
-│       └── overrides/
-│           ├── components/
-│           │   ├── product_screen/    # barcode scan handler
-│           │   ├── payment_screen/    # post-payment hook
-│           │   └── consign_card_popup/ # item selection popup
-│           └── models/
-│               └── pos_order.js       # order sync extension
 ├── woow_member_center/
 │   ├── __manifest__.py
-│   ├── models/
+│   ├── __init__.py
 │   ├── controllers/
-│   ├── views/                        # portal hub templates
+│   │   └── portal.py                 # Portal controllers
+│   ├── views/
+│   │   ├── portal_templates.xml      # Hub page & portal home entry
+│   │   ├── ewallet_templates.xml     # eWallet pages
+│   │   ├── loyalty_templates.xml     # Loyalty points pages
+│   │   ├── gift_card_templates.xml   # Gift card pages
+│   │   ├── coupon_templates.xml      # Coupon pages
+│   │   └── membership_templates.xml  # Membership page
 │   ├── security/
-│   └── static/src/css/              # responsive styles
+│   │   ├── ir.model.access.csv
+│   │   └── portal_security.xml
+│   └── static/
+│       ├── description/
+│       │   └── icon.png
+│       └── src/
+│           ├── css/
+│           │   └── member_center.css  # Responsive styles
+│           └── img/                   # SVG icons
 ├── docs/
-│   ├── images/                       # screenshots
-│   └── ARCHITECTURE.md               # detailed architecture docs
-├── README.md                         # English documentation
-├── README_zh-TW.md                   # 繁體中文文件
-├── LICENSE                           # LGPL-3
-└── CHANGELOG.md                      # version history
+│   ├── images/                        # Screenshots
+│   └── ARCHITECTURE.md                # Architecture docs
+├── README.md                          # English documentation
+├── README_zh-TW.md                    # 繁體中文文件
+├── LICENSE                            # LGPL-3
+└── CHANGELOG.md                       # Version history
 ```
 
-### Security & Access Control
+### Portal Routes
 
-| Model | Salesman | Manager | POS User | Portal |
-|-------|----------|---------|----------|--------|
-| `loyalty.consign.line` | CRUD (no delete) | Full CRUD | Read only | Read only |
-| `loyalty.consign.redemption` | CRUD (no delete) | Full CRUD | Read + Create | Read only |
-| `loyalty.consign.redemption.line` | CRUD (no delete) | Full CRUD | Read + Create | Read only |
-| `loyalty.card` | (inherited) | (inherited) | (inherited) | Read only |
-
-Portal users can only see their own records (row-level security via `ir.rule`).
+| Route | Description |
+|-------|-------------|
+| `/my/member-center` | Main hub page with all card types |
+| `/my/member-center/ewallet` | eWallet list |
+| `/my/member-center/ewallet/<id>` | eWallet detail |
+| `/my/member-center/loyalty` | Loyalty points list |
+| `/my/member-center/loyalty/<id>` | Loyalty points detail |
+| `/my/member-center/gift-cards` | Gift card list |
+| `/my/member-center/gift-cards/<id>` | Gift card detail |
+| `/my/member-center/coupons` | Coupon list |
+| `/my/member-center/coupons/<id>` | Coupon detail |
+| `/my/member-center/membership` | Membership status |
 
 ---
 
 ## Roadmap
 
-- [ ] Batch redemption — redeem from multiple cards in one POS transaction
-- [ ] Expiration management — auto-notify when card items are nearing expiry
-- [ ] Transfer — allow customers to transfer consigned items to another member
-- [ ] Inventory integration — link consignment lines to warehouse stock moves
-- [ ] Analytics dashboard — redemption trends, popular items, card utilization rates
+- [ ] Transaction history — show recent point/balance changes on detail pages
+- [ ] Card sharing — allow customers to share gift cards with others
+- [ ] Notifications — alert customers of expiring coupons or low balances
+- [ ] Dashboard widgets — add member center summary to the main portal dashboard
 
 ---
 

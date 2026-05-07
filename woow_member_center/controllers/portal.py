@@ -96,13 +96,6 @@ class MemberCenterPortal(CustomerPortal):
             partner_sudo.fields_get(['membership_state'])['membership_state']['selection']
         ).get(membership_state, membership_state)
 
-        # Consign
-        consign_count = LoyaltyCard.search_count([
-            ('partner_id', '=', partner.id),
-            ('is_consign', '=', True),
-            ('active', '=', True),
-        ])
-
         # Currency for monetary display
         currency = request.env.company.currency_id
 
@@ -114,7 +107,6 @@ class MemberCenterPortal(CustomerPortal):
             'coupon_count': coupon_count,
             'membership_state': membership_state,
             'membership_state_label': membership_state_label,
-            'consign_count': consign_count,
             'currency': currency,
             'ewallet_point_name': ewallet_cards[:1].point_name if ewallet_cards else '元',
             'loyalty_point_name': loyalty_cards[:1].point_name if loyalty_cards else '點',

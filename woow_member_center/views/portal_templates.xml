@@ -16,7 +16,7 @@
                 <t t-set="icon" t-value="'/woow_member_center/static/src/img/member-center.svg'"/>
                 <t t-set="title">會員中心</t>
                 <t t-set="url" t-value="'/my/member-center'"/>
-                <t t-set="text">電子錢包、集點卡、禮品卡、優惠券、會員資格、寄品卡</t>
+                <t t-set="text">電子錢包、集點卡、禮品卡、優惠券、會員資格</t>
                 <t t-set="placeholder_count" t-value="'member_center_count'"/>
             </t>
         </xpath>
@@ -117,22 +117,6 @@
                             'bg-warning text-dark'
                         }">
                             <t t-out="membership_state_label"/>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- 寄品卡 -->
-                <a href="/my/consign-cards" class="mc-hub-card">
-                    <div class="mc-hub-card-icon">
-                        <img src="/woow_member_center/static/src/img/consign.svg" alt="寄品卡"/>
-                    </div>
-                    <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">寄品卡</div>
-                        <div class="mc-hub-card-text">查看寄品卡與核銷紀錄</div>
-                    </div>
-                    <div class="mc-hub-card-metric">
-                        <span class="badge rounded-pill bg-secondary">
-                            <t t-out="consign_count"/> 張
                         </span>
                     </div>
                 </a>
