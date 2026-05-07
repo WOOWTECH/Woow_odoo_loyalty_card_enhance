@@ -53,7 +53,7 @@ class ConsignPortal(CustomerPortal):
             'page_name': 'consign_card_detail',
         }
         values = self._get_page_view_values(
-            card, None, values, 'my_consign_cards_history', False, **kw,
+            card, card._portal_ensure_token(), values, 'my_consign_cards_history', False, **kw,
         )
         return request.render(
             'woow_loyalty_consign.portal_consign_card_detail', values
@@ -76,7 +76,7 @@ class ConsignPortal(CustomerPortal):
             'page_name': 'consign_redemption_detail',
         }
         values = self._get_page_view_values(
-            redemption, None, values, 'my_consign_redemptions_history', False, **kw,
+            redemption, redemption._portal_ensure_token(), values, 'my_consign_redemptions_history', False, **kw,
         )
         return request.render(
             'woow_loyalty_consign.portal_consign_redemption_detail', values
