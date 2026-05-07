@@ -217,6 +217,20 @@
             </li>
             <li t-if="page_name == 'mc_membership'"
                 class="breadcrumb-item active">會員資格</li>
+
+            <!-- 交易紀錄歷史頁 -->
+            <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
+                <a href="/my/member-center">會員中心</a>
+            </li>
+            <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
+                <a t-att-href="parent_url"><t t-out="parent_title"/></a>
+            </li>
+            <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
+                <a t-att-href="card_url"><t t-out="card.program_id.name"/></a>
+            </li>
+            <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item active">
+                交易紀錄
+            </li>
         </xpath>
     </template>
 

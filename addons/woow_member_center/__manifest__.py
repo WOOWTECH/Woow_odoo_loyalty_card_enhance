@@ -19,6 +19,7 @@
     'depends': [
         'portal',
         'loyalty',
+        'sale_loyalty',
         'membership',
         'woow_loyalty_consign',
     ],
@@ -26,6 +27,8 @@
         'security/ir.model.access.csv',
         'security/portal_security.xml',
         'views/portal_templates.xml',
+        'views/loyalty_history_snippet.xml',
+        'views/loyalty_history_page.xml',
         'views/ewallet_templates.xml',
         'views/loyalty_templates.xml',
         'views/gift_card_templates.xml',

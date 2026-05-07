@@ -102,6 +102,9 @@
                 </div>
             </div>
 
+            <!-- 交易紀錄 -->
+            <t t-call="woow_member_center.portal_loyalty_history_table"/>
+
             <!-- chatter -->
             <hr/>
             <div id="ewallet_communication" class="mt-4">
