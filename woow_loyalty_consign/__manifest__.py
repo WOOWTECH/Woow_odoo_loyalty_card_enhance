@@ -30,6 +30,7 @@
     'depends': [
         'loyalty',
         'sale_loyalty',
+        'pos_loyalty',
         'stock',
         'portal',
         'mail',
@@ -41,6 +42,7 @@
         # Data
         'data/sequence_data.xml',
         'data/mail_template_data.xml',
+        'data/consign_product_data.xml',
         # Views
         'views/loyalty_program_views.xml',
         'views/loyalty_card_consign_views.xml',
@@ -56,7 +58,11 @@
         'report/consign_card_report_templates.xml',
         'report/consign_card_report_actions.xml',
     ],
-    'assets': {},
+    'assets': {
+        'point_of_sale._assets_pos': [
+            'woow_loyalty_consign/static/src/**/*',
+        ],
+    },
     'installable': True,
     'application': False,
     'auto_install': False,
