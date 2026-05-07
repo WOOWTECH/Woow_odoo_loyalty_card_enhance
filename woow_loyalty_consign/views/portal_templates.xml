@@ -1,24 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Portal 導覽列加入寄品卡 -->
-    <template id="portal_my_home_consign" name="Portal: 寄品卡入口"
-              inherit_id="portal.portal_my_home"
-              priority="40">
-        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
-            <t t-set="portal_client_category_enable" t-value="True"/>
-        </xpath>
-        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
-            <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'fa-archive'"/>
-                <t t-set="title">寄品卡</t>
-                <t t-set="url" t-value="'/my/consign-cards'"/>
-                <t t-set="text">查看您的寄品卡與寄存品項</t>
-                <t t-set="placeholder_count" t-value="'consign_card_count'"/>
-            </t>
-        </xpath>
-    </template>
-
     <!-- 寄品卡列表頁 -->
     <template id="portal_my_consign_cards" name="Portal: 寄品卡列表">
         <t t-call="portal.portal_layout">
