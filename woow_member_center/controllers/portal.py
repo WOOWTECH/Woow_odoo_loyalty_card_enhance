@@ -157,7 +157,7 @@ class MemberCenterPortal(CustomerPortal):
             'card': card,
         }
         values = self._get_page_view_values(
-            card, None, values, 'my_mc_ewallet_history', False, **kw,
+            card, card._portal_ensure_token(), values, 'my_mc_ewallet_history', False, **kw,
         )
         return request.render('woow_member_center.portal_mc_ewallet_detail', values)
 
@@ -190,7 +190,7 @@ class MemberCenterPortal(CustomerPortal):
             'card': card,
         }
         values = self._get_page_view_values(
-            card, None, values, 'my_mc_loyalty_history', False, **kw,
+            card, card._portal_ensure_token(), values, 'my_mc_loyalty_history', False, **kw,
         )
         return request.render('woow_member_center.portal_mc_loyalty_detail', values)
 
@@ -227,7 +227,7 @@ class MemberCenterPortal(CustomerPortal):
             'currency': currency,
         }
         values = self._get_page_view_values(
-            card, None, values, 'my_mc_gift_card_history', False, **kw,
+            card, card._portal_ensure_token(), values, 'my_mc_gift_card_history', False, **kw,
         )
         return request.render('woow_member_center.portal_mc_gift_card_detail', values)
 
@@ -260,7 +260,7 @@ class MemberCenterPortal(CustomerPortal):
             'card': card,
         }
         values = self._get_page_view_values(
-            card, None, values, 'my_mc_coupon_history', False, **kw,
+            card, card._portal_ensure_token(), values, 'my_mc_coupon_history', False, **kw,
         )
         return request.render('woow_member_center.portal_mc_coupon_detail', values)
 

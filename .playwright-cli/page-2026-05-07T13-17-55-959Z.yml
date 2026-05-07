@@ -1,0 +1,130 @@
+- generic [ref=e2]:
+  - link "Skip to Content" [ref=e3] [cursor=pointer]:
+    - /url: "#wrap"
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "Logo of My Website" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "Logo of My Website" [ref=e8]:
+            - img "My Website" [ref=e9]
+        - menu [ref=e10]:
+          - menuitem "Home" [ref=e11] [cursor=pointer]
+          - menuitem "Contact us" [ref=e12] [cursor=pointer]
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - button "" [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]: 
+          - listitem [ref=e17]:
+            - link " +1 555-555-5556" [ref=e19] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+              - generic [ref=e20]: 
+              - generic [ref=e21]: +1 555-555-5556
+          - listitem [ref=e22]:
+            - button "Joel Willis" [ref=e23] [cursor=pointer]
+            - text:  
+          - listitem [ref=e24]:
+            - link "Contact Us" [ref=e28] [cursor=pointer]:
+              - /url: /contactus
+  - main [ref=e29]:
+    - generic [ref=e31]:
+      - navigation [ref=e32]:
+        - list [ref=e33]:
+          - listitem [ref=e34]:
+            - link "Home" [ref=e35] [cursor=pointer]:
+              - /url: /my/home
+              - generic [ref=e36]: 
+          - listitem [ref=e37]:
+            - text: /
+            - link "會員中心" [ref=e38] [cursor=pointer]:
+              - /url: /my/member-center
+          - listitem [ref=e39]: / 優惠券
+        - text: 
+      - table [ref=e41]:
+        - rowgroup [ref=e42]:
+          - row "方案 優惠碼 說明" [ref=e43]:
+            - columnheader "方案" [ref=e44]
+            - columnheader "優惠碼" [ref=e45]
+            - columnheader "說明" [ref=e46]
+        - rowgroup [ref=e47]:
+          - row "10% Discount Coupons 0442-14a0-46d2 10% on your order" [ref=e48]:
+            - cell "10% Discount Coupons" [ref=e49]:
+              - link "10% Discount Coupons" [ref=e50] [cursor=pointer]:
+                - /url: /my/member-center/coupons/1
+            - cell "0442-14a0-46d2" [ref=e51]:
+              - code [ref=e52]: 0442-14a0-46d2
+            - cell "10% on your order" [ref=e53]
+          - row "10% Discount Coupons 0444-2d56-409b 10% on your order" [ref=e54]:
+            - cell "10% Discount Coupons" [ref=e55]:
+              - link "10% Discount Coupons" [ref=e56] [cursor=pointer]:
+                - /url: /my/member-center/coupons/2
+            - cell "0444-2d56-409b" [ref=e57]:
+              - code [ref=e58]: 0444-2d56-409b
+            - cell "10% on your order" [ref=e59]
+    - generic: 
+  - contentinfo [ref=e60]:
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - heading "Useful Links" [level=5] [ref=e66]
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - link "Home" [ref=e69] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e70]:
+            - link "About us" [ref=e71] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e72]:
+            - link "Products" [ref=e73] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e74]:
+            - link "Services" [ref=e75] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e76]:
+            - link "Legal" [ref=e77] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e78]:
+            - link "Contact us" [ref=e79] [cursor=pointer]:
+              - /url: /contactus
+      - generic [ref=e80]:
+        - heading "About us" [level=5] [ref=e81]
+        - paragraph [ref=e82]:
+          - text: We are a team of passionate people whose goal is to improve everyone's life through disruptive products. We build great products to solve your business problems.
+          - text: Our products are designed for small to medium size companies willing to optimize their performance.
+      - generic [ref=e83]:
+        - heading "Connect with us" [level=5] [ref=e84]
+        - list [ref=e85]:
+          - listitem [ref=e86]:
+            - generic [ref=e87]: 
+            - link "Contact us" [ref=e89] [cursor=pointer]:
+              - /url: /contactus
+          - listitem [ref=e90]:
+            - generic [ref=e91]: 
+            - link "info@yourcompany.example.com" [ref=e93] [cursor=pointer]:
+              - /url: mailto:info@yourcompany.example.com
+          - listitem [ref=e94]:
+            - generic [ref=e95]: 
+            - link "+1 555-555-5556" [ref=e97] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+        - generic [ref=e98]:
+          - link "Facebook" [ref=e99] [cursor=pointer]:
+            - /url: /website/social/facebook
+            - generic [ref=e100]: 
+          - link "X" [ref=e101] [cursor=pointer]:
+            - /url: /website/social/twitter
+            - generic [ref=e102]: 
+          - link "LinkedIn" [ref=e103] [cursor=pointer]:
+            - /url: /website/social/linkedin
+            - generic [ref=e104]: 
+          - link "Extra page" [ref=e105] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e106]: 
+    - generic [ref=e109]:
+      - generic [ref=e110]: Copyright © Company name
+      - generic [ref=e112]:
+        - text: Powered by
+        - link "Odoo" [ref=e113] [cursor=pointer]:
+          - /url: http://www.odoo.com?utm_source=db&utm_medium=website
+          - img "Odoo" [ref=e114]
+        - text: "- Create a"
+        - link "free website" [ref=e115] [cursor=pointer]:
+          - /url: http://www.odoo.com/app/website?utm_source=db&utm_medium=website

@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - button "" [ref=e5] [cursor=pointer]:
+        - generic [ref=e6]: 
+      - menu [ref=e7]:
+        - button "訊息 10" [ref=e9] [cursor=pointer]:
+          - img "訊息" [ref=e10]: 
+          - generic [ref=e11]: "10"
+        - button "活動 28" [ref=e12] [cursor=pointer]:
+          - img "活動" [ref=e13]: 
+          - generic [ref=e14]: "28"
+        - button "YourCompany" [disabled] [ref=e16]:
+          - text: 
+          - generic [ref=e17]: YourCompany
+        - button "使用者" [ref=e19] [cursor=pointer]:
+          - img "使用者" [ref=e20]
+          - text: 
+  - generic:
+    - generic:
+      - paragraph: 按 esc 離開全螢幕
+    - generic [ref=e33]:
+      - button "" [ref=e34] [cursor=pointer]
+      - generic [ref=e35]:
+        - generic [ref=e37]: 
+        - text: 
+        - button "對話串圖片" [ref=e38] [cursor=pointer]:
+          - img "對話串圖片" [ref=e39]

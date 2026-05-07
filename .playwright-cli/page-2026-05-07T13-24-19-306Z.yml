@@ -1,0 +1,45 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - button "" [expanded] [active] [ref=e5] [cursor=pointer]:
+        - generic [ref=e6]: 
+      - menu [ref=e7]:
+        - button "訊息 10" [ref=e9] [cursor=pointer]:
+          - img "訊息" [ref=e10]: 
+          - generic [ref=e11]: "10"
+        - button "活動 28" [ref=e12] [cursor=pointer]:
+          - img "活動" [ref=e13]: 
+          - generic [ref=e14]: "28"
+        - button "YourCompany" [disabled] [ref=e16]:
+          - text: 
+          - generic [ref=e17]: YourCompany
+        - button "使用者" [ref=e19] [cursor=pointer]:
+          - img "使用者" [ref=e20]
+          - text: 
+  - generic:
+    - menu [ref=e40]:
+      - menuitem "討論" [ref=e41] [cursor=pointer]
+      - menuitem "日曆" [ref=e42] [cursor=pointer]
+      - menuitem "待辦事項" [ref=e43] [cursor=pointer]
+      - menuitem "聯絡人" [ref=e44] [cursor=pointer]
+      - menuitem "客戶關係管理" [ref=e45] [cursor=pointer]
+      - menuitem "預約管理" [ref=e46] [cursor=pointer]
+      - menuitem "銷售" [ref=e47] [cursor=pointer]
+      - menuitem "Dashboard" [ref=e48] [cursor=pointer]
+      - menuitem "發票" [ref=e49] [cursor=pointer]
+      - menuitem "專案" [ref=e50] [cursor=pointer]
+      - menuitem "網站" [ref=e51] [cursor=pointer]
+      - menuitem "網上學習" [ref=e52] [cursor=pointer]
+      - menuitem "員工" [ref=e53] [cursor=pointer]
+      - menuitem "開支" [ref=e54] [cursor=pointer]
+      - menuitem "應用程式" [ref=e55] [cursor=pointer]
+      - menuitem "設定" [ref=e56] [cursor=pointer]
+    - generic:
+      - paragraph: 按 esc 離開全螢幕
+    - generic [ref=e33]:
+      - button "" [ref=e34] [cursor=pointer]
+      - generic [ref=e35]:
+        - generic [ref=e37]: 
+        - text: 
+        - button "對話串圖片" [ref=e38] [cursor=pointer]:
+          - img "對話串圖片" [ref=e39]
