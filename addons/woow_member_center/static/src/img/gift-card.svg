@@ -1,0 +1,29 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Shadow -->
+<ellipse cx="32" cy="58" rx="14" ry="4" fill="#C1DBF6"/>
+<!-- Box body -->
+<path d="M10 30L32 18L54 30V50L32 62L10 50V30Z" fill="white"/>
+<path d="M32 42L54 30V50L32 62V42Z" fill="#FBDBD0"/>
+<path d="M10 30L32 42V62L10 50V30Z" fill="#C1DBF6"/>
+<!-- Box lid top -->
+<path d="M10 26L32 14L54 26L32 38L10 26Z" fill="white"/>
+<!-- Box lid sides -->
+<path d="M10 26L32 38L32 42L10 30L10 26Z" fill="#C1DBF6"/>
+<path d="M54 26L32 38V42L54 30V26Z" fill="#FBDBD0"/>
+<!-- Ribbon vertical (front-left face) -->
+<path d="M20 30L20 50L22 51L22 31L20 30Z" fill="#FBDBD0" stroke="#374874" stroke-width="0.5"/>
+<!-- Ribbon vertical (front-right face) -->
+<path d="M42 30L42 50L44 49L44 29L42 30Z" fill="#FBDBD0" stroke="#374874" stroke-width="0.5"/>
+<!-- Ribbon horizontal on lid -->
+<path d="M10 26L32 38L54 26L52 25L32 36L12 25L10 26Z" fill="#FBDBD0" stroke="#374874" stroke-width="0.5"/>
+<!-- Bow -->
+<path d="M32 14C28 11 24 12 26 15C28 18 32 14 32 14Z" fill="#FBDBD0" stroke="#374874" stroke-width="0.8"/>
+<path d="M32 14C36 11 40 12 38 15C36 18 32 14 32 14Z" fill="#FBDBD0" stroke="#374874" stroke-width="0.8"/>
+<circle cx="32" cy="14" r="2" fill="white" stroke="#374874" stroke-width="0.8"/>
+<!-- Outline -->
+<path d="M10 26L32 14L54 26V30" stroke="#374874" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+<path d="M10 26V30" stroke="#374874" stroke-width="1.2"/>
+<path d="M10 30L32 18L54 30V50L32 62L10 50V30Z" stroke="#374874" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+<path d="M10 30L32 42L54 30" stroke="#374874" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+<path d="M32 42V62" stroke="#374874" stroke-width="1.2"/>
+</svg>
