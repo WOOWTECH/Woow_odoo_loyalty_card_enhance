@@ -105,6 +105,13 @@
                     </t>
                 </div>
             </div>
+
+            <!-- chatter -->
+            <hr/>
+            <div id="coupon_communication" class="mt-4">
+                <h3>溝通紀錄</h3>
+                <t t-call="portal.message_thread"/>
+            </div>
         </t>
     </template>
 
