@@ -67,6 +67,9 @@ class LoyaltyConsignLine(models.Model):
     sale_order_id = fields.Many2one(
         related='sale_line_id.order_id', store=True, string='來源訂單',
     )
+    is_cancelled = fields.Boolean(
+        string='已取消', default=False,
+    )
     state = fields.Selection(
         [
             ('active', '有效'),
@@ -106,13 +109,13 @@ class LoyaltyConsignLine(models.Model):
             line.amount_deposited = line.qty_deposited * line.unit_price
             line.amount_remaining = line.qty_remaining * line.unit_price
 
-    @api.depends('qty_remaining', 'date_expiry', 'state')
+    @api.depends('qty_remaining', 'date_expiry', 'is_cancelled')
     def _compute_state(self):
         today = fields.Date.context_today(self)
         for line in self:
-            if line.state == 'cancelled':
-                continue
-            if line.date_expiry and line.date_expiry < today:
+            if line.is_cancelled:
+                line.state = 'cancelled'
+            elif line.date_expiry and line.date_expiry < today:
                 line.state = 'expired'
             elif line.qty_remaining <= 0:
                 line.state = 'depleted'
@@ -120,4 +123,4 @@ class LoyaltyConsignLine(models.Model):
                 line.state = 'active'
 
     def action_cancel(self):
-        self.write({'state': 'cancelled'})
+        self.write({'is_cancelled': True})

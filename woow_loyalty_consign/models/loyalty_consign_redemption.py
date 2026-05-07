@@ -73,6 +73,19 @@ class LoyaltyConsignRedemption(models.Model):
                 raise ValidationError('只有草稿狀態的核銷單才能確認。')
             if not rec.line_ids:
                 raise ValidationError('核銷單至少需要一筆明細。')
+
+            # 鎖定相關寄品明細列，防止並行核銷超額 (TOCTOU)
+            consign_line_ids = rec.line_ids.mapped('consign_line_id').ids
+            if consign_line_ids:
+                self.env.cr.execute(
+                    "SELECT id FROM loyalty_consign_line WHERE id IN %s FOR UPDATE",
+                    [tuple(consign_line_ids)],
+                )
+                # 鎖定後重新讀取最新數量
+                rec.line_ids.mapped('consign_line_id').invalidate_recordset(
+                    ['qty_remaining', 'qty_redeemed'],
+                )
+
             for line in rec.line_ids:
                 if line.qty_redeemed <= 0:
                     raise ValidationError(
