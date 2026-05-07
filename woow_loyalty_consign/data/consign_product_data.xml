@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- 寄品核銷用 service product（$0 訂單行） -->
+    <record id="consign_redemption_product" model="product.product">
+        <field name="name">寄品核銷</field>
+        <field name="type">service</field>
+        <field name="list_price">0</field>
+        <field name="available_in_pos">True</field>
+        <field name="sale_ok">False</field>
+        <field name="purchase_ok">False</field>
+        <field name="categ_id" ref="product.product_category_all"/>
+        <field name="taxes_id" eval="[(5, 0, 0)]"/>
+    </record>
+
+</odoo>

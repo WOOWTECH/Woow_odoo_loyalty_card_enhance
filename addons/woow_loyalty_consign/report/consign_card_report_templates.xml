@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_consign_card_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="card">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>寄品卡</h2>
+                        <div class="row mt-3 mb-3">
+                            <div class="col-6">
+                                <strong>卡號：</strong>
+                                <span t-field="card.code"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>方案：</strong>
+                                <span t-field="card.program_id.name"/>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>客戶：</strong>
+                                <span t-field="card.partner_id.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>建立日期：</strong>
+                                <span t-field="card.create_date"
+                                      t-options="{'widget': 'date'}"/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-4 text-center">
+                                <div class="border rounded p-2">
+                                    <small class="text-muted">有效品項</small>
+                                    <h4 t-out="card.consign_active_lines"/>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="border rounded p-2">
+                                    <small class="text-muted">剩餘數量</small>
+                                    <h4 t-out="card.consign_total_remaining_qty"/>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="border rounded p-2">
+                                    <small class="text-muted">剩餘金額</small>
+                                    <h4>
+                                        <t t-out="card.consign_total_remaining_value"
+                                           t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>寄存品項明細</h4>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>品項</th>
+                                    <th class="text-center">存入數量</th>
+                                    <th class="text-center">已核銷</th>
+                                    <th class="text-center">剩餘數量</th>
+                                    <th class="text-end">單價</th>
+                                    <th class="text-end">剩餘金額</th>
+                                    <th class="text-center">存入日期</th>
+                                    <th class="text-center">到期日</th>
+                                    <th class="text-center">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
+                                   t-as="line">
+                                    <tr>
+                                        <td>
+                                            <t t-out="line.product_desc or line.product_id.name"/>
+                                        </td>
+                                        <td class="text-center" t-out="line.qty_deposited"/>
+                                        <td class="text-center" t-out="line.qty_redeemed"/>
+                                        <td class="text-center">
+                                            <strong t-out="line.qty_remaining"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-out="line.unit_price"
+                                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-out="line.amount_remaining"
+                                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                        </td>
+                                        <td class="text-center" t-field="line.date_deposited"/>
+                                        <td class="text-center">
+                                            <t t-if="line.date_expiry">
+                                                <span t-field="line.date_expiry"/>
+                                            </t>
+                                            <t t-else="">—</t>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-if="line.state == 'active'">有效</span>
+                                            <span t-if="line.state == 'depleted'">已用完</span>
+                                            <span t-if="line.state == 'expired'">已過期</span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- 條碼 -->
+                        <div class="text-center mt-4">
+                            <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=300&amp;height=50' % card.code"
+                                 alt="barcode"/>
+                            <br/>
+                            <small t-out="card.code"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

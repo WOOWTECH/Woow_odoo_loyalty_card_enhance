@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_template_consign_card" model="mail.template">
+            <field name="name">寄品卡 - 存入通知</field>
+            <field name="model_id" ref="loyalty.model_loyalty_card"/>
+            <field name="subject">您的寄品卡 {{ object.code }} 已更新</field>
+            <field name="email_from">{{ (object.company_id.email or user.email) }}</field>
+            <field name="email_to">{{ object.partner_id.email }}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        親愛的 <t t-out="object.partner_id.name or ''">客戶</t> 您好，
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        您的寄品卡已更新，以下是目前寄存品項：
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>寄品卡號：</strong> <t t-out="object.code or ''">CARD-CODE</t>
+    </p>
+    <br/>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background-color: #875A7B; color: white;">
+                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">品項</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">存入數量</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">已核銷</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">剩餘數量</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">到期日</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="object.consign_line_ids.filtered(lambda l: l.state != 'cancelled')" t-as="line">
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">
+                        <t t-out="line.product_desc or line.product_id.name">品項名稱</t>
+                    </td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
+                        <t t-out="line.qty_deposited">0</t>
+                    </td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
+                        <t t-out="line.qty_redeemed">0</t>
+                    </td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
+                        <strong><t t-out="line.qty_remaining">0</t></strong>
+                    </td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
+                        <t t-if="line.date_expiry">
+                            <t t-out="line.date_expiry">-</t>
+                        </t>
+                        <t t-else="">無期限</t>
+                    </td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        如有任何疑問，歡迎隨時與我們聯繫。
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        謝謝您的惠顧！
+    </p>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

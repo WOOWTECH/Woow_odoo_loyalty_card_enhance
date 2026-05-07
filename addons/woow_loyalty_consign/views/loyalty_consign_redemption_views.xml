@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 核銷單表單 -->
+    <record id="loyalty_consign_redemption_view_form" model="ir.ui.view">
+        <field name="name">loyalty.consign.redemption.form</field>
+        <field name="model">loyalty.consign.redemption</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_done" type="object" string="確認核銷"
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="card_id" readonly="state == 'done'"/>
+                            <field name="partner_id"/>
+                            <field name="date_redemption" readonly="state == 'done'"/>
+                        </group>
+                        <group>
+                            <field name="staff_user_id" readonly="state == 'done'"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_redeemed_value"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="核銷明細" name="lines">
+                            <field name="line_ids" nolabel="1"
+                                   readonly="state == 'done'">
+                                <list editable="bottom">
+                                    <field name="consign_line_id"
+                                           domain="[('card_id', '=', parent.card_id), ('state', '=', 'active')]"/>
+                                    <field name="product_id"/>
+                                    <field name="product_desc"/>
+                                    <field name="qty_available"/>
+                                    <field name="qty_redeemed"/>
+                                    <field name="unit_price"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="subtotal"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="服務備註" name="service_note">
+                            <field name="service_note" nolabel="1"
+                                   placeholder="施打劑量、操作師、備註..."
+                                   readonly="state == 'done'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 核銷單清單 -->
+    <record id="loyalty_consign_redemption_view_tree" model="ir.ui.view">
+        <field name="name">loyalty.consign.redemption.list</field>
+        <field name="model">loyalty.consign.redemption</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="card_id"/>
+                <field name="partner_id"/>
+                <field name="date_redemption"/>
+                <field name="staff_user_id"/>
+                <field name="total_redeemed_value"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 核銷單搜尋 -->
+    <record id="loyalty_consign_redemption_view_search" model="ir.ui.view">
+        <field name="name">loyalty.consign.redemption.search</field>
+        <field name="model">loyalty.consign.redemption</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="card_id"/>
+                <field name="partner_id"/>
+                <field name="staff_user_id"/>
+                <filter name="filter_draft" string="草稿"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_done" string="已完成"
+                        domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter name="group_partner" string="依客戶"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_staff" string="依服務人員"
+                        context="{'group_by': 'staff_user_id'}"/>
+                <filter name="group_date" string="依日期"
+                        context="{'group_by': 'date_redemption:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- 核銷單動作 -->
+    <record id="loyalty_consign_redemption_action" model="ir.actions.act_window">
+        <field name="name">核銷紀錄</field>
+        <field name="res_model">loyalty.consign.redemption</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                目前沒有核銷紀錄
+            </p>
+            <p>
+                核銷紀錄會在核銷寄品時自動建立。
+            </p>
+        </field>
+    </record>
+
+</odoo>
