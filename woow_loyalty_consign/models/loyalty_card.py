@@ -72,8 +72,7 @@ class LoyaltyCard(models.Model):
     def consign_add_line(self, product, qty, unit_price, product_desc=None, sale_line=None):
         """新增或累加寄品明細至此卡片。
 
-        若方案啟用 consign_one_card_per_partner 且同品項已存在有效行，
-        則累加數量；否則建立新行。
+        一客一卡制：同品項同價格的 active line 直接累加數量，否則建立新行。
 
         Args:
             product: product.product recordset 或 ID (int)
@@ -88,13 +87,12 @@ class LoyaltyCard(models.Model):
                 months=program.consign_expiry_months
             )
 
-        existing = False
-        if program.consign_one_card_per_partner:
-            existing = self.consign_line_ids.filtered(
-                lambda l: l.product_id == product
-                and l.state == 'active'
-                and l.unit_price == unit_price
-            )[:1]
+        # 同品項同價格的 active line 直接累加
+        existing = self.consign_line_ids.filtered(
+            lambda l: l.product_id == product
+            and l.state == 'active'
+            and l.unit_price == unit_price
+        )[:1]
 
         if existing:
             existing.qty_deposited += qty

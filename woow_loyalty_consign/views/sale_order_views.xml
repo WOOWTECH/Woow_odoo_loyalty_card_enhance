@@ -8,22 +8,6 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="priority">20</field>
         <field name="arch" type="xml">
-            <!-- 在 note_group 之後加入寄品設定 -->
-            <xpath expr="//group[@name='note_group']" position="after">
-                <group name="consign_group" string="寄品設定">
-                    <group>
-                        <field name="consign_program_id"/>
-                        <field name="auto_consign"/>
-                    </group>
-                    <group>
-                        <field name="consign_card_id"
-                               invisible="not consign_program_id"/>
-                        <field name="consign_line_count"
-                               invisible="not consign_program_id"/>
-                    </group>
-                </group>
-            </xpath>
-
             <!-- 在 button_box 中加入寄品按鈕 -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_consign_lines"

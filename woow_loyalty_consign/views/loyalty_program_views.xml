@@ -1,21 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- 繼承寄品方案表單 -->
-    <record id="loyalty_program_view_form_consign" model="ir.ui.view">
-        <field name="name">loyalty.program.form.consign</field>
+    <!-- 1. 把 consign 加入「禮品卡與電子錢包」表單的白名單 -->
+    <record id="loyalty_program_gift_ewallet_view_form_consign" model="ir.ui.view">
+        <field name="name">loyalty.program.gift_ewallet.form.consign</field>
         <field name="model">loyalty.program</field>
-        <field name="inherit_id" ref="loyalty.loyalty_program_view_form"/>
+        <field name="inherit_id" ref="loyalty.loyalty_program_gift_ewallet_view_form"/>
         <field name="arch" type="xml">
-            <!-- 在 program_type 後加入寄品卡類型 -->
-            <xpath expr="//field[@name='program_type']" position="after">
-                <field name="consign_card_type"
+            <!-- 修改 program_type 白名單加入 consign -->
+            <field name="program_type" position="attributes">
+                <attribute name="options">{'whitelisted_values': ['gift_card', 'ewallet', 'consign']}</attribute>
+            </field>
+
+            <!-- 在 program_type 的描述文字區塊後加入 consign 說明 -->
+            <xpath expr="//p[contains(@invisible, 'ewallet')][last()]" position="after">
+                <p class="text-muted" invisible="program_type != 'consign'" colspan="2">
+                    寄品卡在客戶購買「寄品服務」觸發商品後自動建立，非觸發品項存入卡片供日後分次取用。
+                </p>
+            </xpath>
+
+            <!-- 加入觸發商品欄位（寄品卡用） -->
+            <xpath expr="//field[@name='trigger_product_ids'][last()]" position="after">
+                <field name="trigger_product_ids" string="寄品卡產品"
+                       widget="many2many_tags"
                        invisible="program_type != 'consign'"/>
             </xpath>
 
-            <!-- 在右側欄位群組加入寄品設定 -->
-            <xpath expr="//field[@name='company_id']" position="after">
-                <field name="consign_one_card_per_partner"
+            <!-- 在右側群組加入寄品設定欄位 -->
+            <xpath expr="//field[@name='company_id'][last()]" position="after">
+                <field name="consign_card_type"
                        invisible="program_type != 'consign'"/>
                 <field name="consign_expiry_months"
                        invisible="program_type != 'consign'"/>
@@ -27,7 +40,20 @@
         </field>
     </record>
 
-    <!-- 繼承方案清單檢視 -->
+    <!-- 2. 把 consign 加入「折扣與會員計劃」表單的黑名單 -->
+    <!--    重用原本的 XML ID 以確保 DB 中舊記錄被正確覆蓋 -->
+    <record id="loyalty_program_view_form_consign" model="ir.ui.view">
+        <field name="name">loyalty.program.form.consign.blacklist</field>
+        <field name="model">loyalty.program</field>
+        <field name="inherit_id" ref="loyalty.loyalty_program_view_form"/>
+        <field name="arch" type="xml">
+            <field name="program_type" position="attributes">
+                <attribute name="options">{'blacklisted_values': ['gift_card', 'ewallet', 'consign']}</attribute>
+            </field>
+        </field>
+    </record>
+
+    <!-- 3. 清單檢視（保留 XML ID 避免 DB 孤立記錄） -->
     <record id="loyalty_program_view_tree_consign" model="ir.ui.view">
         <field name="name">loyalty.program.list.consign</field>
         <field name="model">loyalty.program</field>
@@ -40,7 +66,7 @@
         </field>
     </record>
 
-    <!-- 寄品方案動作 -->
+    <!-- 5. 寄品方案動作（獨立選單用） -->
     <record id="loyalty_program_consign_action" model="ir.actions.act_window">
         <field name="name">寄品方案</field>
         <field name="res_model">loyalty.program</field>
@@ -55,6 +81,14 @@
                 寄品卡讓客戶購買後寄存商品或服務，日後分次取用。
             </p>
         </field>
+    </record>
+
+    <!-- 6. 寄品方案動作使用禮品卡/電子錢包 form view -->
+    <record id="action_loyalty_program_form_consign" model="ir.actions.act_window.view">
+        <field name="view_mode">form</field>
+        <field name="sequence">2</field>
+        <field name="view_id" ref="loyalty.loyalty_program_gift_ewallet_view_form"/>
+        <field name="act_window_id" ref="loyalty_program_consign_action"/>
     </record>
 
 </odoo>
