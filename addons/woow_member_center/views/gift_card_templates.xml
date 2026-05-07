@@ -93,6 +93,13 @@
                     </t>
                 </div>
             </div>
+
+            <!-- chatter -->
+            <hr/>
+            <div id="gift_card_communication" class="mt-4">
+                <h3>溝通紀錄</h3>
+                <t t-call="portal.message_thread"/>
+            </div>
         </t>
     </template>
 

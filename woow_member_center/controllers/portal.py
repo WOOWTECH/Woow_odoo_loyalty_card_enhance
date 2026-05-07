@@ -156,6 +156,9 @@ class MemberCenterPortal(CustomerPortal):
             'page_name': 'mc_ewallet_detail',
             'card': card,
         }
+        values = self._get_page_view_values(
+            card, None, values, 'my_mc_ewallet_history', False, **kw,
+        )
         return request.render('woow_member_center.portal_mc_ewallet_detail', values)
 
     # ----------------------------------------------------------------
@@ -186,6 +189,9 @@ class MemberCenterPortal(CustomerPortal):
             'page_name': 'mc_loyalty_detail',
             'card': card,
         }
+        values = self._get_page_view_values(
+            card, None, values, 'my_mc_loyalty_history', False, **kw,
+        )
         return request.render('woow_member_center.portal_mc_loyalty_detail', values)
 
     # ----------------------------------------------------------------
@@ -220,6 +226,9 @@ class MemberCenterPortal(CustomerPortal):
             'card': card,
             'currency': currency,
         }
+        values = self._get_page_view_values(
+            card, None, values, 'my_mc_gift_card_history', False, **kw,
+        )
         return request.render('woow_member_center.portal_mc_gift_card_detail', values)
 
     # ----------------------------------------------------------------
@@ -250,6 +259,9 @@ class MemberCenterPortal(CustomerPortal):
             'page_name': 'mc_coupon_detail',
             'card': card,
         }
+        values = self._get_page_view_values(
+            card, None, values, 'my_mc_coupon_history', False, **kw,
+        )
         return request.render('woow_member_center.portal_mc_coupon_detail', values)
 
     # ----------------------------------------------------------------
