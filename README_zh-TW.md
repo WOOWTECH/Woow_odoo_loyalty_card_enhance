@@ -191,13 +191,38 @@ sequenceDiagram
 ### 後台畫面
 
 <p align="center">
+  <img src="docs/images/backend-consign-program-form.png" alt="寄品計劃表單" width="700"><br>
+  <em>寄品計劃表單——觸發商品與設定</em>
+</p>
+
+<p align="center">
   <img src="docs/images/backend-program-type-consign.png" alt="寄品計劃類型" width="700"><br>
   <em>忠誠計劃類型下拉選單中的寄品卡選項</em>
 </p>
 
 <p align="center">
+  <img src="docs/images/backend-consign-card-list.png" alt="寄品卡列表" width="700"><br>
+  <em>寄品卡列表視圖——所有卡片狀態概覽</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-consign-card-form.png" alt="寄品卡表單" width="700"><br>
+  <em>寄品卡表單——品項、數量及卡片詳情</em>
+</p>
+
+<p align="center">
   <img src="docs/images/backend-consign-line-form.png" alt="寄品明細表單" width="700"><br>
   <em>寄品明細表單——追蹤品項數量</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-consign-redemption.png" alt="核銷紀錄" width="700"><br>
+  <em>核銷紀錄——已核銷品項的稽核軌跡</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-sale-order-consign.png" alt="含寄品卡的銷售訂單" width="700"><br>
+  <em>含寄品卡指示器的銷售訂單</em>
 </p>
 
 <p align="center">

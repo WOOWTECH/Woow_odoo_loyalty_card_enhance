@@ -191,13 +191,38 @@ sequenceDiagram
 ### Backend Views
 
 <p align="center">
+  <img src="docs/images/backend-consign-program-form.png" alt="Consign Program Form" width="700"><br>
+  <em>Consignment program form — trigger products and configuration</em>
+</p>
+
+<p align="center">
   <img src="docs/images/backend-program-type-consign.png" alt="Consign Program Type" width="700"><br>
   <em>Consignment type in loyalty program type dropdown</em>
 </p>
 
 <p align="center">
+  <img src="docs/images/backend-consign-card-list.png" alt="Consign Card List" width="700"><br>
+  <em>Consignment card list view — all cards with status overview</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-consign-card-form.png" alt="Consign Card Form" width="700"><br>
+  <em>Consignment card form — items, quantities, and card details</em>
+</p>
+
+<p align="center">
   <img src="docs/images/backend-consign-line-form.png" alt="Consign Line Form" width="700"><br>
   <em>Consignment line form — tracking item quantities</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-consign-redemption.png" alt="Redemption Record" width="700"><br>
+  <em>Redemption record — audit trail of redeemed items</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/backend-sale-order-consign.png" alt="Sale Order with Consign" width="700"><br>
+  <em>Sale order with consignment card indicator</em>
 </p>
 
 <p align="center">
