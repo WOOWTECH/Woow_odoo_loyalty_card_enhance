@@ -31,6 +31,10 @@ class SaleOrder(models.Model):
         if not consign_programs:
             return
 
+        # Collect ALL trigger products across every active consign program
+        # so that no trigger product of any program is deposited as an item.
+        all_trigger_products = consign_programs.mapped('trigger_product_ids')
+
         for program in consign_programs:
             trigger_products = program.trigger_product_ids
             if not trigger_products:
@@ -66,11 +70,13 @@ class SaleOrder(models.Model):
             trigger_lines.write({'is_consigned': True})
 
             # 其他非觸發商品行存入寄品明細
+            # Exclude trigger products from ALL programs (not just this one)
+            # to prevent one program's trigger being deposited into another.
             other_lines = self.order_line.filtered(
-                lambda l, tp=trigger_products: (
+                lambda l, atp=all_trigger_products: (
                     not l.is_consigned
                     and l.product_id
-                    and l.product_id not in tp
+                    and l.product_id not in atp
                 )
             )
             for sol in other_lines:

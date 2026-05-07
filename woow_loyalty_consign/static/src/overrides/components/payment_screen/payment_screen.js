@@ -27,7 +27,8 @@ patch(PaymentScreen.prototype, {
                         });
                     }
                 }
-            } catch {
+            } catch (error) {
+                console.error("[ConsignRedemption] Failed to confirm redemptions:", error);
                 this.dialog.add(AlertDialog, {
                     title: _t("寄品核銷錯誤"),
                     body: _t("無法連接伺服器確認核銷，請聯繫管理員。"),

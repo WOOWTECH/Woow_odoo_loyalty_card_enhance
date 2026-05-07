@@ -27,7 +27,8 @@ patch(ProductScreen.prototype, {
                 "use_consign_card_code",
                 [[this.pos.config.id], code.base_code, partnerId]
             );
-        } catch {
+        } catch (error) {
+            console.error("[ConsignCard] Lookup RPC failed, falling back:", error);
             return super._onCouponScan(code);
         }
 
@@ -49,12 +50,15 @@ patch(ProductScreen.prototype, {
         this.consignDialog.add(ConsignCardPopup, {
             cardData,
             getPayload: async (consignSelection) => {
-                await this._addConsignLinesToOrder(consignSelection);
+                await this._addConsignLinesToOrder(
+                    consignSelection,
+                    cardData.consign_redemption_product_id
+                );
             },
         });
     },
 
-    async _addConsignLinesToOrder(consignSelection) {
+    async _addConsignLinesToOrder(consignSelection, redemptionProductId) {
         const order = this.pos.get_order();
 
         if (!order.uiState.consignRedemptions) {
@@ -62,10 +66,10 @@ patch(ProductScreen.prototype, {
         }
         order.uiState.consignRedemptions.push(consignSelection);
 
-        // Find the consign redemption product (created by data/consign_product_data.xml)
-        const consignProduct = this.pos.models["product.product"].find(
-            (p) => p.display_name === "寄品核銷"
-        );
+        // Find the consign redemption product by ID (returned from backend RPC)
+        const consignProduct = redemptionProductId
+            ? this.pos.models["product.product"].get(redemptionProductId)
+            : null;
         if (!consignProduct) {
             this.consignNotification.add("找不到寄品核銷商品，請確認已安裝模組。", {
                 type: "danger",

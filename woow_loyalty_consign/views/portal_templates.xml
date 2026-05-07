@@ -10,7 +10,7 @@
         </xpath>
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/woow_loyalty_consign/static/description/icon.png'"/>
+                <t t-set="icon" t-value="'fa-archive'"/>
                 <t t-set="title">寄品卡</t>
                 <t t-set="url" t-value="'/my/consign-cards'"/>
                 <t t-set="text">查看您的寄品卡與寄存品項</t>

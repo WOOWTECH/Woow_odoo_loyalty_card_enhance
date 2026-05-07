@@ -4,6 +4,14 @@ from odoo import models
 class PosConfig(models.Model):
     _inherit = 'pos.config'
 
+    def _get_consign_redemption_product_id(self):
+        """Return the consign redemption service product ID (XML ID lookup)."""
+        product = self.env.ref(
+            'woow_loyalty_consign.consign_redemption_product',
+            raise_if_not_found=False,
+        )
+        return product.id if product else False
+
     def use_consign_card_code(self, code, partner_id):
         """POS 掃碼驗證寄品卡，回傳卡片資訊及可核銷品項。"""
         self.ensure_one()
@@ -46,6 +54,7 @@ class PosConfig(models.Model):
                 'partner_id': card.partner_id.id,
                 'partner_name': card.partner_id.name,
                 'program_name': card.program_id.name,
+                'consign_redemption_product_id': self._get_consign_redemption_product_id(),
                 'lines': lines,
             },
         }
