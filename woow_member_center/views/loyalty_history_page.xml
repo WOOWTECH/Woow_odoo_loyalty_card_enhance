@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- 獨立交易紀錄歷史頁面（分頁 + 排序）                           -->
+    <!-- ============================================================ -->
+    <template id="portal_mc_card_history" name="Portal: 交易紀錄歷史">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">交易紀錄</t>
+            </t>
+
+            <t t-if="not history_lines">
+                <p class="alert alert-warning mt-3">
+                    目前沒有交易紀錄。
+                </p>
+            </t>
+
+            <t t-else="" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>日期</th>
+                        <th>說明</th>
+                        <th>關聯訂單</th>
+                        <th class="text-end">增加</th>
+                        <th class="text-end">使用</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="history_lines" t-as="line">
+                        <tr>
+                            <td>
+                                <t t-out="line.create_date" t-options="{'widget': 'date'}"/>
+                            </td>
+                            <td>
+                                <t t-out="line.description"/>
+                            </td>
+                            <td>
+                                <t t-if="line.order_id">
+                                    <t t-set="order_portal_url" t-value="line._get_order_portal_url()"/>
+                                    <t t-set="order_description" t-value="line._get_order_description()"/>
+                                    <a t-if="order_portal_url"
+                                       t-att-href="order_portal_url">
+                                        <t t-out="order_description"/>
+                                    </a>
+                                    <span t-else="" t-out="order_description"/>
+                                </t>
+                                <span t-else="" class="text-muted">—</span>
+                            </td>
+                            <td class="text-end">
+                                <span t-if="line.issued"
+                                      class="text-success fw-bold">
+                                    +<t t-out="line.card_id._format_points(line.issued)"/>
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <span t-if="line.used"
+                                      class="text-danger fw-bold">
+                                    -<t t-out="line.card_id._format_points(line.used)"/>
+                                </span>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+</odoo>
