@@ -15,6 +15,18 @@ class SaleOrder(models.Model):
                 order.order_line.filtered('is_consigned')
             )
 
+    def _get_program_domain(self):
+        """Exclude consign programs from sale_loyalty's automatic program
+        management.  Consign cards are handled entirely by
+        ``_action_create_consign_card`` and must not be touched by the
+        native ``_update_programs_and_rewards`` cleanup logic which would
+        otherwise delete zero-point nominative cards created by a
+        previous order.
+        """
+        domain = super()._get_program_domain()
+        domain.append(('program_type', '!=', 'consign'))
+        return domain
+
     def action_confirm(self):
         res = super().action_confirm()
         for order in self:
