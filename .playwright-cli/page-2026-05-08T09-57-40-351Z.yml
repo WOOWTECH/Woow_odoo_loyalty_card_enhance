@@ -1,0 +1,189 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - button [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]: 
+      - button "504" [ref=e4066] [cursor=pointer]
+    - img "標誌" [ref=e13]
+    - generic [ref=e15]:
+      - generic [ref=e4069]:
+        - generic [ref=e4070]: 
+        - textbox "搜尋產品⋯" [ref=e4071]
+      - button "" [ref=e4072] [cursor=pointer]:
+        - generic [ref=e4073]: 
+      - button "Mitchell Admin Mitchell Admin":
+        - img "Mitchell Admin"
+        - generic: Mitchell Admin
+      - button "" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: 
+  - generic [ref=e4074]:
+    - generic [ref=e4075]:
+      - generic [ref=e4077]:
+        - img [ref=e4078]: 
+        - heading "開始加入產品" [level=3] [ref=e4079]
+      - generic [ref=e4081]:
+        - button "Joel Willis" [ref=e5004] [cursor=pointer]:
+          - generic [ref=e5005]: Joel Willis
+        - button "內部備註" [disabled]
+        - button "動作" [ref=e4083] [cursor=pointer]
+    - generic [ref=e4085]:
+      - generic [ref=e4086]:
+        - button "類別 Misc" [ref=e4087] [cursor=pointer]:
+          - img "類別" [ref=e4089]
+          - generic [ref=e4090]: Misc
+        - button "類別 Desks" [ref=e4091] [cursor=pointer]:
+          - img "類別" [ref=e4093]
+          - generic [ref=e4094]: Desks
+        - button "類別 Chairs" [ref=e4095] [cursor=pointer]:
+          - img "類別" [ref=e4097]
+          - generic [ref=e4098]: Chairs
+      - generic [ref=e4099]:
+        - article "Acoustic Bloc Screens" [ref=e4100] [cursor=pointer]:
+          - img "產品訊息" [ref=e4102]: 
+          - img "Acoustic Bloc Screens" [ref=e4104]
+          - generic [ref=e4106]: Acoustic Bloc Screens
+        - article "Cabinet with Doors" [ref=e4107] [cursor=pointer]:
+          - img "產品訊息" [ref=e4109]: 
+          - img "Cabinet with Doors" [ref=e4111]
+          - generic [ref=e4113]: Cabinet with Doors
+        - article "Conference Chair" [ref=e4114] [cursor=pointer]:
+          - img "產品訊息" [ref=e4116]: 
+          - img "Conference Chair" [ref=e4118]
+          - generic [ref=e4120]: Conference Chair
+        - article "Corner Desk Left Sit" [ref=e4121] [cursor=pointer]:
+          - img "產品訊息" [ref=e4123]: 
+          - img "Corner Desk Left Sit" [ref=e4125]
+          - generic [ref=e4127]: Corner Desk Left Sit
+        - article "Corner Desk Right Sit" [ref=e4128] [cursor=pointer]:
+          - img "產品訊息" [ref=e4130]: 
+          - img "Corner Desk Right Sit" [ref=e4132]
+          - generic [ref=e4134]: Corner Desk Right Sit
+        - article "Customizable Desk" [ref=e4135] [cursor=pointer]:
+          - img "產品訊息" [ref=e4137]: 
+          - img "Customizable Desk" [ref=e4139]
+          - generic [ref=e4141]: Customizable Desk
+        - article "Desk Combination" [ref=e4142] [cursor=pointer]:
+          - img "產品訊息" [ref=e4144]: 
+          - img "Desk Combination" [ref=e4146]
+          - generic [ref=e4148]: Desk Combination
+        - article "Desk Organizer" [ref=e4149] [cursor=pointer]:
+          - img "產品訊息" [ref=e4151]: 
+          - img "Desk Organizer" [ref=e4153]
+          - generic [ref=e4155]: Desk Organizer
+        - article "Desk Pad" [ref=e4156] [cursor=pointer]:
+          - img "產品訊息" [ref=e4158]: 
+          - img "Desk Pad" [ref=e4160]
+          - generic [ref=e4162]: Desk Pad
+        - article "Desk Stand with Screen" [ref=e4163] [cursor=pointer]:
+          - img "產品訊息" [ref=e4165]: 
+          - img "Desk Stand with Screen" [ref=e4167]
+          - generic [ref=e4169]: Desk Stand with Screen
+        - article "Drawer" [ref=e4170] [cursor=pointer]:
+          - img "產品訊息" [ref=e4172]: 
+          - img "Drawer" [ref=e4174]
+          - generic [ref=e4176]: Drawer
+        - article "Drawer Black" [ref=e4177] [cursor=pointer]:
+          - img "產品訊息" [ref=e4179]: 
+          - img "Drawer Black" [ref=e4181]
+          - generic [ref=e4183]: Drawer Black
+        - article "Flipover" [ref=e4184] [cursor=pointer]:
+          - img "產品訊息" [ref=e4186]: 
+          - img "Flipover" [ref=e4188]
+          - generic [ref=e4190]: Flipover
+        - article "Four Person Desk" [ref=e4191] [cursor=pointer]:
+          - img "產品訊息" [ref=e4193]: 
+          - img "Four Person Desk" [ref=e4195]
+          - generic [ref=e4197]: Four Person Desk
+        - article "Gift Card" [ref=e4198] [cursor=pointer]:
+          - img "產品訊息" [ref=e4200]: 
+          - img "Gift Card" [ref=e4202]
+          - generic [ref=e4204]: Gift Card
+        - article "Individual Workplace" [ref=e4205] [cursor=pointer]:
+          - img "產品訊息" [ref=e4207]: 
+          - img "Individual Workplace" [ref=e4209]
+          - generic [ref=e4211]: Individual Workplace
+        - article "Large Cabinet" [ref=e4212] [cursor=pointer]:
+          - img "產品訊息" [ref=e4214]: 
+          - img "Large Cabinet" [ref=e4216]
+          - generic [ref=e4218]: Large Cabinet
+        - article "Large Desk" [ref=e4219] [cursor=pointer]:
+          - img "產品訊息" [ref=e4221]: 
+          - img "Large Desk" [ref=e4223]
+          - generic [ref=e4225]: Large Desk
+        - article "Large Meeting Table" [ref=e4226] [cursor=pointer]:
+          - img "產品訊息" [ref=e4228]: 
+          - img "Large Meeting Table" [ref=e4230]
+          - generic [ref=e4232]: Large Meeting Table
+        - article "LED Lamp" [ref=e4233] [cursor=pointer]:
+          - img "產品訊息" [ref=e4235]: 
+          - img "LED Lamp" [ref=e4237]
+          - generic [ref=e4239]: LED Lamp
+        - article "Letter Tray" [ref=e4240] [cursor=pointer]:
+          - img "產品訊息" [ref=e4242]: 
+          - img "Letter Tray" [ref=e4244]
+          - generic [ref=e4246]: Letter Tray
+        - article "Magnetic Board" [ref=e4247] [cursor=pointer]:
+          - img "產品訊息" [ref=e4249]: 
+          - img "Magnetic Board" [ref=e4251]
+          - generic [ref=e4253]: Magnetic Board
+        - article "Monitor Stand" [ref=e4254] [cursor=pointer]:
+          - img "產品訊息" [ref=e4256]: 
+          - img "Monitor Stand" [ref=e4258]
+          - generic [ref=e4260]: Monitor Stand
+        - article "Newspaper Rack" [ref=e4261] [cursor=pointer]:
+          - img "產品訊息" [ref=e4263]: 
+          - img "Newspaper Rack" [ref=e4265]
+          - generic [ref=e4267]: Newspaper Rack
+        - article "Office Chair" [ref=e4268] [cursor=pointer]:
+          - img "產品訊息" [ref=e4270]: 
+          - img "Office Chair" [ref=e4272]
+          - generic [ref=e4274]: Office Chair
+        - article "Office Chair Black" [ref=e4275] [cursor=pointer]:
+          - img "產品訊息" [ref=e4277]: 
+          - img "Office Chair Black" [ref=e4279]
+          - generic [ref=e4281]: Office Chair Black
+        - article "Office Combo" [ref=e4282] [cursor=pointer]:
+          - img "產品訊息" [ref=e4284]: 
+          - img "Office Combo" [ref=e4286]
+          - generic [ref=e4288]: Office Combo
+        - article "Office Design Software" [ref=e4289] [cursor=pointer]:
+          - img "產品訊息" [ref=e4291]: 
+          - img "Office Design Software" [ref=e4293]
+          - generic [ref=e4295]: Office Design Software
+        - article "Office Lamp" [ref=e4296] [cursor=pointer]:
+          - img "產品訊息" [ref=e4298]: 
+          - img "Office Lamp" [ref=e4300]
+          - generic [ref=e4302]: Office Lamp
+        - article "Pedal Bin" [ref=e4303] [cursor=pointer]:
+          - img "產品訊息" [ref=e4305]: 
+          - img "Pedal Bin" [ref=e4307]
+          - generic [ref=e4309]: Pedal Bin
+        - article "Small Shelf" [ref=e4310] [cursor=pointer]:
+          - img "產品訊息" [ref=e4312]: 
+          - img "Small Shelf" [ref=e4314]
+          - generic [ref=e4316]: Small Shelf
+        - article "Storage Box" [ref=e4317] [cursor=pointer]:
+          - img "產品訊息" [ref=e4319]: 
+          - img "Storage Box" [ref=e4321]
+          - generic [ref=e4323]: Storage Box
+        - article "Three-Seat Sofa" [ref=e4324] [cursor=pointer]:
+          - img "產品訊息" [ref=e4326]: 
+          - img "Three-Seat Sofa" [ref=e4328]
+          - generic [ref=e4330]: Three-Seat Sofa
+        - article "Top-up eWallet" [ref=e4331] [cursor=pointer]:
+          - img "產品訊息" [ref=e4333]: 
+          - generic [ref=e4335]: Top-up eWallet
+        - article "Virtual Home Staging" [ref=e4336] [cursor=pointer]:
+          - img "產品訊息" [ref=e4338]: 
+          - generic [ref=e4340]: Virtual Home Staging
+        - article "Virtual Interior Design" [ref=e4341] [cursor=pointer]:
+          - img "產品訊息" [ref=e4343]: 
+          - generic [ref=e4345]: Virtual Interior Design
+        - article "Wall Shelf Unit" [ref=e4346] [cursor=pointer]:
+          - img "產品訊息" [ref=e4348]: 
+          - img "Wall Shelf Unit" [ref=e4350]
+          - generic [ref=e4352]: Wall Shelf Unit
+        - article "Whiteboard Pen" [ref=e4353] [cursor=pointer]:
+          - img "產品訊息" [ref=e4355]: 
+          - img "Whiteboard Pen" [ref=e4357]
+          - generic [ref=e4359]: Whiteboard Pen

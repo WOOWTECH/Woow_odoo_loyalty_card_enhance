@@ -1,0 +1,64 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - button [ref=e6] [cursor=pointer]:
+      - generic [ref=e7]: 
+    - img "標誌" [ref=e13]
+    - generic [ref=e15]:
+      - button "Mitchell Admin Mitchell Admin":
+        - img "Mitchell Admin"
+        - generic: Mitchell Admin
+      - button "" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: 
+  - generic [ref=e4018]:
+    - generic [ref=e4019]:
+      - generic [ref=e4020]:
+        - generic [ref=e4021]:
+          - generic [ref=e4022]: 
+          - generic [ref=e4023]: 付款成功
+          - generic [ref=e4024]:
+            - generic [ref=e4025]: $ 0.00
+            - generic [ref=e4026] [cursor=pointer]: 編輯付款
+        - separator [ref=e4027]
+        - generic [ref=e4028]:
+          - button " 列印完整收據" [ref=e4030] [cursor=pointer]:
+            - generic [ref=e4031]: 
+            - text: 列印完整收據
+          - generic [ref=e4033]:
+            - textbox "e.g. john.doe@mail.com" [ref=e4034]: joel.willis63@example.com
+            - button "" [ref=e4036] [cursor=pointer]:
+              - generic [ref=e4037]: 
+      - button "新訂單" [ref=e4039] [cursor=pointer]
+    - generic [ref=e4042]:
+      - img "標誌" [ref=e4043]
+      - generic [ref=e4045]:
+        - generic [ref=e4046]: My Company (San Francisco)
+        - generic [ref=e4047]: 電話：+1 555-555-5556
+        - generic [ref=e4048]: info@yourcompany.com
+        - generic [ref=e4049]: http://www.example.com
+        - generic [ref=e4050]:
+          - generic [ref=e4051]: "--------------------------------"
+          - generic [ref=e4052]: 服務員：Mitchell Admin
+        - generic [ref=e4053]: "503"
+      - generic [ref=e4054]:
+        - generic:
+          - listitem:
+            - generic:
+              - generic:
+                - generic: 寄品核銷
+                - generic: $ 0.00
+              - list:
+                - listitem: 1.00 x $ 0.00 / Units
+                - listitem:
+                  - img "客戶備註": 
+                  - text: "[寄品] 抹茶拿鐵"
+      - generic [ref=e4055]: "--------------------------------"
+      - generic [ref=e4056]:
+        - text: 總計
+        - generic [ref=e4057]: $ 0.00
+      - generic [ref=e4059]:
+        - text: 客戶
+        - generic [ref=e4060]: Joel Willis
+      - generic [ref=e4061]:
+        - paragraph [ref=e4062]: 由 Odoo 驅動
+        - generic [ref=e4063]: 訂單 00005-001-0003
+        - generic [ref=e4064]: 2026年05月08日 17時56分36秒

@@ -1,0 +1,57 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - button [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]: 
+      - button "504" [ref=e4066] [cursor=pointer]
+    - img "標誌" [ref=e13]
+    - generic [ref=e15]:
+      - button "Mitchell Admin Mitchell Admin":
+        - img "Mitchell Admin"
+        - generic: Mitchell Admin
+      - button "" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: 
+  - generic [ref=e5102]:
+    - generic [ref=e5103]:
+      - generic [ref=e5105]:
+        - generic [ref=e5107] [cursor=pointer]:
+          - img [ref=e5108]
+          - generic [ref=e5109]: Cash
+        - generic [ref=e5111] [cursor=pointer]:
+          - img [ref=e5112]
+          - generic [ref=e5113]: Card
+        - generic [ref=e5115] [cursor=pointer]:
+          - img [ref=e5116]
+          - generic [ref=e5117]: Customer Account
+      - generic [ref=e5119]:
+        - button "客戶 Joel Willis" [ref=e5120] [cursor=pointer]:
+          - img "客戶" [ref=e5121]: 
+          - generic [ref=e5122]: Joel Willis
+        - button " 發票 " [ref=e5123] [cursor=pointer]:
+          - generic [ref=e5124]:
+            - generic [ref=e5125]: 
+            - text: 發票
+          - generic [ref=e5126]: 
+      - generic [ref=e5127]:
+        - button "1" [ref=e5128] [cursor=pointer]
+        - button "2" [ref=e5129] [cursor=pointer]
+        - button "3" [ref=e5130] [cursor=pointer]
+        - button "+10" [ref=e5131] [cursor=pointer]
+        - button "4" [ref=e5132] [cursor=pointer]
+        - button "5" [ref=e5133] [cursor=pointer]
+        - button "6" [ref=e5134] [cursor=pointer]
+        - button "+20" [ref=e5135] [cursor=pointer]
+        - button "7" [ref=e5136] [cursor=pointer]
+        - button "8" [ref=e5137] [cursor=pointer]
+        - button "9" [ref=e5138] [cursor=pointer]
+        - button "+50" [ref=e5139] [cursor=pointer]
+        - button "+/-" [ref=e5140] [cursor=pointer]
+        - button "0" [ref=e5141] [cursor=pointer]
+        - button "." [ref=e5142] [cursor=pointer]
+        - button "⌫" [ref=e5143] [cursor=pointer]
+      - generic [ref=e5144]:
+        - button "返回" [ref=e5145] [cursor=pointer]
+        - button "核實" [ref=e5146] [cursor=pointer]
+    - generic [ref=e5147]:
+      - generic [ref=e5149]: $ 0.00
+      - generic [ref=e5151]: 請選擇付款方式
