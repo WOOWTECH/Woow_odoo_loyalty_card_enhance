@@ -1,0 +1,203 @@
+- generic [ref=e2]:
+  - link "Skip to Content" [ref=e3] [cursor=pointer]:
+    - /url: "#wrap"
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "Logo of My Website" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "Logo of My Website" [ref=e8]:
+            - img "My Website" [ref=e9]
+        - menu [ref=e10]:
+          - menuitem "Home" [ref=e11] [cursor=pointer]
+          - menuitem "Contact us" [ref=e12] [cursor=pointer]
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - button "" [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]: 
+          - listitem [ref=e17]:
+            - link " +1 555-555-5556" [ref=e19] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+              - generic [ref=e20]: 
+              - generic [ref=e21]: +1 555-555-5556
+          - listitem [ref=e22]:
+            - button "Joel Willis" [ref=e23] [cursor=pointer]
+            - text:  
+          - listitem [ref=e24]:
+            - link "Contact Us" [ref=e28] [cursor=pointer]:
+              - /url: /contactus
+  - main [ref=e29]:
+    - list [ref=e32]:
+      - listitem [ref=e33]:
+        - link "Home" [ref=e34] [cursor=pointer]:
+          - /url: /my/home
+          - generic [ref=e35]: 
+      - listitem [ref=e36]:
+        - text: /
+        - link "會員中心" [ref=e37] [cursor=pointer]:
+          - /url: /my/member-center
+      - listitem [ref=e38]:
+        - text: /
+        - link "禮品卡" [ref=e39] [cursor=pointer]:
+          - /url: /my/member-center/gift-cards
+      - listitem [ref=e40]: / Gift Cards
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e45]:
+          - heading "Gift Cards" [level=3] [ref=e47]
+          - generic [ref=e49]: 892 $
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - strong [ref=e53]: 卡號：
+            - text: 044d-5506-484d
+          - generic [ref=e54]:
+            - strong [ref=e55]: 建立日期：
+            - text: 05/07/2026
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "交易紀錄" [level=5] [ref=e58]
+          - generic [ref=e59]: 2 筆
+        - table [ref=e62]:
+          - rowgroup [ref=e63]:
+            - row "日期 說明 關聯訂單 增加 使用" [ref=e64]:
+              - columnheader "日期" [ref=e65]
+              - columnheader "說明" [ref=e66]
+              - columnheader "關聯訂單" [ref=e67]
+              - columnheader "增加" [ref=e68]
+              - columnheader "使用" [ref=e69]
+          - rowgroup [ref=e70]:
+            - row "05/08/2026 訂單 S00073 S00073 -$ 70.00" [ref=e71]:
+              - cell "05/08/2026" [ref=e72]
+              - cell "訂單 S00073" [ref=e73]
+              - cell "S00073" [ref=e74]:
+                - link "S00073" [ref=e75] [cursor=pointer]:
+                  - /url: /my/orders/73?access_token=cf5f2d8d-ac40-4591-859d-80bd3a20abf6
+              - cell [ref=e76]
+              - cell "-$ 70.00" [ref=e77]
+            - row "05/08/2026 Order S00067 S00067 -$ 38.25" [ref=e78]:
+              - cell "05/08/2026" [ref=e79]
+              - cell "Order S00067" [ref=e80]
+              - cell "S00067" [ref=e81]:
+                - link "S00067" [ref=e82] [cursor=pointer]:
+                  - /url: /my/orders/67?access_token=47f7f5c4-2c56-4d65-a5f3-0caa00662f17
+              - cell [ref=e83]
+              - cell "-$ 38.25" [ref=e84]
+      - separator [ref=e85]
+      - generic [ref=e86]:
+        - heading "溝通紀錄" [level=3] [ref=e87]
+        - generic [ref=e90]:
+          - generic [ref=e93]:
+            - img "Avatar of user" [ref=e95]
+            - generic [ref=e96]:
+              - generic [ref=e97]:
+                - textbox "Write a message…" [ref=e99]
+                - button "Emojis" [ref=e102] [cursor=pointer]:
+                  - generic [ref=e103]: 
+              - generic [ref=e104]:
+                - button "Send" [disabled]
+                - button "Attach files" [ref=e108] [cursor=pointer]:
+                  - generic [ref=e109]: 
+          - generic [ref=e112]:
+            - generic [ref=e114]:
+              - separator [ref=e115]
+              - generic [ref=e116]: May 7, 2026
+              - separator [ref=e117]
+            - group "Note" [ref=e118]:
+              - generic [ref=e119]:
+                - img [ref=e122]
+                - generic [ref=e123]:
+                  - generic [ref=e124]:
+                    - strong [ref=e126]: Mitchell Admin
+                    - generic "5/7/2026, 10:42:59 PM" [ref=e127]: Yesterday at 10:42 PM
+                  - paragraph [ref=e135]: <p>【消費紀錄】禮品卡消費扣款<br/>消費金額：$280<br/>消費項目：下午茶雙人組<br/>消費門市：台北松山店<br/>交易時間：2026-05-07 22:42<br/>變動前餘額：$1150 → 變動後餘額：$870</p>
+            - group "Note" [ref=e136]:
+              - generic [ref=e137]:
+                - img [ref=e140]
+                - generic [ref=e141]:
+                  - generic [ref=e142]:
+                    - strong [ref=e144]: Mitchell Admin
+                    - generic "5/7/2026, 10:42:59 PM" [ref=e145]: Yesterday at 10:42 PM
+                  - paragraph [ref=e153]: <p>【消費紀錄】禮品卡消費扣款<br/>消費金額：$350<br/>消費項目：生日蛋糕套餐<br/>消費門市：板橋大遠百店<br/>交易時間：2026-05-07 22:42<br/>變動前餘額：$1500 → 變動後餘額：$1150</p>
+            - group "Note" [ref=e154]:
+              - generic [ref=e155]:
+                - img [ref=e158]
+                - generic [ref=e159]:
+                  - generic [ref=e160]:
+                    - strong [ref=e162]: Mitchell Admin
+                    - generic "5/7/2026, 9:41:19 PM" [ref=e163]: Yesterday at 9:41 PM
+                  - paragraph [ref=e171]: 禮品卡可在全台所有門市使用，無使用期限限制。您目前餘額為$1,500，歡迎隨時使用！
+            - group "Note" [ref=e172]:
+              - generic [ref=e173]:
+                - img [ref=e176]
+                - generic [ref=e177]:
+                  - generic [ref=e178]:
+                    - strong [ref=e180]: Joel Willis
+                    - generic "5/7/2026, 9:35:50 PM" [ref=e181]: Yesterday at 9:35 PM
+                  - paragraph [ref=e189]: 這張禮品卡可以在哪些門市使用？有效期限是多久？
+    - generic: 
+  - contentinfo [ref=e190]:
+    - generic [ref=e194]:
+      - generic [ref=e195]:
+        - heading "Useful Links" [level=5] [ref=e196]
+        - list [ref=e197]:
+          - listitem [ref=e198]:
+            - link "Home" [ref=e199] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e200]:
+            - link "About us" [ref=e201] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e202]:
+            - link "Products" [ref=e203] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e204]:
+            - link "Services" [ref=e205] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e206]:
+            - link "Legal" [ref=e207] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e208]:
+            - link "Contact us" [ref=e209] [cursor=pointer]:
+              - /url: /contactus
+      - generic [ref=e210]:
+        - heading "About us" [level=5] [ref=e211]
+        - paragraph [ref=e212]:
+          - text: We are a team of passionate people whose goal is to improve everyone's life through disruptive products. We build great products to solve your business problems.
+          - text: Our products are designed for small to medium size companies willing to optimize their performance.
+      - generic [ref=e213]:
+        - heading "Connect with us" [level=5] [ref=e214]
+        - list [ref=e215]:
+          - listitem [ref=e216]:
+            - generic [ref=e217]: 
+            - link "Contact us" [ref=e219] [cursor=pointer]:
+              - /url: /contactus
+          - listitem [ref=e220]:
+            - generic [ref=e221]: 
+            - link "info@yourcompany.example.com" [ref=e223] [cursor=pointer]:
+              - /url: mailto:info@yourcompany.example.com
+          - listitem [ref=e224]:
+            - generic [ref=e225]: 
+            - link "+1 555-555-5556" [ref=e227] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+        - generic [ref=e228]:
+          - link "Facebook" [ref=e229] [cursor=pointer]:
+            - /url: /website/social/facebook
+            - generic [ref=e230]: 
+          - link "X" [ref=e231] [cursor=pointer]:
+            - /url: /website/social/twitter
+            - generic [ref=e232]: 
+          - link "LinkedIn" [ref=e233] [cursor=pointer]:
+            - /url: /website/social/linkedin
+            - generic [ref=e234]: 
+          - link "Extra page" [ref=e235] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e236]: 
+    - generic [ref=e239]:
+      - generic [ref=e240]: Copyright © Company name
+      - generic [ref=e242]:
+        - text: Powered by
+        - link "Odoo" [ref=e243] [cursor=pointer]:
+          - /url: http://www.odoo.com?utm_source=db&utm_medium=website
+          - img "Odoo" [ref=e244]
+        - text: "- Create a"
+        - link "free website" [ref=e245] [cursor=pointer]:
+          - /url: http://www.odoo.com/app/website?utm_source=db&utm_medium=website

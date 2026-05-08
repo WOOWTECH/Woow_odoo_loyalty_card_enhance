@@ -1,0 +1,278 @@
+- generic [ref=e2]:
+  - link "Skip to Content" [ref=e3] [cursor=pointer]:
+    - /url: "#wrap"
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "Logo of My Website" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "Logo of My Website" [ref=e8]:
+            - img "My Website" [ref=e9]
+        - menu [ref=e10]:
+          - menuitem "Home" [ref=e11] [cursor=pointer]
+          - menuitem "Contact us" [ref=e12] [cursor=pointer]
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - button "" [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]: 
+          - listitem [ref=e17]:
+            - link " +1 555-555-5556" [ref=e19] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+              - generic [ref=e20]: 
+              - generic [ref=e21]: +1 555-555-5556
+          - listitem [ref=e22]:
+            - button "Joel Willis" [ref=e23] [cursor=pointer]
+            - text:  
+          - listitem [ref=e24]:
+            - link "Contact Us" [ref=e28] [cursor=pointer]:
+              - /url: /contactus
+  - main [ref=e29]:
+    - list [ref=e32]:
+      - listitem [ref=e33]:
+        - link "Home" [ref=e34] [cursor=pointer]:
+          - /url: /my/home
+          - generic [ref=e35]: 
+      - listitem [ref=e36]:
+        - text: /
+        - link "會員中心" [ref=e37] [cursor=pointer]:
+          - /url: /my/member-center
+      - listitem [ref=e38]:
+        - text: /
+        - link "集點卡" [ref=e39] [cursor=pointer]:
+          - /url: /my/member-center/loyalty
+      - listitem [ref=e40]: / Loyalty Program
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e45]:
+          - heading "Loyalty Program" [level=3] [ref=e47]
+          - generic [ref=e49]: 3,476 Loyalty Points
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - strong [ref=e53]: 卡號：
+            - text: 044b-470e-4be7
+          - generic [ref=e54]:
+            - strong [ref=e55]: 建立日期：
+            - text: 05/07/2026
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "交易紀錄" [level=5] [ref=e58]
+          - generic [ref=e59]: 10 筆
+        - table [ref=e62]:
+          - rowgroup [ref=e63]:
+            - row "日期 說明 關聯訂單 增加 使用" [ref=e64]:
+              - columnheader "日期" [ref=e65]
+              - columnheader "說明" [ref=e66]
+              - columnheader "關聯訂單" [ref=e67]
+              - columnheader "增加" [ref=e68]
+              - columnheader "使用" [ref=e69]
+          - rowgroup [ref=e70]:
+            - row "05/08/2026 訂單 S00076 S00076 +595 Loyalty Points" [ref=e71]:
+              - cell "05/08/2026" [ref=e72]
+              - cell "訂單 S00076" [ref=e73]
+              - cell "S00076" [ref=e74]:
+                - link "S00076" [ref=e75] [cursor=pointer]:
+                  - /url: /my/orders/76?access_token=4b99e6dc-f693-4daa-a446-d5635509ed03
+              - cell "+595 Loyalty Points" [ref=e76]
+              - cell [ref=e77]
+            - row "05/08/2026 訂單 S00075 S00075 +2880 Loyalty Points" [ref=e78]:
+              - cell "05/08/2026" [ref=e79]
+              - cell "訂單 S00075" [ref=e80]
+              - cell "S00075" [ref=e81]:
+                - link "S00075" [ref=e82] [cursor=pointer]:
+                  - /url: /my/orders/75?access_token=829d9c7c-aeda-4946-8bc2-7930678634b6
+              - cell "+2880 Loyalty Points" [ref=e83]
+              - cell [ref=e84]
+            - row "05/08/2026 訂單 S00074 S00074 +158 Loyalty Points -6570 Loyalty Points" [ref=e85]:
+              - cell "05/08/2026" [ref=e86]
+              - cell "訂單 S00074" [ref=e87]
+              - cell "S00074" [ref=e88]:
+                - link "S00074" [ref=e89] [cursor=pointer]:
+                  - /url: /my/orders/74?access_token=761941e5-f15f-4643-8fbc-8d4289bd3dd1
+              - cell "+158 Loyalty Points" [ref=e90]
+              - cell "-6570 Loyalty Points" [ref=e91]
+            - row "05/08/2026 訂單 S00073 S00073 +700 Loyalty Points" [ref=e92]:
+              - cell "05/08/2026" [ref=e93]
+              - cell "訂單 S00073" [ref=e94]
+              - cell "S00073" [ref=e95]:
+                - link "S00073" [ref=e96] [cursor=pointer]:
+                  - /url: /my/orders/73?access_token=cf5f2d8d-ac40-4591-859d-80bd3a20abf6
+              - cell "+700 Loyalty Points" [ref=e97]
+              - cell [ref=e98]
+            - row "05/08/2026 訂單 S00072 S00072 +3200 Loyalty Points" [ref=e99]:
+              - cell "05/08/2026" [ref=e100]
+              - cell "訂單 S00072" [ref=e101]
+              - cell "S00072" [ref=e102]:
+                - link "S00072" [ref=e103] [cursor=pointer]:
+                  - /url: /my/orders/72?access_token=89d1fe35-7f33-4ead-828b-5c3e6315f663
+              - cell "+3200 Loyalty Points" [ref=e104]
+              - cell [ref=e105]
+            - row "05/08/2026 Order S00071 S00071 +1249.50 Loyalty Points" [ref=e106]:
+              - cell "05/08/2026" [ref=e107]
+              - cell "Order S00071" [ref=e108]
+              - cell "S00071" [ref=e109]:
+                - link "S00071" [ref=e110] [cursor=pointer]:
+                  - /url: /my/orders/71?access_token=3f57fa2a-433a-47c8-87a2-dd510b7e92d7
+              - cell "+1249.50 Loyalty Points" [ref=e111]
+              - cell [ref=e112]
+            - row "05/08/2026 Order S00070 S00070 +1260 Loyalty Points" [ref=e113]:
+              - cell "05/08/2026" [ref=e114]
+              - cell "Order S00070" [ref=e115]
+              - cell "S00070" [ref=e116]:
+                - link "S00070" [ref=e117] [cursor=pointer]:
+                  - /url: /my/orders/70?access_token=5cd93544-bde9-4879-9f47-32324b1d741a
+              - cell "+1260 Loyalty Points" [ref=e118]
+              - cell [ref=e119]
+            - row "05/08/2026 Order S00069 S00069 +316 Loyalty Points -4395 Loyalty Points" [ref=e120]:
+              - cell "05/08/2026" [ref=e121]
+              - cell "Order S00069" [ref=e122]
+              - cell "S00069" [ref=e123]:
+                - link "S00069" [ref=e124] [cursor=pointer]:
+                  - /url: /my/orders/69?access_token=8cc19c01-3c4a-42ac-af15-e24ef3f13736
+              - cell "+316 Loyalty Points" [ref=e125]
+              - cell "-4395 Loyalty Points" [ref=e126]
+            - row "05/08/2026 Order S00067 S00067 +382.50 Loyalty Points" [ref=e127]:
+              - cell "05/08/2026" [ref=e128]
+              - cell "Order S00067" [ref=e129]
+              - cell "S00067" [ref=e130]:
+                - link "S00067" [ref=e131] [cursor=pointer]:
+                  - /url: /my/orders/67?access_token=47f7f5c4-2c56-4d65-a5f3-0caa00662f17
+              - cell "+382.50 Loyalty Points" [ref=e132]
+              - cell [ref=e133]
+            - row "05/08/2026 Order S00066 S00066 +3200 Loyalty Points" [ref=e134]:
+              - cell "05/08/2026" [ref=e135]
+              - cell "Order S00066" [ref=e136]
+              - cell "S00066" [ref=e137]:
+                - link "S00066" [ref=e138] [cursor=pointer]:
+                  - /url: /my/orders/66?access_token=4500227b-7587-460a-83ea-7e7af77f3ee1
+              - cell "+3200 Loyalty Points" [ref=e139]
+              - cell [ref=e140]
+      - separator [ref=e141]
+      - generic [ref=e142]:
+        - heading "溝通紀錄" [level=3] [ref=e143]
+        - generic [ref=e146]:
+          - generic [ref=e149]:
+            - img "Avatar of user" [ref=e151]
+            - generic [ref=e152]:
+              - generic [ref=e153]:
+                - textbox "Write a message…" [ref=e155]
+                - button "Emojis" [ref=e158] [cursor=pointer]:
+                  - generic [ref=e159]: 
+              - generic [ref=e160]:
+                - button "Send" [disabled]
+                - button "Attach files" [ref=e164] [cursor=pointer]:
+                  - generic [ref=e165]: 
+          - generic [ref=e167]:
+            - generic [ref=e168]:
+              - generic [ref=e170]:
+                - separator [ref=e171]
+                - generic [ref=e172]: May 7, 2026
+                - separator [ref=e173]
+              - group "Note" [ref=e174]:
+                - generic [ref=e175]:
+                  - img [ref=e178]
+                  - generic [ref=e179]:
+                    - generic [ref=e180]:
+                      - strong [ref=e182]: Mitchell Admin
+                      - generic "5/7/2026, 10:42:59 PM" [ref=e183]: Yesterday at 10:42 PM
+                    - paragraph [ref=e191]: <p>【兌換紀錄】集點折抵消費<br/>折抵說明：消費金額 $800，使用 200 點折抵 $200<br/>實付金額：$600<br/>消費門市：高雄夢時代店<br/>交易時間：2026-05-07 22:42<br/>變動前點數：2000 → 變動後點數：1800</p>
+              - group "Note" [ref=e192]:
+                - generic [ref=e193]:
+                  - img [ref=e196]
+                  - generic [ref=e197]:
+                    - generic [ref=e198]:
+                      - strong [ref=e200]: Mitchell Admin
+                      - generic "5/7/2026, 10:42:59 PM" [ref=e201]: Yesterday at 10:42 PM
+                    - paragraph [ref=e209]: <p>【集點紀錄】消費累積點數<br/>消費金額：$1,500<br/>獲得點數：150 Points (每消費$10得1點)<br/>消費門市：台北忠孝店<br/>交易時間：2026-05-07 22:42<br/>變動前點數：1850 → 變動後點數：2000</p>
+              - group "Note" [ref=e210]:
+                - generic [ref=e211]:
+                  - img [ref=e214]
+                  - generic [ref=e215]:
+                    - generic [ref=e216]:
+                      - strong [ref=e218]: Mitchell Admin
+                      - generic "5/7/2026, 10:42:59 PM" [ref=e219]: Yesterday at 10:42 PM
+                    - paragraph [ref=e227]: <p>【兌換紀錄】集點兌換商品<br/>兌換品項：精品咖啡豆禮盒<br/>扣除點數：500 Points<br/>兌換門市：台中逢甲店<br/>交易時間：2026-05-07 22:42<br/>變動前點數：2350 → 變動後點數：1850</p>
+              - group "Note" [ref=e228]:
+                - generic [ref=e229]:
+                  - img [ref=e232]
+                  - generic [ref=e233]:
+                    - generic [ref=e234]:
+                      - strong [ref=e236]: Mitchell Admin
+                      - generic "5/7/2026, 9:40:40 PM" [ref=e237]: Yesterday at 9:40 PM
+                    - paragraph [ref=e245]: 集點卡點數可兌換店內指定商品或折抵消費金額，詳細兌換清單請參考門市公告。目前您有2350點可使用！
+              - group "Note" [ref=e246]:
+                - generic [ref=e247]:
+                  - img [ref=e250]
+                  - generic [ref=e251]:
+                    - generic [ref=e252]:
+                      - strong [ref=e254]: Joel Willis
+                      - generic "5/7/2026, 9:33:24 PM" [ref=e255]: Yesterday at 9:33 PM
+                    - paragraph [ref=e263]: 請問集點卡的點數可以兌換什麼獎勵？
+            - button "" [ref=e264] [cursor=pointer]:
+              - generic [ref=e265]: 
+    - generic: 
+  - contentinfo [ref=e266]:
+    - generic [ref=e270]:
+      - generic [ref=e271]:
+        - heading "Useful Links" [level=5] [ref=e272]
+        - list [ref=e273]:
+          - listitem [ref=e274]:
+            - link "Home" [ref=e275] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e276]:
+            - link "About us" [ref=e277] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e278]:
+            - link "Products" [ref=e279] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e280]:
+            - link "Services" [ref=e281] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e282]:
+            - link "Legal" [ref=e283] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e284]:
+            - link "Contact us" [ref=e285] [cursor=pointer]:
+              - /url: /contactus
+      - generic [ref=e286]:
+        - heading "About us" [level=5] [ref=e287]
+        - paragraph [ref=e288]:
+          - text: We are a team of passionate people whose goal is to improve everyone's life through disruptive products. We build great products to solve your business problems.
+          - text: Our products are designed for small to medium size companies willing to optimize their performance.
+      - generic [ref=e289]:
+        - heading "Connect with us" [level=5] [ref=e290]
+        - list [ref=e291]:
+          - listitem [ref=e292]:
+            - generic [ref=e293]: 
+            - link "Contact us" [ref=e295] [cursor=pointer]:
+              - /url: /contactus
+          - listitem [ref=e296]:
+            - generic [ref=e297]: 
+            - link "info@yourcompany.example.com" [ref=e299] [cursor=pointer]:
+              - /url: mailto:info@yourcompany.example.com
+          - listitem [ref=e300]:
+            - generic [ref=e301]: 
+            - link "+1 555-555-5556" [ref=e303] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+        - generic [ref=e304]:
+          - link "Facebook" [ref=e305] [cursor=pointer]:
+            - /url: /website/social/facebook
+            - generic [ref=e306]: 
+          - link "X" [ref=e307] [cursor=pointer]:
+            - /url: /website/social/twitter
+            - generic [ref=e308]: 
+          - link "LinkedIn" [ref=e309] [cursor=pointer]:
+            - /url: /website/social/linkedin
+            - generic [ref=e310]: 
+          - link "Extra page" [ref=e311] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e312]: 
+    - generic [ref=e315]:
+      - generic [ref=e316]: Copyright © Company name
+      - generic [ref=e318]:
+        - text: Powered by
+        - link "Odoo" [ref=e319] [cursor=pointer]:
+          - /url: http://www.odoo.com?utm_source=db&utm_medium=website
+          - img "Odoo" [ref=e320]
+        - text: "- Create a"
+        - link "free website" [ref=e321] [cursor=pointer]:
+          - /url: http://www.odoo.com/app/website?utm_source=db&utm_medium=website

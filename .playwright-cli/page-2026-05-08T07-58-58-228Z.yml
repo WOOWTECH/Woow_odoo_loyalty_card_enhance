@@ -1,0 +1,216 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - button "" [ref=e5] [cursor=pointer]:
+        - generic [ref=e6]: 
+      - menuitem "銷售" [ref=e7] [cursor=pointer]
+      - menu [ref=e8]:
+        - button "訂單" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]: 訂單
+        - button "待開立發票" [ref=e11] [cursor=pointer]:
+          - generic [ref=e12]: 待開立發票
+        - button "產品" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 產品
+        - button "報告" [ref=e15] [cursor=pointer]:
+          - generic [ref=e16]: 報告
+        - button "配置" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 配置
+      - menu [ref=e19]:
+        - button "訊息 9" [ref=e33] [cursor=pointer]:
+          - img "訊息" [ref=e22]: 
+          - generic [ref=e23]: "9"
+        - button "活動 2" [ref=e34] [cursor=pointer]:
+          - img "活動" [ref=e25]: 
+          - generic [ref=e35]: "2"
+        - button "My Company (San Francisco)" [ref=e27] [cursor=pointer]:
+          - text: 
+          - generic [ref=e28]: My Company (San Francisco)
+        - button "使用者" [ref=e30] [cursor=pointer]:
+          - img "使用者" [ref=e31]
+          - text: 
+  - generic [ref=e37]:
+    - generic [ref=e40]:
+      - button "新增" [ref=e43] [cursor=pointer]
+      - generic [ref=e44]:
+        - list [ref=e45]:
+          - listitem [ref=e46]:
+            - link "報價單" [ref=e47] [cursor=pointer]:
+              - /url: /odoo/sales
+        - generic [ref=e48]:
+          - generic [ref=e50]: 新增
+          - button "" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]: 
+      - generic [ref=e57]:
+        - button "手動儲存" [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]: 
+        - button "捨棄所有變更" [ref=e60] [cursor=pointer]:
+          - generic [ref=e61]: 
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - button "通過信件發送" [ref=e67] [cursor=pointer]
+            - button "確認" [ref=e68] [cursor=pointer]
+            - button "預覽" [ref=e69] [cursor=pointer]
+          - radiogroup "狀態列" [ref=e71]:
+            - radio "銷售訂單" [disabled]
+            - radio "報價單送出" [disabled]
+            - radio "報價" [checked] [disabled]
+        - generic [ref=e72]:
+          - heading "新增" [level=1] [ref=e74]:
+            - generic [ref=e75]: 新增
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e80]: 客戶
+                - generic [ref=e82]:
+                  - combobox "客戶" [ref=e86]: YourCompany, Joel Willis
+                  - generic [ref=e301]:
+                    - text: 858 Lynn Street
+                    - text: Bayonne NJ 07002
+                    - text: 美國
+              - generic [ref=e87]:
+                - generic [ref=e89]: 報價單範本
+                - combobox "報價單範本" [ref=e95]
+            - generic [ref=e96]:
+              - generic [ref=e97]:
+                - generic [ref=e99]:
+                  - text: 截止日期
+                  - superscript [ref=e100]: "?"
+                - textbox "截止日期?" [ref=e104] [cursor=pointer]: 2026年06月07日
+              - generic [ref=e105]:
+                - generic [ref=e107]: 付款條件
+                - combobox "付款條件" [ref=e113]
+          - generic [ref=e114]:
+            - list [ref=e116]:
+              - listitem [ref=e117] [cursor=pointer]:
+                - tab "訂單明細" [ref=e118]
+              - listitem [ref=e119] [cursor=pointer]:
+                - tab "選配產品" [ref=e120]
+              - listitem [ref=e302] [cursor=pointer]:
+                - tab "報價單製作工具" [ref=e303]
+              - listitem [ref=e121] [cursor=pointer]:
+                - tab "其他資訊" [ref=e122]
+            - generic [ref=e124]:
+              - table [ref=e128]:
+                - rowgroup [ref=e129]:
+                  - row "商品 數量  單價  稅項 金額  " [ref=e130]:
+                    - columnheader [ref=e131] [cursor=pointer]
+                    - columnheader "商品" [ref=e132]:
+                      - generic [ref=e133]:
+                        - generic [ref=e134]: 商品
+                        - text: 
+                    - columnheader "數量 " [ref=e136] [cursor=pointer]:
+                      - generic [ref=e137]:
+                        - generic [ref=e138]: 數量
+                        - generic [ref=e139]: 
+                    - columnheader [ref=e141]
+                    - columnheader "單價 " [ref=e142] [cursor=pointer]:
+                      - generic [ref=e143]:
+                        - generic [ref=e144]: 單價
+                        - generic [ref=e145]: 
+                    - columnheader "稅項" [ref=e147]:
+                      - generic [ref=e148]:
+                        - generic [ref=e149]: 稅項
+                        - text: 
+                    - columnheader "金額 " [ref=e151] [cursor=pointer]:
+                      - generic [ref=e152]:
+                        - generic [ref=e153]: 金額
+                        - generic [ref=e154]: 
+                    - columnheader "" [ref=e156]:
+                      - button "" [ref=e158] [cursor=pointer]:
+                        - generic [ref=e159]: 
+                - rowgroup [ref=e160]:
+                  - row " 1.00 0.00 $ 0.00 刪除列" [ref=e305]:
+                    - cell [ref=e306] [cursor=pointer]
+                    - cell "" [ref=e308] [cursor=pointer]:
+                      - generic [ref=e311]:
+                        - combobox "搜尋產品" [active] [ref=e314]
+                        - button "" [ref=e315]
+                    - cell "1.00" [ref=e316] [cursor=pointer]:
+                      - textbox [ref=e318]: "1.00"
+                    - cell [ref=e319]
+                    - cell "0.00" [ref=e321] [cursor=pointer]:
+                      - textbox [ref=e323]: "0.00"
+                    - cell [ref=e324] [cursor=pointer]:
+                      - combobox [ref=e330]
+                    - cell "$ 0.00" [ref=e331] [cursor=pointer]:
+                      - generic [ref=e333]: $ 0.00
+                    - cell "刪除列" [ref=e334]:
+                      - button "刪除列" [ref=e335] [cursor=pointer]: 
+                  - row "加入產品加入分段標題加入備註 目錄" [ref=e161]:
+                    - cell [ref=e162]
+                    - cell "加入產品加入分段標題加入備註 目錄" [ref=e163]:
+                      - button "加入產品" [ref=e164] [cursor=pointer]
+                      - button "加入分段標題" [ref=e165] [cursor=pointer]
+                      - button "加入備註" [ref=e166] [cursor=pointer]
+                      - button "目錄" [ref=e167] [cursor=pointer]
+                  - row [ref=e168]:
+                    - cell [ref=e169]
+                  - row [ref=e170]:
+                    - cell [ref=e171]
+                - rowgroup [ref=e174]:
+                  - row [ref=e175]:
+                    - cell [ref=e176]
+                    - cell [ref=e177]
+                    - cell [ref=e178]
+                    - cell [ref=e179]
+                    - cell [ref=e180]
+                    - cell [ref=e181]
+                    - cell [ref=e182]
+                    - cell [ref=e183]
+              - generic [ref=e184]:
+                - button "優惠碼" [ref=e185] [cursor=pointer]
+                - button "獎勵" [ref=e186] [cursor=pointer]
+              - generic [ref=e187]:
+                - generic [ref=e193]:
+                  - generic:
+                    - generic:        
+                  - generic [ref=e196]: 條款和條件...
+                - table [ref=e201]:
+                  - rowgroup [ref=e202]:
+                    - 'row "未連稅金額: $ 0.00" [ref=e203]':
+                      - cell "未連稅金額:" [ref=e204]:
+                        - generic [ref=e205]: "未連稅金額:"
+                      - cell "$ 0.00" [ref=e206]
+                    - 'row "總計: $ 0.00" [ref=e207]':
+                      - cell "總計:" [ref=e208]:
+                        - generic [ref=e209]: "總計:"
+                      - cell "$ 0.00" [ref=e210]
+      - generic [ref=e213]:
+        - generic [ref=e215]:
+          - button "發送訊息" [ref=e216] [cursor=pointer]
+          - button "備註" [ref=e217] [cursor=pointer]
+          - button "活動" [ref=e218] [cursor=pointer]
+          - button "搜尋訊息" [ref=e220] [cursor=pointer]:
+            - img [ref=e221]: 
+          - generic [ref=e222]:
+            - button "附加檔案" [disabled]:
+              - generic: 
+          - generic [ref=e223]:
+            - button "0" [disabled]:
+              - img: 
+              - superscript: "0"
+          - button "訂閱" [ref=e224] [cursor=pointer]:
+            - generic [ref=e226]: 訂閱
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - generic [ref=e231]:
+              - separator [ref=e232]
+              - generic [ref=e233]: 今天
+              - separator [ref=e234]
+            - group "系統通知" [ref=e235]:
+              - generic [ref=e236]:
+                - generic "開啟卡" [ref=e238] [cursor=pointer]:
+                  - img [ref=e239]
+                - generic [ref=e240]:
+                  - generic [ref=e241]:
+                    - generic "開啟卡" [ref=e242] [cursor=pointer]:
+                      - strong [ref=e243]: Mitchell Admin
+                    - generic "2026/5/8 下午3:56:36" [ref=e244]: 今天 下午3:56
+                  - generic [ref=e250]: 建立新記錄⋯
+          - button "" [ref=e251] [cursor=pointer]:
+            - generic [ref=e252]: 
+  - generic:
+    - generic:
+      - paragraph: 按 esc 離開全螢幕

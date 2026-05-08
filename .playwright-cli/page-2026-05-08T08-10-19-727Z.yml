@@ -1,0 +1,190 @@
+- generic [ref=e2]:
+  - link "Skip to Content" [ref=e3] [cursor=pointer]:
+    - /url: "#wrap"
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "Logo of My Website" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "Logo of My Website" [ref=e8]:
+            - img "My Website" [ref=e9]
+        - menu [ref=e10]:
+          - menuitem "Home" [ref=e11] [cursor=pointer]
+          - menuitem "Contact us" [ref=e12] [cursor=pointer]
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - button "" [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]: 
+          - listitem [ref=e17]:
+            - link " +1 555-555-5556" [ref=e19] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+              - generic [ref=e20]: 
+              - generic [ref=e21]: +1 555-555-5556
+          - listitem [ref=e22]:
+            - button "Joel Willis" [ref=e23] [cursor=pointer]
+            - text:  
+          - listitem [ref=e24]:
+            - link "Contact Us" [ref=e28] [cursor=pointer]:
+              - /url: /contactus
+  - main [ref=e29]:
+    - list [ref=e32]:
+      - listitem [ref=e33]:
+        - link "Home" [ref=e34] [cursor=pointer]:
+          - /url: /my/home
+          - generic [ref=e35]: 
+      - listitem [ref=e36]:
+        - text: /
+        - link "會員中心" [ref=e37] [cursor=pointer]:
+          - /url: /my/member-center
+      - listitem [ref=e38]:
+        - text: /
+        - link "優惠券" [ref=e39] [cursor=pointer]:
+          - /url: /my/member-center/coupons
+      - listitem [ref=e40]: / 0442-14a0-46d2
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e45]:
+          - heading "10% Discount Coupons" [level=3] [ref=e47]
+          - generic [ref=e49]: 0442-14a0-46d2
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - strong [ref=e53]: 優惠碼：
+              - code [ref=e54]: 0442-14a0-46d2
+            - generic [ref=e55]:
+              - strong [ref=e56]: 建立日期：
+              - text: 05/07/2026
+          - heading "優惠內容" [level=5] [ref=e57]
+          - generic [ref=e59]: 10% on your order
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - heading "交易紀錄" [level=5] [ref=e62]
+          - generic [ref=e63]: 1 筆
+        - table [ref=e66]:
+          - rowgroup [ref=e67]:
+            - row "日期 說明 關聯訂單 增加 使用" [ref=e68]:
+              - columnheader "日期" [ref=e69]
+              - columnheader "說明" [ref=e70]
+              - columnheader "關聯訂單" [ref=e71]
+              - columnheader "增加" [ref=e72]
+              - columnheader "使用" [ref=e73]
+          - rowgroup [ref=e74]:
+            - row "05/08/2026 訂單 S00075 S00075 -1 Coupon points" [ref=e75]:
+              - cell "05/08/2026" [ref=e76]
+              - cell "訂單 S00075" [ref=e77]
+              - cell "S00075" [ref=e78]:
+                - link "S00075" [ref=e79] [cursor=pointer]:
+                  - /url: /my/orders/75?access_token=829d9c7c-aeda-4946-8bc2-7930678634b6
+              - cell [ref=e80]
+              - cell "-1 Coupon points" [ref=e81]
+      - separator [ref=e82]
+      - generic [ref=e83]:
+        - heading "溝通紀錄" [level=3] [ref=e84]
+        - generic [ref=e87]:
+          - generic [ref=e90]:
+            - img "Avatar of user" [ref=e92]
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - textbox "Write a message…" [ref=e96]
+                - button "Emojis" [ref=e99] [cursor=pointer]:
+                  - generic [ref=e100]: 
+              - generic [ref=e101]:
+                - button "Send" [disabled]
+                - button "Attach files" [ref=e105] [cursor=pointer]:
+                  - generic [ref=e106]: 
+          - generic [ref=e109]:
+            - generic [ref=e111]:
+              - separator [ref=e112]
+              - generic [ref=e113]: May 7, 2026
+              - separator [ref=e114]
+            - group "Note" [ref=e115]:
+              - generic [ref=e116]:
+                - img [ref=e119]
+                - generic [ref=e120]:
+                  - generic [ref=e121]:
+                    - strong [ref=e123]: Mitchell Admin
+                    - generic "5/7/2026, 10:45:09 PM" [ref=e124]: Yesterday at 10:45 PM
+                  - paragraph [ref=e132]: <p>【系統通知】優惠券即將到期提醒<br/>折扣方案：10% Discount Coupons<br/>優惠券代碼：0442-14a0-46d2<br/>請於有效期限前使用，逾期將自動失效。</p>
+            - group "Note" [ref=e133]:
+              - generic [ref=e134]:
+                - img [ref=e137]
+                - generic [ref=e138]:
+                  - generic [ref=e139]:
+                    - strong [ref=e141]: Mitchell Admin
+                    - generic "5/7/2026, 9:42:01 PM" [ref=e142]: Yesterday at 9:42 PM
+                  - paragraph [ref=e150]: 可以的！這張10%折扣優惠券可與其他促銷活動併用，結帳時輸入優惠碼即可享受折扣。
+            - group "Note" [ref=e151]:
+              - generic [ref=e152]:
+                - img [ref=e155]
+                - generic [ref=e156]:
+                  - generic [ref=e157]:
+                    - strong [ref=e159]: Joel Willis
+                    - generic "5/7/2026, 9:36:20 PM" [ref=e160]: Yesterday at 9:36 PM
+                  - paragraph [ref=e168]: 請問這張優惠券可以跟其他促銷活動一起使用嗎？
+    - generic: 
+  - contentinfo [ref=e169]:
+    - generic [ref=e173]:
+      - generic [ref=e174]:
+        - heading "Useful Links" [level=5] [ref=e175]
+        - list [ref=e176]:
+          - listitem [ref=e177]:
+            - link "Home" [ref=e178] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e179]:
+            - link "About us" [ref=e180] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e181]:
+            - link "Products" [ref=e182] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e183]:
+            - link "Services" [ref=e184] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e185]:
+            - link "Legal" [ref=e186] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e187]:
+            - link "Contact us" [ref=e188] [cursor=pointer]:
+              - /url: /contactus
+      - generic [ref=e189]:
+        - heading "About us" [level=5] [ref=e190]
+        - paragraph [ref=e191]:
+          - text: We are a team of passionate people whose goal is to improve everyone's life through disruptive products. We build great products to solve your business problems.
+          - text: Our products are designed for small to medium size companies willing to optimize their performance.
+      - generic [ref=e192]:
+        - heading "Connect with us" [level=5] [ref=e193]
+        - list [ref=e194]:
+          - listitem [ref=e195]:
+            - generic [ref=e196]: 
+            - link "Contact us" [ref=e198] [cursor=pointer]:
+              - /url: /contactus
+          - listitem [ref=e199]:
+            - generic [ref=e200]: 
+            - link "info@yourcompany.example.com" [ref=e202] [cursor=pointer]:
+              - /url: mailto:info@yourcompany.example.com
+          - listitem [ref=e203]:
+            - generic [ref=e204]: 
+            - link "+1 555-555-5556" [ref=e206] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+        - generic [ref=e207]:
+          - link "Facebook" [ref=e208] [cursor=pointer]:
+            - /url: /website/social/facebook
+            - generic [ref=e209]: 
+          - link "X" [ref=e210] [cursor=pointer]:
+            - /url: /website/social/twitter
+            - generic [ref=e211]: 
+          - link "LinkedIn" [ref=e212] [cursor=pointer]:
+            - /url: /website/social/linkedin
+            - generic [ref=e213]: 
+          - link "Extra page" [ref=e214] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e215]: 
+    - generic [ref=e218]:
+      - generic [ref=e219]: Copyright © Company name
+      - generic [ref=e221]:
+        - text: Powered by
+        - link "Odoo" [ref=e222] [cursor=pointer]:
+          - /url: http://www.odoo.com?utm_source=db&utm_medium=website
+          - img "Odoo" [ref=e223]
+        - text: "- Create a"
+        - link "free website" [ref=e224] [cursor=pointer]:
+          - /url: http://www.odoo.com/app/website?utm_source=db&utm_medium=website
