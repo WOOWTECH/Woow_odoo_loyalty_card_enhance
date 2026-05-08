@@ -88,7 +88,9 @@
                                             <t t-out="line.amount_remaining"
                                                t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
                                         </td>
-                                        <td class="text-center" t-field="line.date_deposited"/>
+                                        <td class="text-center">
+                                            <span t-field="line.date_deposited"/>
+                                        </td>
                                         <td class="text-center">
                                             <t t-if="line.date_expiry">
                                                 <span t-field="line.date_expiry"/>
