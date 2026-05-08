@@ -82,7 +82,10 @@ class MemberCenterPortal(CustomerPortal):
     def _get_card_history_values(self, card, card_type_slug):
         """Query loyalty.history records for a card and return template values."""
         LoyaltyHistory = request.env['loyalty.history'].sudo()
-        domain = [('card_id', '=', card.id)]
+        domain = [
+            ('card_id', '=', card.id),
+            '|', ('issued', '!=', 0), ('used', '!=', 0),
+        ]
         history_count = LoyaltyHistory.search_count(domain)
         history_lines = LoyaltyHistory.search(
             domain, order='create_date desc', limit=_HISTORY_PAGE_SIZE,
@@ -374,7 +377,10 @@ class MemberCenterPortal(CustomerPortal):
             return request.redirect(_CARD_LIST_URLS.get(card_type, '/my/member-center'))
 
         LoyaltyHistory = request.env['loyalty.history'].sudo()
-        domain = [('card_id', '=', card.id)]
+        domain = [
+            ('card_id', '=', card.id),
+            '|', ('issued', '!=', 0), ('used', '!=', 0),
+        ]
 
         searchbar_sortings = self._get_history_searchbar_sortings()
         if sortby not in searchbar_sortings:
