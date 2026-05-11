@@ -34,7 +34,13 @@
                                             <t t-out="line.create_date" t-options="{'widget': 'date'}"/>
                                         </td>
                                         <td>
-                                            <t t-out="line.description"/>
+                                            <t t-set="desc" t-value="line.description or ''"/>
+                                            <t t-if="desc.startswith('Order ')">
+                                                訂單 <t t-out="desc[6:]"/>
+                                            </t>
+                                            <t t-else="">
+                                                <t t-out="desc"/>
+                                            </t>
                                         </td>
                                         <td>
                                             <t t-if="line.order_id">
