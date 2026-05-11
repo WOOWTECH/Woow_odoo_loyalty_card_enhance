@@ -29,3 +29,10 @@ filestore/
 .vibe/
 docs/plans/
 docs/take_screenshots.mjs
+
+# Playwright CLI artifacts
+.playwright-cli/
+portal-auth.json
+
+# Test results (screenshots, logs)
+test-results/
