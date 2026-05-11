@@ -1,6 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ============================================================ -->
+    <!-- Breadcrumbs                                                   -->
+    <!-- ============================================================ -->
+    <template id="portal_breadcrumb_consign"
+              inherit_id="portal.portal_breadcrumbs"
+              priority="25">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <!-- 寄品卡列表 -->
+            <li t-if="page_name in ('consign_cards', 'consign_card_detail', 'consign_redemption_detail')"
+                class="breadcrumb-item">
+                <a href="/my/member-center">會員中心</a>
+            </li>
+            <li t-if="page_name == 'consign_cards'"
+                class="breadcrumb-item active">寄品卡</li>
+
+            <!-- 寄品卡明細 -->
+            <li t-if="page_name in ('consign_card_detail', 'consign_redemption_detail')"
+                class="breadcrumb-item">
+                <a href="/my/consign-cards">寄品卡</a>
+            </li>
+            <li t-if="page_name == 'consign_card_detail'"
+                class="breadcrumb-item active">
+                <t t-out="card.code"/>
+            </li>
+
+            <!-- 核銷單明細 -->
+            <li t-if="page_name == 'consign_redemption_detail'"
+                class="breadcrumb-item">
+                <a t-attf-href="/my/consign-cards/#{redemption.card_id.id}">
+                    <t t-out="redemption.card_id.code"/>
+                </a>
+            </li>
+            <li t-if="page_name == 'consign_redemption_detail'"
+                class="breadcrumb-item active">
+                <t t-out="redemption.name"/>
+            </li>
+        </xpath>
+    </template>
+
     <!-- 寄品卡列表頁 -->
     <template id="portal_my_consign_cards" name="Portal: 寄品卡列表">
         <t t-call="portal.portal_layout">
