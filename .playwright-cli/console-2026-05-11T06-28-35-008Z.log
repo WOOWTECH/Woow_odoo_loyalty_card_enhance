@@ -1,0 +1,3 @@
+[     279ms] [ERROR] Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR) @ http://localhost:9100/web/assets/1/f72ec00/web.assets_frontend_minimal.min.js:0
+[     349ms] [ERROR] Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR) @ http://localhost:9100/web/image/website/1/logo/My%20Website?unique=8b51d46:0
+[     350ms] [ERROR] Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR) @ http://localhost:9100/web/image/website/1/favicon?unique=8b51d46:0
