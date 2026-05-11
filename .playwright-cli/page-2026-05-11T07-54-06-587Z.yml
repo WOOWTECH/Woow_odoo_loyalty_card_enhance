@@ -1,0 +1,343 @@
+- generic [ref=e2]:
+  - link "Skip to Content" [ref=e3] [cursor=pointer]:
+    - /url: "#wrap"
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "Logo of My Website" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "Logo of My Website" [ref=e8]:
+            - img "My Website" [ref=e9]
+        - menu [ref=e10]:
+          - menuitem "Home" [ref=e11] [cursor=pointer]
+          - menuitem "Contact us" [ref=e12] [cursor=pointer]
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - text: 
+            - button "" [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]: 
+          - listitem [ref=e17]:
+            - link " +1 555-555-5556" [ref=e19] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+              - generic [ref=e20]: 
+              - generic [ref=e21]: +1 555-555-5556
+          - listitem [ref=e22]:
+            - button "Joel Willis" [ref=e23] [cursor=pointer]
+            - text:  
+          - listitem [ref=e24]:
+            - link "Contact Us" [ref=e28] [cursor=pointer]:
+              - /url: /contactus
+  - main [ref=e29]:
+    - generic [ref=e31]:
+      - navigation [ref=e32]:
+        - list [ref=e33]:
+          - listitem [ref=e34]:
+            - link "Home" [ref=e35] [cursor=pointer]:
+              - /url: /my/home
+              - generic [ref=e36]: 
+          - listitem [ref=e37]:
+            - text: /
+            - link "會員中心" [ref=e38] [cursor=pointer]:
+              - /url: /my/member-center
+          - listitem [ref=e39]:
+            - text: /
+            - link "集點卡" [ref=e40] [cursor=pointer]:
+              - /url: /my/member-center/loyalty
+          - listitem [ref=e41]:
+            - text: /
+            - link "Loyalty Program" [ref=e42] [cursor=pointer]:
+              - /url: /my/member-center/loyalty/17
+          - listitem [ref=e43]: / 交易紀錄
+        - text: 
+        - generic [ref=e46]:
+          - text: "Sort By:"
+          - button "日期" [ref=e48] [cursor=pointer]
+      - table [ref=e50]:
+        - rowgroup [ref=e51]:
+          - row "日期 說明 關聯訂單 前餘額 增加 使用 後餘額" [ref=e52]:
+            - columnheader "日期" [ref=e53]
+            - columnheader "說明" [ref=e54]
+            - columnheader "關聯訂單" [ref=e55]
+            - columnheader "前餘額" [ref=e56]
+            - columnheader "增加" [ref=e57]
+            - columnheader "使用" [ref=e58]
+            - columnheader "後餘額" [ref=e59]
+        - rowgroup [ref=e60]:
+          - row "05/08/2026 上門 Furniture Shop/0005 Furniture Shop/0005 3149301 Loyalty Points +19.80 Loyalty Points 3149320.80 Loyalty Points" [ref=e61]:
+            - cell "05/08/2026" [ref=e62]
+            - cell "上門 Furniture Shop/0005" [ref=e63]
+            - cell "Furniture Shop/0005" [ref=e64]
+            - cell "3149301 Loyalty Points" [ref=e65]
+            - cell "+19.80 Loyalty Points" [ref=e66]
+            - cell [ref=e67]
+            - cell "3149320.80 Loyalty Points" [ref=e68]
+          - row "05/08/2026 訂單 S00087 S00087 3034301 Loyalty Points +115000 Loyalty Points 3149301 Loyalty Points" [ref=e69]:
+            - cell "05/08/2026" [ref=e70]
+            - cell "訂單 S00087" [ref=e71]
+            - cell "S00087" [ref=e72]:
+              - link "S00087" [ref=e73] [cursor=pointer]:
+                - /url: /my/orders/87?access_token=92ba6411-3685-4853-a483-c54d4c5e0100
+            - cell "3034301 Loyalty Points" [ref=e74]
+            - cell "+115000 Loyalty Points" [ref=e75]
+            - cell [ref=e76]
+            - cell "3149301 Loyalty Points" [ref=e77]
+          - row "05/08/2026 訂單 S00086 S00086 2879051 Loyalty Points +155250 Loyalty Points 3034301 Loyalty Points" [ref=e78]:
+            - cell "05/08/2026" [ref=e79]
+            - cell "訂單 S00086" [ref=e80]
+            - cell "S00086" [ref=e81]:
+              - link "S00086" [ref=e82] [cursor=pointer]:
+                - /url: /my/orders/86?access_token=40280566-b97c-463f-83cd-d2b5d09f5006
+            - cell "2879051 Loyalty Points" [ref=e83]
+            - cell "+155250 Loyalty Points" [ref=e84]
+            - cell [ref=e85]
+            - cell "3034301 Loyalty Points" [ref=e86]
+          - row "05/08/2026 訂單 S00085 S00085 2384551 Loyalty Points +494500 Loyalty Points 2879051 Loyalty Points" [ref=e87]:
+            - cell "05/08/2026" [ref=e88]
+            - cell "訂單 S00085" [ref=e89]
+            - cell "S00085" [ref=e90]:
+              - link "S00085" [ref=e91] [cursor=pointer]:
+                - /url: /my/orders/85?access_token=547abf56-aa25-4fd7-9171-f24eb620cff5
+            - cell "2384551 Loyalty Points" [ref=e92]
+            - cell "+494500 Loyalty Points" [ref=e93]
+            - cell [ref=e94]
+            - cell "2879051 Loyalty Points" [ref=e95]
+          - row "05/08/2026 訂單 S00084 S00084 2229301 Loyalty Points +155250 Loyalty Points 2384551 Loyalty Points" [ref=e96]:
+            - cell "05/08/2026" [ref=e97]
+            - cell "訂單 S00084" [ref=e98]
+            - cell "S00084" [ref=e99]:
+              - link "S00084" [ref=e100] [cursor=pointer]:
+                - /url: /my/orders/84?access_token=35b5f445-36a0-49b0-8f26-32aba3c405ff
+            - cell "2229301 Loyalty Points" [ref=e101]
+            - cell "+155250 Loyalty Points" [ref=e102]
+            - cell [ref=e103]
+            - cell "2384551 Loyalty Points" [ref=e104]
+          - row "05/08/2026 訂單 S00083 S00083 1734801 Loyalty Points +494500 Loyalty Points 2229301 Loyalty Points" [ref=e105]:
+            - cell "05/08/2026" [ref=e106]
+            - cell "訂單 S00083" [ref=e107]
+            - cell "S00083" [ref=e108]:
+              - link "S00083" [ref=e109] [cursor=pointer]:
+                - /url: /my/orders/83?access_token=4a2f01bb-ed92-45ad-a901-66834c34cd42
+            - cell "1734801 Loyalty Points" [ref=e110]
+            - cell "+494500 Loyalty Points" [ref=e111]
+            - cell [ref=e112]
+            - cell "2229301 Loyalty Points" [ref=e113]
+          - row "05/08/2026 訂單 S00082 S00082 1579551 Loyalty Points +155250 Loyalty Points 1734801 Loyalty Points" [ref=e114]:
+            - cell "05/08/2026" [ref=e115]
+            - cell "訂單 S00082" [ref=e116]
+            - cell "S00082" [ref=e117]:
+              - link "S00082" [ref=e118] [cursor=pointer]:
+                - /url: /my/orders/82?access_token=76fddae4-207d-4979-a973-49a4709b1ed6
+            - cell "1579551 Loyalty Points" [ref=e119]
+            - cell "+155250 Loyalty Points" [ref=e120]
+            - cell [ref=e121]
+            - cell "1734801 Loyalty Points" [ref=e122]
+          - row "05/08/2026 訂單 S00081 S00081 1085051 Loyalty Points +494500 Loyalty Points 1579551 Loyalty Points" [ref=e123]:
+            - cell "05/08/2026" [ref=e124]
+            - cell "訂單 S00081" [ref=e125]
+            - cell "S00081" [ref=e126]:
+              - link "S00081" [ref=e127] [cursor=pointer]:
+                - /url: /my/orders/81?access_token=241071b4-e605-4c14-b20d-73d66d965bb1
+            - cell "1085051 Loyalty Points" [ref=e128]
+            - cell "+494500 Loyalty Points" [ref=e129]
+            - cell [ref=e130]
+            - cell "1579551 Loyalty Points" [ref=e131]
+          - row "05/08/2026 訂單 S00080 S00080 929801 Loyalty Points +155250 Loyalty Points 1085051 Loyalty Points" [ref=e132]:
+            - cell "05/08/2026" [ref=e133]
+            - cell "訂單 S00080" [ref=e134]
+            - cell "S00080" [ref=e135]:
+              - link "S00080" [ref=e136] [cursor=pointer]:
+                - /url: /my/orders/80?access_token=b7793013-67a9-496e-9615-b6eeac9d548f
+            - cell "929801 Loyalty Points" [ref=e137]
+            - cell "+155250 Loyalty Points" [ref=e138]
+            - cell [ref=e139]
+            - cell "1085051 Loyalty Points" [ref=e140]
+          - row "05/08/2026 訂單 S00079 S00079 900476 Loyalty Points +29325 Loyalty Points 929801 Loyalty Points" [ref=e141]:
+            - cell "05/08/2026" [ref=e142]
+            - cell "訂單 S00079" [ref=e143]
+            - cell "S00079" [ref=e144]:
+              - link "S00079" [ref=e145] [cursor=pointer]:
+                - /url: /my/orders/79?access_token=725ba7b3-c006-498a-b1f9-61665936ac5c
+            - cell "900476 Loyalty Points" [ref=e146]
+            - cell "+29325 Loyalty Points" [ref=e147]
+            - cell [ref=e148]
+            - cell "929801 Loyalty Points" [ref=e149]
+          - row "05/08/2026 訂單 S00078 S00078 497976 Loyalty Points +402500 Loyalty Points 900476 Loyalty Points" [ref=e150]:
+            - cell "05/08/2026" [ref=e151]
+            - cell "訂單 S00078" [ref=e152]
+            - cell "S00078" [ref=e153]:
+              - link "S00078" [ref=e154] [cursor=pointer]:
+                - /url: /my/orders/78?access_token=a9ecc603-7a22-4b4e-96a0-e7bc786da18c
+            - cell "497976 Loyalty Points" [ref=e155]
+            - cell "+402500 Loyalty Points" [ref=e156]
+            - cell [ref=e157]
+            - cell "900476 Loyalty Points" [ref=e158]
+          - row "05/08/2026 訂單 S00077 S00077 3476 Loyalty Points +494500 Loyalty Points 497976 Loyalty Points" [ref=e159]:
+            - cell "05/08/2026" [ref=e160]
+            - cell "訂單 S00077" [ref=e161]
+            - cell "S00077" [ref=e162]:
+              - link "S00077" [ref=e163] [cursor=pointer]:
+                - /url: /my/orders/77?access_token=6cbe2ff8-6f62-470b-9c86-6316cb0d77c8
+            - cell "3476 Loyalty Points" [ref=e164]
+            - cell "+494500 Loyalty Points" [ref=e165]
+            - cell [ref=e166]
+            - cell "497976 Loyalty Points" [ref=e167]
+          - row "05/08/2026 訂單 S00076 S00076 2881 Loyalty Points +595 Loyalty Points 3476 Loyalty Points" [ref=e168]:
+            - cell "05/08/2026" [ref=e169]
+            - cell "訂單 S00076" [ref=e170]
+            - cell "S00076" [ref=e171]:
+              - link "S00076" [ref=e172] [cursor=pointer]:
+                - /url: /my/orders/76?access_token=4b99e6dc-f693-4daa-a446-d5635509ed03
+            - cell "2881 Loyalty Points" [ref=e173]
+            - cell "+595 Loyalty Points" [ref=e174]
+            - cell [ref=e175]
+            - cell "3476 Loyalty Points" [ref=e176]
+          - row "05/08/2026 訂單 S00075 S00075 1 Loyalty Points +2880 Loyalty Points 2881 Loyalty Points" [ref=e177]:
+            - cell "05/08/2026" [ref=e178]
+            - cell "訂單 S00075" [ref=e179]
+            - cell "S00075" [ref=e180]:
+              - link "S00075" [ref=e181] [cursor=pointer]:
+                - /url: /my/orders/75?access_token=829d9c7c-aeda-4946-8bc2-7930678634b6
+            - cell "1 Loyalty Points" [ref=e182]
+            - cell "+2880 Loyalty Points" [ref=e183]
+            - cell [ref=e184]
+            - cell "2881 Loyalty Points" [ref=e185]
+          - row "05/08/2026 訂單 S00074 S00074 6413 Loyalty Points +158 Loyalty Points -6570 Loyalty Points 1 Loyalty Points" [ref=e186]:
+            - cell "05/08/2026" [ref=e187]
+            - cell "訂單 S00074" [ref=e188]
+            - cell "S00074" [ref=e189]:
+              - link "S00074" [ref=e190] [cursor=pointer]:
+                - /url: /my/orders/74?access_token=761941e5-f15f-4643-8fbc-8d4289bd3dd1
+            - cell "6413 Loyalty Points" [ref=e191]
+            - cell "+158 Loyalty Points" [ref=e192]
+            - cell "-6570 Loyalty Points" [ref=e193]
+            - cell "1 Loyalty Points" [ref=e194]
+          - row "05/08/2026 訂單 S00073 S00073 5713 Loyalty Points +700 Loyalty Points 6413 Loyalty Points" [ref=e195]:
+            - cell "05/08/2026" [ref=e196]
+            - cell "訂單 S00073" [ref=e197]
+            - cell "S00073" [ref=e198]:
+              - link "S00073" [ref=e199] [cursor=pointer]:
+                - /url: /my/orders/73?access_token=cf5f2d8d-ac40-4591-859d-80bd3a20abf6
+            - cell "5713 Loyalty Points" [ref=e200]
+            - cell "+700 Loyalty Points" [ref=e201]
+            - cell [ref=e202]
+            - cell "6413 Loyalty Points" [ref=e203]
+          - row "05/08/2026 訂單 S00072 S00072 2513 Loyalty Points +3200 Loyalty Points 5713 Loyalty Points" [ref=e204]:
+            - cell "05/08/2026" [ref=e205]
+            - cell "訂單 S00072" [ref=e206]
+            - cell "S00072" [ref=e207]:
+              - link "S00072" [ref=e208] [cursor=pointer]:
+                - /url: /my/orders/72?access_token=89d1fe35-7f33-4ead-828b-5c3e6315f663
+            - cell "2513 Loyalty Points" [ref=e209]
+            - cell "+3200 Loyalty Points" [ref=e210]
+            - cell [ref=e211]
+            - cell "5713 Loyalty Points" [ref=e212]
+          - row "05/08/2026 訂單 S00071 S00071 1263.50 Loyalty Points +1249.50 Loyalty Points 2513 Loyalty Points" [ref=e213]:
+            - cell "05/08/2026" [ref=e214]
+            - cell "訂單 S00071" [ref=e215]
+            - cell "S00071" [ref=e216]:
+              - link "S00071" [ref=e217] [cursor=pointer]:
+                - /url: /my/orders/71?access_token=3f57fa2a-433a-47c8-87a2-dd510b7e92d7
+            - cell "1263.50 Loyalty Points" [ref=e218]
+            - cell "+1249.50 Loyalty Points" [ref=e219]
+            - cell [ref=e220]
+            - cell "2513 Loyalty Points" [ref=e221]
+          - row "05/08/2026 訂單 S00070 S00070 3.50 Loyalty Points +1260 Loyalty Points 1263.50 Loyalty Points" [ref=e222]:
+            - cell "05/08/2026" [ref=e223]
+            - cell "訂單 S00070" [ref=e224]
+            - cell "S00070" [ref=e225]:
+              - link "S00070" [ref=e226] [cursor=pointer]:
+                - /url: /my/orders/70?access_token=5cd93544-bde9-4879-9f47-32324b1d741a
+            - cell "3.50 Loyalty Points" [ref=e227]
+            - cell "+1260 Loyalty Points" [ref=e228]
+            - cell [ref=e229]
+            - cell "1263.50 Loyalty Points" [ref=e230]
+          - row "05/08/2026 訂單 S00069 S00069 4082.50 Loyalty Points +316 Loyalty Points -4395 Loyalty Points 3.50 Loyalty Points" [ref=e231]:
+            - cell "05/08/2026" [ref=e232]
+            - cell "訂單 S00069" [ref=e233]
+            - cell "S00069" [ref=e234]:
+              - link "S00069" [ref=e235] [cursor=pointer]:
+                - /url: /my/orders/69?access_token=8cc19c01-3c4a-42ac-af15-e24ef3f13736
+            - cell "4082.50 Loyalty Points" [ref=e236]
+            - cell "+316 Loyalty Points" [ref=e237]
+            - cell "-4395 Loyalty Points" [ref=e238]
+            - cell "3.50 Loyalty Points" [ref=e239]
+      - list [ref=e241]:
+        - listitem [ref=e242]:
+          - generic:
+            - img "Previous": 
+        - listitem [ref=e243]:
+          - link "1" [ref=e244] [cursor=pointer]:
+            - /url: /my/member-center/loyalty/17/history?sortby=date
+        - listitem [ref=e245]:
+          - link "2" [ref=e246] [cursor=pointer]:
+            - /url: /my/member-center/loyalty/17/history/page/2?sortby=date
+        - listitem [ref=e247]:
+          - link "Next" [ref=e248] [cursor=pointer]:
+            - /url: /my/member-center/loyalty/17/history/page/2?sortby=date
+            - img "Next" [ref=e249]: 
+  - contentinfo [ref=e250]:
+    - generic [ref=e254]:
+      - generic [ref=e255]:
+        - heading "Useful Links" [level=5] [ref=e256]
+        - list [ref=e257]:
+          - listitem [ref=e258]:
+            - link "Home" [ref=e259] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e260]:
+            - link "About us" [ref=e261] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e262]:
+            - link "Products" [ref=e263] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e264]:
+            - link "Services" [ref=e265] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e266]:
+            - link "Legal" [ref=e267] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e268]:
+            - link "Contact us" [ref=e269] [cursor=pointer]:
+              - /url: /contactus
+      - generic [ref=e270]:
+        - heading "About us" [level=5] [ref=e271]
+        - paragraph [ref=e272]:
+          - text: We are a team of passionate people whose goal is to improve everyone's life through disruptive products. We build great products to solve your business problems.
+          - text: Our products are designed for small to medium size companies willing to optimize their performance.
+      - generic [ref=e273]:
+        - heading "Connect with us" [level=5] [ref=e274]
+        - list [ref=e275]:
+          - listitem [ref=e276]:
+            - generic [ref=e277]: 
+            - link "Contact us" [ref=e279] [cursor=pointer]:
+              - /url: /contactus
+          - listitem [ref=e280]:
+            - generic [ref=e281]: 
+            - link "info@yourcompany.example.com" [ref=e283] [cursor=pointer]:
+              - /url: mailto:info@yourcompany.example.com
+          - listitem [ref=e284]:
+            - generic [ref=e285]: 
+            - link "+1 555-555-5556" [ref=e287] [cursor=pointer]:
+              - /url: tel:+1 555-555-5556
+        - generic [ref=e288]:
+          - link "Facebook" [ref=e289] [cursor=pointer]:
+            - /url: /website/social/facebook
+            - generic [ref=e290]: 
+          - link "X" [ref=e291] [cursor=pointer]:
+            - /url: /website/social/twitter
+            - generic [ref=e292]: 
+          - link "LinkedIn" [ref=e293] [cursor=pointer]:
+            - /url: /website/social/linkedin
+            - generic [ref=e294]: 
+          - link "Extra page" [ref=e295] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e296]: 
+    - generic [ref=e299]:
+      - generic [ref=e300]: Copyright © Company name
+      - generic [ref=e302]:
+        - text: Powered by
+        - link "Odoo" [ref=e303] [cursor=pointer]:
+          - /url: http://www.odoo.com?utm_source=db&utm_medium=website
+          - img "Odoo" [ref=e304]
+        - text: "- Create a"
+        - link "free website" [ref=e305] [cursor=pointer]:
+          - /url: http://www.odoo.com/app/website?utm_source=db&utm_medium=website
