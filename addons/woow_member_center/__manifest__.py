@@ -40,6 +40,7 @@
             'woow_member_center/static/src/css/member_center.css',
         ],
     },
+    'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': False,
     'auto_install': False,
