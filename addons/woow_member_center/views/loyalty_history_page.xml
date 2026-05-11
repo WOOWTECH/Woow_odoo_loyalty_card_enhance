@@ -23,8 +23,10 @@
                         <th>日期</th>
                         <th>說明</th>
                         <th>關聯訂單</th>
+                        <th class="text-end">前餘額</th>
                         <th class="text-end">增加</th>
                         <th class="text-end">使用</th>
+                        <th class="text-end">後餘額</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,6 +50,9 @@
                                 </t>
                                 <span t-else="" class="text-muted">—</span>
                             </td>
+                            <td class="text-end text-muted">
+                                <t t-out="line.card_id._format_points(line.balance_before)"/>
+                            </td>
                             <td class="text-end">
                                 <span t-if="line.issued"
                                       class="text-success fw-bold">
@@ -59,6 +64,9 @@
                                       class="text-danger fw-bold">
                                     -<t t-out="line.card_id._format_points(line.used)"/>
                                 </span>
+                            </td>
+                            <td class="text-end fw-bold">
+                                <t t-out="line.card_id._format_points(line.balance_after)"/>
                             </td>
                         </tr>
                     </t>
