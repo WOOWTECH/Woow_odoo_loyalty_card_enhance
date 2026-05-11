@@ -1,8 +1,0 @@
-[    4441ms] [WARNING] The following element was removed from the breadcrumb and from the url.
- {action: appointments, actionStack: Array(1)} 
-This could be because the action wasn't found or because the user doesn't have the right to access to the record, the original error is :
- 動作 appointments 不存在。 @ http://localhost:9073/web/assets/e5bad1a/web.assets_web.min.js:10007
-[   27810ms] [WARNING] The following element was removed from the breadcrumb and from the url.
- {action: appointments, actionStack: Array(1)} 
-This could be because the action wasn't found or because the user doesn't have the right to access to the record, the original error is :
- 動作 appointments 不存在。 @ http://localhost:9073/web/assets/e5bad1a/web.assets_web.min.js:10007
