@@ -1,5 +1,3 @@
-from dateutil.relativedelta import relativedelta
-
 from odoo import api, fields, models
 
 
@@ -11,9 +9,6 @@ class LoyaltyCard(models.Model):
 
     is_consign = fields.Boolean(
         string='是寄品卡', compute='_compute_is_consign', store=True,
-    )
-    consign_card_type = fields.Selection(
-        related='program_id.consign_card_type', store=True, string='寄品卡類型',
     )
     consign_line_ids = fields.One2many(
         'loyalty.consign.line', 'card_id', string='寄品明細', copy=False,
@@ -31,10 +26,6 @@ class LoyaltyCard(models.Model):
     consign_active_lines = fields.Integer(
         string='有效品項數', compute='_compute_consign_totals', store=True,
     )
-    consign_expiry_date = fields.Date(
-        string='卡片到期日', compute='_compute_consign_expiry_date',
-    )
-
     @api.depends('program_id.program_type')
     def _compute_is_consign(self):
         for card in self:
@@ -60,15 +51,6 @@ class LoyaltyCard(models.Model):
             if card.is_consign:
                 card.access_url = f'/my/consign-cards/{card.id}'
 
-    @api.depends('program_id.consign_expiry_months')
-    def _compute_consign_expiry_date(self):
-        for card in self:
-            months = card.program_id.consign_expiry_months
-            if card.is_consign and months and card.create_date:
-                card.consign_expiry_date = card.create_date.date() + relativedelta(months=months)
-            else:
-                card.consign_expiry_date = False
-
     def consign_add_line(self, product, qty, unit_price, product_desc=None, sale_line=None):
         """新增或累加寄品明細至此卡片。
 
@@ -80,12 +62,6 @@ class LoyaltyCard(models.Model):
         self.ensure_one()
         if isinstance(product, int):
             product = self.env['product.product'].browse(product)
-        program = self.program_id
-        expiry_date = False
-        if program.consign_expiry_months:
-            expiry_date = fields.Date.context_today(self) + relativedelta(
-                months=program.consign_expiry_months
-            )
 
         # 同品項同價格的 active line 直接累加
         existing = self.consign_line_ids.filtered(
@@ -104,7 +80,6 @@ class LoyaltyCard(models.Model):
                 'qty_deposited': qty,
                 'unit_price': unit_price,
                 'date_deposited': fields.Date.context_today(self),
-                'date_expiry': expiry_date,
             }
             if sale_line:
                 vals['sale_line_id'] = sale_line.id if hasattr(sale_line, 'id') else sale_line

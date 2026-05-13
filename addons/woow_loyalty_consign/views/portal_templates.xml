@@ -143,7 +143,6 @@
                                     <th class="text-center">存入</th>
                                     <th class="text-center">已核銷</th>
                                     <th class="text-center">剩餘</th>
-                                    <th class="text-center">到期日</th>
                                     <th class="text-center">狀態</th>
                                 </tr>
                             </thead>
@@ -151,8 +150,7 @@
                                 <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
                                    t-as="line">
                                     <tr t-attf-class="#{
-                                        'text-muted' if line.state == 'depleted' else
-                                        'text-danger' if line.state == 'expired' else ''
+                                        'text-muted' if line.state == 'depleted' else ''
                                     }">
                                         <td>
                                             <t t-out="line.product_desc or line.product_id.name"/>
@@ -167,18 +165,10 @@
                                             <strong><t t-out="line.qty_remaining"/></strong>
                                         </td>
                                         <td class="text-center">
-                                            <t t-if="line.date_expiry">
-                                                <t t-out="line.date_expiry"/>
-                                            </t>
-                                            <t t-else="">—</t>
-                                        </td>
-                                        <td class="text-center">
                                             <span t-if="line.state == 'active'"
                                                   class="badge bg-success">有效</span>
                                             <span t-if="line.state == 'depleted'"
                                                   class="badge bg-secondary">已用完</span>
-                                            <span t-if="line.state == 'expired'"
-                                                  class="badge bg-danger">已過期</span>
                                         </td>
                                     </tr>
                                 </t>

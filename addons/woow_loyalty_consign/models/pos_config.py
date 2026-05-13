@@ -43,7 +43,6 @@ class PosConfig(models.Model):
                 'product_name': line.product_desc or line.product_id.display_name,
                 'qty_remaining': line.qty_remaining,
                 'unit_price': line.unit_price,
-                'date_expiry': line.date_expiry.isoformat() if line.date_expiry else False,
             })
 
         return {

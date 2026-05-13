@@ -39,7 +39,6 @@
                     <group>
                         <group string="日期">
                             <field name="date_deposited"/>
-                            <field name="date_expiry"/>
                         </group>
                         <group string="來源">
                             <field name="sale_line_id"/>
@@ -69,8 +68,7 @@
         <field name="name">loyalty.consign.line.list</field>
         <field name="model">loyalty.consign.line</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'depleted'"
-                  decoration-danger="state == 'expired'">
+            <list decoration-muted="state == 'depleted'">
                 <field name="card_id"/>
                 <field name="partner_id"/>
                 <field name="product_desc"/>
@@ -83,7 +81,6 @@
                 <field name="unit_price" optional="hide"/>
                 <field name="amount_remaining"/>
                 <field name="date_deposited"/>
-                <field name="date_expiry"/>
                 <field name="sale_order_id" optional="hide"/>
                 <field name="state"/>
             </list>
@@ -104,8 +101,6 @@
                         domain="[('state', '=', 'active')]"/>
                 <filter name="filter_depleted" string="已用完"
                         domain="[('state', '=', 'depleted')]"/>
-                <filter name="filter_expired" string="已過期"
-                        domain="[('state', '=', 'expired')]"/>
                 <separator/>
                 <filter name="group_partner" string="依客戶"
                         context="{'group_by': 'partner_id'}"/>
@@ -113,8 +108,6 @@
                         context="{'group_by': 'product_id'}"/>
                 <filter name="group_card" string="依卡片"
                         context="{'group_by': 'card_id'}"/>
-                <filter name="group_card_type" string="依類型"
-                        context="{'group_by': 'card_type'}"/>
             </search>
         </field>
     </record>
