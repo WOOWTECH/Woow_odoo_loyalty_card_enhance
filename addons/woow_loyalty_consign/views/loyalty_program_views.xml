@@ -31,13 +31,13 @@
                 <attribute name="invisible">program_type not in ('gift_card', 'ewallet', 'consign')</attribute>
             </field>
 
-            <!-- 寄品卡隱藏限制使用欄位 -->
-            <field name="limit_usage" position="attributes">
+            <!-- 寄品卡隱藏限制使用欄位（含 label） -->
+            <xpath expr="//field[@name='limit_usage']" position="attributes">
                 <attribute name="invisible">program_type == 'consign'</attribute>
-            </field>
-            <field name="max_usage" position="attributes">
-                <attribute name="invisible">program_type == 'consign' or not limit_usage</attribute>
-            </field>
+            </xpath>
+            <xpath expr="//label[@for='limit_usage']" position="attributes">
+                <attribute name="invisible">program_type == 'consign'</attribute>
+            </xpath>
         </field>
     </record>
 
