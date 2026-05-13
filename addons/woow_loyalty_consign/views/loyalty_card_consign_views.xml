@@ -24,8 +24,6 @@
             <!-- 在 partner_id 之後加入寄品卡欄位 -->
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="is_consign" invisible="1"/>
-                <field name="consign_card_type" invisible="not is_consign"/>
-                <field name="consign_expiry_date" invisible="not is_consign"/>
             </xpath>
 
             <!-- 原生 loyalty.card form 已有 <chatter/>，不需重複加入 -->
@@ -44,8 +42,7 @@
                         </group>
                     </group>
                     <field name="consign_line_ids" nolabel="1">
-                        <list decoration-muted="state == 'depleted'"
-                              decoration-danger="state == 'expired'">
+                        <list decoration-muted="state == 'depleted'">
                             <field name="product_desc"/>
                             <field name="product_id"/>
                             <field name="lot_id" optional="hide"/>
@@ -56,7 +53,6 @@
                             <field name="unit_price"/>
                             <field name="amount_remaining"/>
                             <field name="date_deposited"/>
-                            <field name="date_expiry"/>
                             <field name="state"/>
                         </list>
                     </field>
@@ -85,7 +81,6 @@
             <list decoration-muted="not active">
                 <field name="code"/>
                 <field name="partner_id"/>
-                <field name="consign_card_type"/>
                 <field name="consign_total_remaining_qty" string="剩餘數量"/>
                 <field name="consign_total_remaining_value" string="剩餘金額"/>
                 <field name="consign_active_lines" string="有效品項"/>
@@ -111,8 +106,6 @@
                 <separator/>
                 <filter name="group_partner" string="依客戶" context="{'group_by': 'partner_id'}"/>
                 <filter name="group_program" string="依方案" context="{'group_by': 'program_id'}"/>
-                <filter name="group_card_type" string="依類型"
-                        context="{'group_by': 'consign_card_type'}"/>
             </search>
         </field>
     </record>

@@ -8,20 +8,6 @@ class LoyaltyProgram(models.Model):
         selection_add=[('consign', '寄品卡')],
         ondelete={'consign': 'set default'},
     )
-    consign_card_type = fields.Selection(
-        [
-            ('wine', '酒窖寄存'),
-            ('aesthetics', '醫美療程'),
-            ('general', '一般寄品'),
-        ],
-        string='寄品卡類型',
-        default='general',
-    )
-    consign_expiry_months = fields.Integer(
-        string='品項有效月數',
-        default=0,
-        help='0 表示無期限。設定後，每筆品項的到期日 = 存入日 + 此月數。',
-    )
 
     @api.depends('program_type')
     def _compute_is_nominative(self):
@@ -59,7 +45,6 @@ class LoyaltyProgram(models.Model):
     @api.onchange('program_type')
     def _onchange_program_type_consign(self):
         if self.program_type == 'consign':
-            self.consign_card_type = self.consign_card_type or 'general'
             if not self.mail_template_id:
                 template = self.env.ref(
                     'woow_loyalty_consign.mail_template_consign_card',
