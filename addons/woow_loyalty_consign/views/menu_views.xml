@@ -1,43 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!--
-        選單結構：放在 Sales > Products 下，
-        與 Discount & Loyalty (seq 40)、Gift cards & eWallet (seq 50) 並列。
-    -->
+    <!-- ============================================================ -->
+    <!-- Sales > Products > 寄品卡                                      -->
+    <!-- 與 Discount & Loyalty (seq 40)、Gift cards & eWallet (seq 50) 並列 -->
+    <!-- ============================================================ -->
 
-    <!-- 寄品卡父選單（Sales > Products > 寄品卡） -->
     <menuitem id="menu_consign_root"
               name="寄品卡"
               parent="sale.product_menu_catalog"
               groups="sales_team.group_sale_salesman"
               sequence="55"/>
 
-    <!-- 寄品方案（程式設定）— 直接在父選單下，類似 Gift cards & eWallet 的 action -->
     <menuitem id="menu_consign_programs"
               name="寄品方案"
               parent="menu_consign_root"
               action="loyalty_program_consign_action"
               sequence="10"/>
 
-    <!-- 寄品卡清單 -->
     <menuitem id="menu_consign_cards"
               name="寄品卡"
               parent="menu_consign_root"
               action="loyalty_card_consign_action"
               sequence="20"/>
 
-    <!-- 寄品明細 -->
     <menuitem id="menu_consign_lines"
               name="寄品明細"
               parent="menu_consign_root"
               action="loyalty_consign_line_action"
               sequence="30"/>
 
-    <!-- 核銷紀錄 -->
     <menuitem id="menu_consign_redemptions"
               name="核銷紀錄"
               parent="menu_consign_root"
+              action="loyalty_consign_redemption_action"
+              sequence="40"/>
+
+    <!-- ============================================================ -->
+    <!-- POS > Configuration > 寄品卡                                   -->
+    <!-- 與 Discount & Loyalty (seq 91)、Gift cards & eWallet (seq 92) 並列 -->
+    <!-- ============================================================ -->
+
+    <menuitem id="menu_consign_pos_root"
+              name="寄品卡"
+              parent="point_of_sale.pos_config_menu_catalog"
+              groups="point_of_sale.group_pos_manager"
+              sequence="93"/>
+
+    <menuitem id="menu_consign_pos_programs"
+              name="寄品方案"
+              parent="menu_consign_pos_root"
+              action="loyalty_program_consign_action"
+              sequence="10"/>
+
+    <menuitem id="menu_consign_pos_cards"
+              name="寄品卡"
+              parent="menu_consign_pos_root"
+              action="loyalty_card_consign_action"
+              sequence="20"/>
+
+    <menuitem id="menu_consign_pos_lines"
+              name="寄品明細"
+              parent="menu_consign_pos_root"
+              action="loyalty_consign_line_action"
+              sequence="30"/>
+
+    <menuitem id="menu_consign_pos_redemptions"
+              name="核銷紀錄"
+              parent="menu_consign_pos_root"
+              action="loyalty_consign_redemption_action"
+              sequence="40"/>
+
+    <!-- ============================================================ -->
+    <!-- eCommerce > Loyalty > 寄品卡                                   -->
+    <!-- 與 Discount & Loyalty、Gift cards & eWallet 並列               -->
+    <!-- ============================================================ -->
+
+    <menuitem id="menu_consign_ecommerce_root"
+              name="寄品卡"
+              parent="website_sale_loyalty.menu_loyalty"
+              groups="sales_team.group_sale_manager"
+              sequence="30"/>
+
+    <menuitem id="menu_consign_ecommerce_programs"
+              name="寄品方案"
+              parent="menu_consign_ecommerce_root"
+              action="loyalty_program_consign_action"
+              sequence="10"/>
+
+    <menuitem id="menu_consign_ecommerce_cards"
+              name="寄品卡"
+              parent="menu_consign_ecommerce_root"
+              action="loyalty_card_consign_action"
+              sequence="20"/>
+
+    <menuitem id="menu_consign_ecommerce_lines"
+              name="寄品明細"
+              parent="menu_consign_ecommerce_root"
+              action="loyalty_consign_line_action"
+              sequence="30"/>
+
+    <menuitem id="menu_consign_ecommerce_redemptions"
+              name="核銷紀錄"
+              parent="menu_consign_ecommerce_root"
               action="loyalty_consign_redemption_action"
               sequence="40"/>
 

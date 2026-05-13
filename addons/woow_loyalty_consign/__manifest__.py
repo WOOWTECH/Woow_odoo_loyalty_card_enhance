@@ -31,6 +31,7 @@
         'loyalty',
         'sale_loyalty',
         'pos_loyalty',
+        'website_sale_loyalty',
         'stock',
         'portal',
         'mail',
