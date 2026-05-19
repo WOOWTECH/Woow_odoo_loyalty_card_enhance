@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Hub Card: 會員資格 -->
+    <template id="mc_hub_membership_card"
+              inherit_id="woow_member_center.portal_member_center_hub">
+        <xpath expr="//div[@id='mc_hub_grid']" position="inside">
+            <t t-if="show_membership">
+                <a href="/my/member-center/membership" class="mc-hub-card" data-mc-order="60">
+                    <div class="mc-hub-card-icon">
+                        <img src="/woow_mc_membership/static/src/img/membership.svg" alt="會員資格"/>
+                    </div>
+                    <div class="mc-hub-card-body">
+                        <div class="mc-hub-card-title">會員資格</div>
+                        <div class="mc-hub-card-text">查看會員方案與期限</div>
+                    </div>
+                    <div class="mc-hub-card-metric">
+                        <span t-attf-class="badge rounded-pill #{
+                            'bg-success' if membership_state in ('paid', 'free') else
+                            'bg-secondary' if membership_state == 'none' else
+                            'bg-warning text-dark'
+                        }">
+                            <t t-out="membership_state_label"/>
+                        </span>
+                    </div>
+                </a>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Breadcrumbs -->
+    <template id="portal_breadcrumb_membership"
+              inherit_id="portal.portal_breadcrumbs"
+              priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'mc_membership'" class="breadcrumb-item">
+                <a href="/my/member-center">會員中心</a>
+            </li>
+            <li t-if="page_name == 'mc_membership'"
+                class="breadcrumb-item active">會員資格</li>
+        </xpath>
+    </template>
+
+    <!-- 會員資格 -->
+    <template id="portal_mc_membership" name="Portal: 會員資格">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">會員資格</t>
+            </t>
+
+            <!-- 狀態卡片 -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-6">
+                            <h3 class="mb-0">會員狀態</h3>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <span t-attf-class="badge fs-5 #{
+                                'bg-success' if membership_state in ('paid', 'free') else
+                                'bg-warning text-dark' if membership_state == 'invoiced' else
+                                'bg-danger' if membership_state == 'canceled' else
+                                'bg-secondary'
+                            }">
+                                <t t-out="membership_state_label"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <t t-if="not member_lines">
+                        <div class="text-center text-muted py-4">
+                            <i class="fa fa-id-card fa-3x mb-3 d-block"/>
+                            <p>目前尚未加入任何會員方案。</p>
+                        </div>
+                    </t>
+
+                    <t t-if="member_lines">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>會員方案</th>
+                                        <th class="text-center">起始日</th>
+                                        <th class="text-center">到期日</th>
+                                        <th class="text-end">會費</th>
+                                        <th class="text-center">狀態</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="member_lines" t-as="line">
+                                        <tr>
+                                            <td>
+                                                <strong><t t-out="line.membership_id.name"/></strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <t t-out="line.date_from"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <t t-out="line.date_to"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-out="'{:,.0f}'.format(line.member_price)"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-if="line.state == 'paid'"
+                                                      class="badge bg-success">已付費</span>
+                                                <span t-if="line.state == 'invoiced'"
+                                                      class="badge bg-warning text-dark">已開立帳單</span>
+                                                <span t-if="line.state == 'free'"
+                                                      class="badge bg-info">免費會員</span>
+                                                <span t-if="line.state == 'canceled'"
+                                                      class="badge bg-danger">已取消</span>
+                                                <span t-if="line.state == 'none'"
+                                                      class="badge bg-secondary">無</span>
+                                                <span t-if="line.state == 'waiting'"
+                                                      class="badge bg-secondary">等待中</span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>
