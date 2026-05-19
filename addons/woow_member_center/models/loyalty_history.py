@@ -24,3 +24,27 @@ class LoyaltyHistory(models.Model):
                 vals['balance_before'] = balance_before
                 vals['balance_after'] = balance_after
         return super().create(vals_list)
+
+    # ------------------------------------------------------------------
+    # Defensive helpers for portal templates (fallback if not in core)
+    # ------------------------------------------------------------------
+
+    def _get_order_portal_url(self):
+        """Return a portal URL for the linked order, or empty string."""
+        self.ensure_one()
+        if hasattr(super(), '_get_order_portal_url'):
+            return super()._get_order_portal_url()
+        order = self.order_id if 'order_id' in self._fields else False
+        if order and hasattr(order, 'get_portal_url'):
+            return order.get_portal_url()
+        return ''
+
+    def _get_order_description(self):
+        """Return a human-readable description for the linked order."""
+        self.ensure_one()
+        if hasattr(super(), '_get_order_description'):
+            return super()._get_order_description()
+        order = self.order_id if 'order_id' in self._fields else False
+        if order:
+            return order.name or ''
+        return ''

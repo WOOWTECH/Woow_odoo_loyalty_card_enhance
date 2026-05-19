@@ -33,7 +33,6 @@
         'pos_loyalty',
         'website_sale_loyalty',
         'stock',
-        'portal',
         'mail',
     ],
     'data': [
@@ -53,8 +52,6 @@
         'views/menu_views.xml',
         # Wizard
         'wizard/consign_redeem_wizard_views.xml',
-        # Portal
-        'views/portal_templates.xml',
         # Report
         'report/consign_card_report_templates.xml',
         'report/consign_card_report_actions.xml',

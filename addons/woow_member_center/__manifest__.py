@@ -1,27 +1,26 @@
 {
     'name': '會員中心 (Member Center)',
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'category': 'Sales/Loyalty',
-    'summary': '會員中心入口 — 電子錢包、集點卡、禮品卡、優惠券、寄品卡、會員資格',
+    'summary': '會員中心 Portal Hub — 模組化架構，各功能可獨立安裝',
     'description': """
         會員中心 Portal Hub
         ===================
-        提供統一的會員中心入口頁面，整合以下功能：
-        - 電子錢包 (eWallet) — 餘額查詢
-        - 集點卡 (Loyalty) — 累積點數查詢
-        - 禮品卡 (Gift Card) — 餘額查詢
-        - 優惠券 (Coupon) — 可用券查詢
-        - 寄品卡 (Consign) — 寄品查詢
-        - 會員資格 (Membership) — 狀態與期限
+        提供統一的會員中心入口頁面，各功能模組透過 xpath 注入卡片：
+
+        可搭配的子模組：
+        - woow_mc_ewallet — 電子錢包
+        - woow_mc_loyalty — 集點卡
+        - woow_mc_gift_card — 禮品卡
+        - woow_mc_coupon — 優惠券
+        - woow_mc_consign — 寄品卡
+        - woow_mc_membership — 會員資格
     """,
     'author': 'WoowTech',
     'website': 'https://www.woowtech.com',
     'depends': [
         'portal',
         'loyalty',
-        'sale_loyalty',
-        'membership',
-        'woow_loyalty_consign',
     ],
     'data': [
         'security/ir.model.access.csv',
@@ -29,11 +28,6 @@
         'views/portal_templates.xml',
         'views/loyalty_history_snippet.xml',
         'views/loyalty_history_page.xml',
-        'views/ewallet_templates.xml',
-        'views/loyalty_templates.xml',
-        'views/gift_card_templates.xml',
-        'views/coupon_templates.xml',
-        'views/membership_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [

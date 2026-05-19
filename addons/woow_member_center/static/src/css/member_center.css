@@ -103,6 +103,25 @@
 }
 
 /* ============================================================
+   Hub Card Ordering (子模組用 data-mc-order 指定排序)
+   ============================================================ */
+
+.mc-hub-card[data-mc-order="10"] { order: 10; }
+.mc-hub-card[data-mc-order="20"] { order: 20; }
+.mc-hub-card[data-mc-order="30"] { order: 30; }
+.mc-hub-card[data-mc-order="40"] { order: 40; }
+.mc-hub-card[data-mc-order="50"] { order: 50; }
+.mc-hub-card[data-mc-order="60"] { order: 60; }
+
+/* ============================================================
+   Hub Empty State — 當 grid 有內容時隱藏空狀態
+   ============================================================ */
+
+.mc-hub-grid:not(:empty) + .mc-hub-empty {
+    display: none;
+}
+
+/* ============================================================
    Balance Hero (eWallet total balance)
    ============================================================ */
 

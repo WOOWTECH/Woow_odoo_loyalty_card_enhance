@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Hub Card: 集點卡 -->
+    <template id="mc_hub_loyalty_card"
+              inherit_id="woow_member_center.portal_member_center_hub">
+        <xpath expr="//div[@id='mc_hub_grid']" position="inside">
+            <t t-if="show_loyalty">
+                <a href="/my/member-center/loyalty" class="mc-hub-card" data-mc-order="20">
+                    <div class="mc-hub-card-icon">
+                        <img src="/woow_mc_loyalty/static/src/img/loyalty.svg" alt="集點卡"/>
+                    </div>
+                    <div class="mc-hub-card-body">
+                        <div class="mc-hub-card-title">集點卡</div>
+                        <div class="mc-hub-card-text">查看累積點數</div>
+                    </div>
+                    <div class="mc-hub-card-metric">
+                        <span class="badge rounded-pill bg-success">
+                            <t t-out="'{:,.0f}'.format(loyalty_points)"/>
+                            <t t-out="loyalty_point_name"/>
+                        </span>
+                    </div>
+                </a>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Breadcrumbs -->
+    <template id="portal_breadcrumb_loyalty"
+              inherit_id="portal.portal_breadcrumbs"
+              priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ('mc_loyalty', 'mc_loyalty_detail')"
+                class="breadcrumb-item">
+                <a href="/my/member-center">會員中心</a>
+            </li>
+            <li t-if="page_name == 'mc_loyalty'"
+                class="breadcrumb-item active">集點卡</li>
+            <li t-if="page_name == 'mc_loyalty_detail'" class="breadcrumb-item">
+                <a href="/my/member-center/loyalty">集點卡</a>
+            </li>
+            <li t-if="page_name == 'mc_loyalty_detail'"
+                class="breadcrumb-item active">
+                <t t-out="card.program_id.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    <!-- 集點卡列表 -->
+    <template id="portal_mc_loyalty_list" name="Portal: 集點卡列表">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">集點卡</t>
+            </t>
+
+            <t t-if="not cards">
+                <div class="alert alert-info mt-3" role="alert">
+                    目前沒有集點卡。
+                </div>
+            </t>
+
+            <t t-if="cards">
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover o_portal_my_doc_table">
+                        <thead>
+                            <tr class="active">
+                                <th>方案</th>
+                                <th>卡號</th>
+                                <th class="text-end">累積點數</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="cards" t-as="card">
+                                <tr>
+                                    <td>
+                                        <a t-attf-href="/my/member-center/loyalty/#{card.id}">
+                                            <t t-out="card.program_id.name"/>
+                                        </a>
+                                    </td>
+                                    <td><t t-out="card.code"/></td>
+                                    <td class="text-end">
+                                        <strong>
+                                            <t t-out="'{:,.0f}'.format(card.points)"/>
+                                            <t t-out="card.point_name"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- 集點卡明細 -->
+    <template id="portal_mc_loyalty_detail" name="Portal: 集點卡明細">
+        <t t-call="portal.portal_layout">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-6">
+                            <h3 class="mb-0">
+                                <t t-out="card.program_id.name"/>
+                            </h3>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <span class="badge bg-success fs-5">
+                                <t t-out="'{:,.0f}'.format(card.points)"/>
+                                <t t-out="card.point_name"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>卡號：</strong>
+                            <t t-out="card.code"/>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>建立日期：</strong>
+                            <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
+                        </div>
+                    </div>
+                    <t t-if="card.program_id.date_from or card.program_id.date_to">
+                        <div class="row">
+                            <div class="col-md-6 mb-2" t-if="card.program_id.date_from">
+                                <strong>方案開始：</strong>
+                                <t t-out="card.program_id.date_from"/>
+                            </div>
+                            <div class="col-md-6 mb-2" t-if="card.program_id.date_to">
+                                <strong>方案結束：</strong>
+                                <t t-out="card.program_id.date_to"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- 交易紀錄 -->
+            <t t-call="woow_member_center.portal_loyalty_history_table"/>
+
+            <!-- chatter -->
+            <hr/>
+            <div id="loyalty_communication" class="mt-4">
+                <h3>溝通紀錄</h3>
+                <t t-call="portal.message_thread"/>
+            </div>
+        </t>
+    </template>
+
+</odoo>
