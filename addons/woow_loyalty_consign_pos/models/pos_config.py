@@ -1,4 +1,4 @@
-from odoo import models
+from odoo import _, models
 
 
 class PosConfig(models.Model):
@@ -24,13 +24,13 @@ class PosConfig(models.Model):
         if not card:
             return {
                 'successful': False,
-                'payload': {'error_message': 'Consignment card not found.', 'not_found': True},
+                'payload': {'error_message': _('Consignment card not found.'), 'not_found': True},
             }
 
         if card.partner_id and partner_id and card.partner_id.id != partner_id:
             return {
                 'successful': False,
-                'payload': {'error_message': 'This card does not belong to the selected customer.'},
+                'payload': {'error_message': _('This card does not belong to the selected customer.')},
             }
 
         return {
@@ -42,7 +42,7 @@ class PosConfig(models.Model):
         """Get all active consignment cards for a specific partner."""
         self.ensure_one()
         if not partner_id:
-            return {'successful': False, 'payload': {'error_message': 'No customer selected.'}}
+            return {'successful': False, 'payload': {'error_message': _('No customer selected.')}}
 
         cards = self.env['loyalty.card'].search([
             ('is_consign', '=', True),

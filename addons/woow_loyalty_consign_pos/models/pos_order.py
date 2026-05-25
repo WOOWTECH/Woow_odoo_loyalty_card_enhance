@@ -1,4 +1,4 @@
-from odoo import models
+from odoo import _, models
 
 
 class PosOrder(models.Model):
@@ -21,13 +21,13 @@ class PosOrder(models.Model):
         if not card.exists() or not card.is_consign:
             return {
                 'successful': False,
-                'payload': {'error_message': 'Invalid consignment card.'},
+                'payload': {'error_message': _('Invalid consignment card.')},
             }
 
         redemption = self.env['loyalty.consign.redemption'].create({
             'card_id': card.id,
             'staff_user_id': self.env.user.id,
-            'service_note': f'POS Redemption - {self.name}',
+            'service_note': _('POS Redemption - %s', self.name),
             'line_ids': [(0, 0, {
                 'consign_line_id': line['consign_line_id'],
                 'qty_redeemed': line['qty_redeemed'],
