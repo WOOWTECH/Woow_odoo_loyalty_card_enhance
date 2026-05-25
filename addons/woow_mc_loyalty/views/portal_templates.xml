@@ -68,6 +68,7 @@
                                 <th>方案</th>
                                 <th>卡號</th>
                                 <th class="text-end">累積點數</th>
+                                <th class="text-center">狀態</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,12 +79,23 @@
                                             <t t-out="card.program_id.name"/>
                                         </a>
                                     </td>
-                                    <td><t t-out="card.code"/></td>
+                                    <td><code><t t-out="card.code"/></code></td>
                                     <td class="text-end">
                                         <strong>
                                             <t t-out="'{:,.0f}'.format(card.points)"/>
                                             <t t-out="card.point_name"/>
                                         </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <t t-if="card.program_id.reward_ids and any(r.required_points &lt;= card.points for r in card.program_id.reward_ids)">
+                                            <span class="badge bg-info">有獎賞可兌換</span>
+                                        </t>
+                                        <t t-elif="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
+                                            <span class="badge bg-secondary">已過期</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-success">有效</span>
+                                        </t>
                                     </td>
                                 </tr>
                             </t>
@@ -114,6 +126,15 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <!-- 條碼區 -->
+                    <div class="mc-barcode-section text-center mb-3">
+                        <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
+                             class="mc-barcode-img" alt="barcode"/>
+                        <div class="mc-barcode-code mt-1">
+                            <code><t t-out="card.code"/></code>
+                        </div>
+                    </div>
+                    <hr/>
                     <div class="row">
                         <div class="col-md-6 mb-2">
                             <strong>卡號：</strong>
@@ -122,6 +143,12 @@
                         <div class="col-md-6 mb-2">
                             <strong>建立日期：</strong>
                             <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-2" t-if="card.expiration_date">
+                            <strong>到期日：</strong>
+                            <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <t t-if="card.program_id.date_from or card.program_id.date_to">
@@ -138,6 +165,29 @@
                     </t>
                 </div>
             </div>
+
+            <!-- 可兌換獎勵 -->
+            <t t-if="rewards">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">可兌換獎勵</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <t t-foreach="rewards" t-as="reward">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <t t-out="reward.description"/>
+                                    </div>
+                                    <span class="badge bg-info rounded-pill">
+                                        需 <t t-out="card._format_points(reward.required_points)"/>
+                                    </span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </t>
 
             <!-- 交易紀錄 -->
             <t t-call="woow_member_center.portal_loyalty_history_table"/>

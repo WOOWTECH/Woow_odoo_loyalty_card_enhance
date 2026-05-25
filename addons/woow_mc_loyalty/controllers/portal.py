@@ -53,9 +53,15 @@ class LoyaltyPortal(MemberCenterPortal):
         card = self._get_single_card(card_id, 'loyalty')
         if not card:
             return request.redirect('/my/member-center/loyalty')
+        # 查詢可兌換獎勵（點數足夠的獎勵）
+        rewards = request.env['loyalty.reward'].sudo().search([
+            ('program_id', '=', card.program_id.id),
+            ('required_points', '<=', card.points),
+        ], order='required_points desc')
         values = {
             'page_name': 'mc_loyalty_detail',
             'card': card,
+            'rewards': rewards,
         }
         values.update(self._get_card_history_values(card, 'loyalty'))
         values = self._get_page_view_values(
