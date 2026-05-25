@@ -17,7 +17,7 @@ class GiftCardPortal(MemberCenterPortal):
             values.update({
                 'show_gift_card': True,
                 'gift_balance': sum(cards.mapped('points')),
-                'gift_point_name': cards[:1].point_name or '元',
+                'gift_point_name': cards[:1].point_name or 'Credits',
                 'currency': request.env.company.currency_id,
             })
         return values

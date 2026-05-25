@@ -8,15 +8,15 @@
             <t t-if="show_coupon">
                 <a href="/my/member-center/coupons" class="mc-hub-card" data-mc-order="40">
                     <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_coupon/static/src/img/coupon.svg" alt="優惠券"/>
+                        <img src="/woow_mc_coupon/static/src/img/coupon.svg" alt="Coupon"/>
                     </div>
                     <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">優惠券</div>
-                        <div class="mc-hub-card-text">查看可用優惠券</div>
+                        <div class="mc-hub-card-title">Coupon</div>
+                        <div class="mc-hub-card-text">View Available Coupons</div>
                     </div>
                     <div class="mc-hub-card-metric">
                         <span class="badge rounded-pill bg-warning text-dark">
-                            <t t-out="coupon_count"/> 張
+                            <t t-out="coupon_count"/>
                         </span>
                     </div>
                 </a>
@@ -31,12 +31,12 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name in ('mc_coupons', 'mc_coupon_detail')"
                 class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'mc_coupons'"
-                class="breadcrumb-item active">優惠券</li>
+                class="breadcrumb-item active">Coupons</li>
             <li t-if="page_name == 'mc_coupon_detail'" class="breadcrumb-item">
-                <a href="/my/member-center/coupons">優惠券</a>
+                <a href="/my/member-center/coupons">Coupons</a>
             </li>
             <li t-if="page_name == 'mc_coupon_detail'"
                 class="breadcrumb-item active">
@@ -50,12 +50,12 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
-                <t t-set="title">優惠券</t>
+                <t t-set="title">Coupons</t>
             </t>
 
             <t t-if="not cards">
                 <div class="alert alert-info mt-3" role="alert">
-                    目前沒有可用的優惠券。
+                    No coupons found.
                 </div>
             </t>
 
@@ -64,10 +64,10 @@
                     <table class="table table-hover o_portal_my_doc_table">
                         <thead>
                             <tr class="active">
-                                <th>方案</th>
-                                <th>優惠碼</th>
-                                <th>說明</th>
-                                <th class="text-center">狀態</th>
+                                <th>Program</th>
+                                <th>Coupon Code</th>
+                                <th>Description</th>
+                                <th class="text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>

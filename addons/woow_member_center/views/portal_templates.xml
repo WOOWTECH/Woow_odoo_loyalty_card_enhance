@@ -14,9 +14,9 @@
         <xpath expr="//div[@id='portal_client_category']" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="icon" t-value="'/woow_member_center/static/src/img/member-center.svg'"/>
-                <t t-set="title">會員中心</t>
+                <t t-set="title">Member Center</t>
                 <t t-set="url" t-value="'/my/member-center'"/>
-                <t t-set="text">我的會員服務</t>
+                <t t-set="text">My Member Services</t>
                 <t t-set="placeholder_count" t-value="'member_center_count'"/>
             </t>
         </xpath>
@@ -29,7 +29,7 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
-                <t t-set="title">會員中心</t>
+                <t t-set="title">Member Center</t>
             </t>
 
             <div class="mc-hub-grid mt-4" id="mc_hub_grid">
@@ -40,7 +40,7 @@
             <div class="mc-hub-empty text-center text-muted py-5" id="mc_hub_empty">
                 <img src="/woow_member_center/static/src/img/member-center.svg"
                      style="width:64px; opacity:.5;" class="mb-3" alt=""/>
-                <p>目前沒有可用的會員功能。</p>
+                <p>No member services available.</p>
             </div>
         </t>
     </template>
@@ -54,11 +54,11 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <!-- Hub -->
             <li t-if="page_name == 'member_center'"
-                class="breadcrumb-item active">會員中心</li>
+                class="breadcrumb-item active">Member Center</li>
 
             <!-- 交易紀錄歷史頁 -->
             <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
                 <a t-att-href="parent_url"><t t-out="parent_title"/></a>
@@ -67,7 +67,7 @@
                 <a t-att-href="card_url"><t t-out="card.program_id.name"/></a>
             </li>
             <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item active">
-                交易紀錄
+                Transaction History
             </li>
         </xpath>
     </template>
