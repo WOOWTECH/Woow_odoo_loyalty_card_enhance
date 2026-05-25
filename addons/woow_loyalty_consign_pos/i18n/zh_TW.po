@@ -1,0 +1,207 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_loyalty_consign_pos
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_loyalty_consign_pos
+#: model:product.product,name:woow_loyalty_consign_pos.consign_pos_redemption_product
+msgid "Consignment Redemption"
+msgstr "寄品核銷"
+
+#. module: woow_loyalty_consign_pos
+#: model:ir.model.fields,field_description:woow_loyalty_consign_pos.field_pos_order_line__consign_line_id
+msgid "Consignment Line"
+msgstr "寄品明細"
+
+#. module: woow_loyalty_consign_pos
+#: model:ir.model.fields,field_description:woow_loyalty_consign_pos.field_pos_order_line__is_consign_redemption
+msgid "Is Consignment Redemption"
+msgstr "是否為寄品核銷"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.xml:0
+msgid "Consignment"
+msgstr "寄品核銷"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.js:0
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.js:0
+msgid "Consignment Redemption - %s"
+msgstr "寄品核銷 - %s"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.xml:0
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.xml:0
+msgid "Card Code"
+msgstr "卡號"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.xml:0
+msgid "Items"
+msgstr "品項數"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.xml:0
+msgid "Remaining Qty"
+msgstr "剩餘數量"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_list_popup/consign_card_list_popup.xml:0
+msgid "Close"
+msgstr "關閉"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Item"
+msgstr "品項"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Available"
+msgstr "可用"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Redeem Qty"
+msgstr "核銷數量"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Expiry"
+msgstr "到期日"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Confirm Redemption"
+msgstr "確認核銷"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
+msgid "Cancel"
+msgstr "取消"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Failed to load consignment cards."
+msgstr "載入寄品卡失敗。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "%s has no consignment cards available for redemption."
+msgstr "%s 目前沒有可供核銷的寄品卡。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Consignment redemption product not found. Please verify module installation."
+msgstr "找不到寄品核銷產品，請確認模組是否正確安裝。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Consignment redemption product not found."
+msgstr "找不到寄品核銷產品。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Consign"
+msgstr "寄品"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Added %s consignment item(s) for pickup"
+msgstr "已加入 %s 項寄品核銷品項"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "Card validation failed"
+msgstr "卡片驗證失敗"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/product_screen/product_screen.js:0
+msgid "This card belongs to %s, not the current customer."
+msgstr "此卡片屬於 %s，非目前選擇的客戶。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/payment_screen/payment_screen.js:0
+msgid "Consignment Redemption Error"
+msgstr "寄品核銷錯誤"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/payment_screen/payment_screen.js:0
+msgid "Redemption failed"
+msgstr "核銷失敗"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-javascript
+#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/payment_screen/payment_screen.js:0
+msgid "Could not connect to server to confirm redemption. Please contact the administrator."
+msgstr "無法連線至伺服器確認核銷，請聯繫管理員。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-python
+#: code:addons/woow_loyalty_consign_pos/models/pos_config.py:0
+msgid "Consignment card not found."
+msgstr "找不到寄品卡。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-python
+#: code:addons/woow_loyalty_consign_pos/models/pos_config.py:0
+msgid "This card does not belong to the selected customer."
+msgstr "此卡片不屬於所選客戶。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-python
+#: code:addons/woow_loyalty_consign_pos/models/pos_config.py:0
+msgid "No customer selected."
+msgstr "未選擇客戶。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-python
+#: code:addons/woow_loyalty_consign_pos/models/pos_order.py:0
+msgid "Invalid consignment card."
+msgstr "無效的寄品卡。"
+
+#. module: woow_loyalty_consign_pos
+#. odoo-python
+#: code:addons/woow_loyalty_consign_pos/models/pos_order.py:0
+msgid "POS Redemption - %s"
+msgstr "POS 核銷 - %s"

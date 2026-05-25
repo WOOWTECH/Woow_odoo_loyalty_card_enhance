@@ -3,6 +3,7 @@
 import { ControlButtons } from "@point_of_sale/app/screens/product_screen/control_buttons/control_buttons";
 import { ProductScreen } from "@point_of_sale/app/screens/product_screen/product_screen";
 import { patch } from "@web/core/utils/patch";
+import { _t } from "@web/core/l10n/translation";
 import { ConsignCardPopup } from "@woow_loyalty_consign_pos/overrides/components/consign_card_popup/consign_card_popup";
 import { ConsignCardListPopup } from "@woow_loyalty_consign_pos/overrides/components/consign_card_list_popup/consign_card_list_popup";
 
@@ -35,13 +36,13 @@ patch(ControlButtons.prototype, {
             );
         } catch (error) {
             console.error("[ConsignCard] get_partner_consign_cards RPC failed:", error);
-            this.notification.add("Failed to load consignment cards.", { type: "danger" });
+            this.notification.add(_t("Failed to load consignment cards."), { type: "danger" });
             return;
         }
 
         if (!result || !result.successful) {
             this.notification.add(
-                result?.payload?.error_message || "Failed to load consignment cards.",
+                result?.payload?.error_message || _t("Failed to load consignment cards."),
                 { type: "danger" }
             );
             return;
@@ -52,7 +53,7 @@ patch(ControlButtons.prototype, {
         // Step 3: Route based on card count
         if (cards.length === 0) {
             this.notification.add(
-                `${partner.name} has no consignment cards available for redemption.`,
+                _t("%s has no consignment cards available for redemption.", partner.name),
                 { type: "warning" }
             );
             return;
@@ -99,7 +100,7 @@ patch(ControlButtons.prototype, {
             : null;
         if (!consignProduct) {
             this.notification.add(
-                "Consignment redemption product not found. Please verify module installation.",
+                _t("Consignment redemption product not found. Please verify module installation."),
                 { type: "danger" }
             );
             return;
@@ -111,7 +112,7 @@ patch(ControlButtons.prototype, {
                     product_id: consignProduct,
                     qty: line.qty_redeemed,
                     price_unit: 0,
-                    customer_note: `[Consign] ${line.product_name}`,
+                    customer_note: `[${_t("Consign")}] ${line.product_name}`,
                     consign_line_id: line.consign_line_id,
                     is_consign_redemption: true,
                 },
@@ -121,7 +122,7 @@ patch(ControlButtons.prototype, {
         }
 
         this.notification.add(
-            `Added ${consignSelection.lines.length} consignment item(s) for pickup`,
+            _t("Added %s consignment item(s) for pickup", consignSelection.lines.length),
             { type: "success" }
         );
     },
@@ -156,7 +157,7 @@ patch(ProductScreen.prototype, {
 
         if (!result.successful) {
             this.notification.add(
-                result.payload?.error_message || "Card validation failed",
+                result.payload?.error_message || _t("Card validation failed"),
                 { type: "danger" }
             );
             return;
@@ -169,7 +170,7 @@ patch(ProductScreen.prototype, {
         if (partnerId && cardPartnerId && partnerId !== cardPartnerId) {
             // Order has a different customer than the card owner
             this.notification.add(
-                `This card belongs to ${cardData.partner_name}, not the current customer.`,
+                _t("This card belongs to %s, not the current customer.", cardData.partner_name),
                 { type: "danger" }
             );
             return;
@@ -197,7 +198,7 @@ patch(ProductScreen.prototype, {
                     : null;
                 if (!consignProduct) {
                     this.notification.add(
-                        "Consignment redemption product not found.",
+                        _t("Consignment redemption product not found."),
                         { type: "danger" }
                     );
                     return;
@@ -209,7 +210,7 @@ patch(ProductScreen.prototype, {
                             product_id: consignProduct,
                             qty: line.qty_redeemed,
                             price_unit: 0,
-                            customer_note: `[Consign] ${line.product_name}`,
+                            customer_note: `[${_t("Consign")}] ${line.product_name}`,
                             consign_line_id: line.consign_line_id,
                             is_consign_redemption: true,
                         },
@@ -219,7 +220,7 @@ patch(ProductScreen.prototype, {
                 }
 
                 this.notification.add(
-                    `Added ${consignSelection.lines.length} consignment item(s) for pickup`,
+                    _t("Added %s consignment item(s) for pickup", consignSelection.lines.length),
                     { type: "success" }
                 );
             },
