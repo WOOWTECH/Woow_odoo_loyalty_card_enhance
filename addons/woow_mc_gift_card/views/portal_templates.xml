@@ -8,11 +8,11 @@
             <t t-if="show_gift_card">
                 <a href="/my/member-center/gift-cards" class="mc-hub-card" data-mc-order="30">
                     <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_gift_card/static/src/img/gift-card.svg" alt="禮品卡"/>
+                        <img src="/woow_mc_gift_card/static/src/img/gift-card.svg" alt="Gift Card"/>
                     </div>
                     <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">禮品卡</div>
-                        <div class="mc-hub-card-text">查看禮品卡餘額</div>
+                        <div class="mc-hub-card-title">Gift Card</div>
+                        <div class="mc-hub-card-text">View Gift Card Balance</div>
                     </div>
                     <div class="mc-hub-card-metric">
                         <span class="badge rounded-pill bg-info">
@@ -32,12 +32,12 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name in ('mc_gift_cards', 'mc_gift_card_detail')"
                 class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'mc_gift_cards'"
-                class="breadcrumb-item active">禮品卡</li>
+                class="breadcrumb-item active">Gift Card</li>
             <li t-if="page_name == 'mc_gift_card_detail'" class="breadcrumb-item">
-                <a href="/my/member-center/gift-cards">禮品卡</a>
+                <a href="/my/member-center/gift-cards">Gift Card</a>
             </li>
             <li t-if="page_name == 'mc_gift_card_detail'"
                 class="breadcrumb-item active">
@@ -51,12 +51,12 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
-                <t t-set="title">禮品卡</t>
+                <t t-set="title">Gift Card</t>
             </t>
 
             <t t-if="not cards">
                 <div class="alert alert-info mt-3" role="alert">
-                    目前沒有禮品卡。
+                    No gift cards found.
                 </div>
             </t>
 
@@ -65,10 +65,10 @@
                     <table class="table table-hover o_portal_my_doc_table">
                         <thead>
                             <tr class="active">
-                                <th>方案</th>
-                                <th>卡號</th>
-                                <th class="text-end">餘額</th>
-                                <th class="text-center">狀態</th>
+                                <th>Program</th>
+                                <th>Card No.</th>
+                                <th class="text-end">Balance</th>
+                                <th class="text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -88,13 +88,13 @@
                                     </td>
                                     <td class="text-center">
                                         <t t-if="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
-                                            <span class="badge bg-secondary">已過期</span>
+                                            <span class="badge bg-secondary">Expired</span>
                                         </t>
                                         <t t-elif="card.points &lt;= 0">
-                                            <span class="badge bg-warning text-dark">餘額為零</span>
+                                            <span class="badge bg-warning text-dark">Zero Balance</span>
                                         </t>
                                         <t t-else="">
-                                            <span class="badge bg-success">有效</span>
+                                            <span class="badge bg-success">Active</span>
                                         </t>
                                     </td>
                                 </tr>
@@ -137,28 +137,28 @@
                     <hr/>
                     <div class="row">
                         <div class="col-md-6 mb-2">
-                            <strong>卡號：</strong>
+                            <strong>Card No.:</strong>
                             <t t-out="card.code"/>
                         </div>
                         <div class="col-md-6 mb-2">
-                            <strong>建立日期：</strong>
+                            <strong>Created:</strong>
                             <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-2" t-if="card.expiration_date">
-                            <strong>到期日：</strong>
+                            <strong>Expires:</strong>
                             <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <t t-if="card.program_id.date_from or card.program_id.date_to">
                         <div class="row">
                             <div class="col-md-6 mb-2" t-if="card.program_id.date_from">
-                                <strong>方案開始：</strong>
+                                <strong>Program Start:</strong>
                                 <t t-out="card.program_id.date_from"/>
                             </div>
                             <div class="col-md-6 mb-2" t-if="card.program_id.date_to">
-                                <strong>方案結束：</strong>
+                                <strong>Program End:</strong>
                                 <t t-out="card.program_id.date_to"/>
                             </div>
                         </div>
@@ -172,7 +172,7 @@
             <!-- chatter -->
             <hr/>
             <div id="gift_card_communication" class="mt-4">
-                <h3>溝通紀錄</h3>
+                <h3>Communication</h3>
                 <t t-call="portal.message_thread"/>
             </div>
         </t>

@@ -8,11 +8,11 @@
             <t t-if="show_membership">
                 <a href="/my/member-center/membership" class="mc-hub-card" data-mc-order="60">
                     <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_membership/static/src/img/membership.svg" alt="會員資格"/>
+                        <img src="/woow_mc_membership/static/src/img/membership.svg" alt="Membership"/>
                     </div>
                     <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">會員資格</div>
-                        <div class="mc-hub-card-text">查看會員方案與期限</div>
+                        <div class="mc-hub-card-title">Membership</div>
+                        <div class="mc-hub-card-text">View Membership Plans &amp; Duration</div>
                     </div>
                     <div class="mc-hub-card-metric">
                         <span t-attf-class="badge rounded-pill #{

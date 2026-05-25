@@ -8,9 +8,9 @@
         <t t-if="history_lines">
             <div class="card mt-3 mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">交易紀錄</h5>
+                    <h5 class="mb-0">Transaction History</h5>
                     <span class="badge bg-secondary rounded-pill">
-                        <t t-out="history_count"/> 筆
+                        <t t-out="history_count"/>
                     </span>
                 </div>
                 <div class="card-body p-0">

@@ -8,15 +8,15 @@
             <t t-if="show_consign">
                 <a href="/my/consign-cards" class="mc-hub-card" data-mc-order="50">
                     <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_consign/static/src/img/consign.svg" alt="寄品卡"/>
+                        <img src="/woow_mc_consign/static/src/img/consign.svg" alt="Consignment Card"/>
                     </div>
                     <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">寄品卡</div>
-                        <div class="mc-hub-card-text">查看寄品卡與核銷紀錄</div>
+                        <div class="mc-hub-card-title">Consignment Card</div>
+                        <div class="mc-hub-card-text">View Cards &amp; Redemption Records</div>
                     </div>
                     <div class="mc-hub-card-metric">
                         <span class="badge rounded-pill bg-secondary">
-                            <t t-out="consign_count"/> 張
+                            <t t-out="consign_count"/>
                         </span>
                     </div>
                 </a>
@@ -32,7 +32,7 @@
             <!-- 寄品卡列表 -->
             <li t-if="page_name in ('consign_cards', 'consign_card_detail', 'consign_redemption_detail')"
                 class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'consign_cards'"
                 class="breadcrumb-item active">寄品卡</li>

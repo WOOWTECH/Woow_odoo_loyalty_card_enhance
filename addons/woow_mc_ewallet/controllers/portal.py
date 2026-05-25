@@ -21,7 +21,7 @@ class EwalletPortal(MemberCenterPortal):
             values.update({
                 'show_ewallet': True,
                 'ewallet_balance': sum(cards.mapped('points')),
-                'ewallet_point_name': cards[:1].point_name or '元',
+                'ewallet_point_name': cards[:1].point_name or 'Credits',
                 'currency': request.env.company.currency_id,
             })
         return values
@@ -49,7 +49,7 @@ class EwalletPortal(MemberCenterPortal):
     def portal_mc_ewallet(self, **kw):
         cards = self._get_cards_by_type('ewallet')
         total_balance = sum(cards.mapped('points'))
-        point_name = cards[:1].point_name if cards else '元'
+        point_name = cards[:1].point_name if cards else 'Credits'
         currency = request.env.company.currency_id
         values = {
             'page_name': 'mc_ewallet',

@@ -8,11 +8,11 @@
             <t t-if="show_loyalty">
                 <a href="/my/member-center/loyalty" class="mc-hub-card" data-mc-order="20">
                     <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_loyalty/static/src/img/loyalty.svg" alt="集點卡"/>
+                        <img src="/woow_mc_loyalty/static/src/img/loyalty.svg" alt="Loyalty Card"/>
                     </div>
                     <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">集點卡</div>
-                        <div class="mc-hub-card-text">查看累積點數</div>
+                        <div class="mc-hub-card-title">Loyalty Card</div>
+                        <div class="mc-hub-card-text">View Accumulated Points</div>
                     </div>
                     <div class="mc-hub-card-metric">
                         <span class="badge rounded-pill bg-success">
@@ -32,12 +32,12 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name in ('mc_loyalty', 'mc_loyalty_detail')"
                 class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'mc_loyalty'"
-                class="breadcrumb-item active">集點卡</li>
+                class="breadcrumb-item active">Loyalty Card</li>
             <li t-if="page_name == 'mc_loyalty_detail'" class="breadcrumb-item">
-                <a href="/my/member-center/loyalty">集點卡</a>
+                <a href="/my/member-center/loyalty">Loyalty Card</a>
             </li>
             <li t-if="page_name == 'mc_loyalty_detail'"
                 class="breadcrumb-item active">
@@ -51,12 +51,12 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
-                <t t-set="title">集點卡</t>
+                <t t-set="title">Loyalty Card</t>
             </t>
 
             <t t-if="not cards">
                 <div class="alert alert-info mt-3" role="alert">
-                    目前沒有集點卡。
+                    No loyalty cards found.
                 </div>
             </t>
 
@@ -65,10 +65,10 @@
                     <table class="table table-hover o_portal_my_doc_table">
                         <thead>
                             <tr class="active">
-                                <th>方案</th>
-                                <th>卡號</th>
-                                <th class="text-end">累積點數</th>
-                                <th class="text-center">狀態</th>
+                                <th>Program</th>
+                                <th>Card No.</th>
+                                <th class="text-end">Points</th>
+                                <th class="text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -88,13 +88,13 @@
                                     </td>
                                     <td class="text-center">
                                         <t t-if="card.program_id.reward_ids and any(r.required_points &lt;= card.points for r in card.program_id.reward_ids)">
-                                            <span class="badge bg-info">有獎賞可兌換</span>
+                                            <span class="badge bg-info">Rewards Available</span>
                                         </t>
                                         <t t-elif="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
-                                            <span class="badge bg-secondary">已過期</span>
+                                            <span class="badge bg-secondary">Expired</span>
                                         </t>
                                         <t t-else="">
-                                            <span class="badge bg-success">有效</span>
+                                            <span class="badge bg-success">Active</span>
                                         </t>
                                     </td>
                                 </tr>
@@ -137,28 +137,28 @@
                     <hr/>
                     <div class="row">
                         <div class="col-md-6 mb-2">
-                            <strong>卡號：</strong>
+                            <strong>Card No.:</strong>
                             <t t-out="card.code"/>
                         </div>
                         <div class="col-md-6 mb-2">
-                            <strong>建立日期：</strong>
+                            <strong>Created:</strong>
                             <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-2" t-if="card.expiration_date">
-                            <strong>到期日：</strong>
+                            <strong>Expires:</strong>
                             <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <t t-if="card.program_id.date_from or card.program_id.date_to">
                         <div class="row">
                             <div class="col-md-6 mb-2" t-if="card.program_id.date_from">
-                                <strong>方案開始：</strong>
+                                <strong>Program Start:</strong>
                                 <t t-out="card.program_id.date_from"/>
                             </div>
                             <div class="col-md-6 mb-2" t-if="card.program_id.date_to">
-                                <strong>方案結束：</strong>
+                                <strong>Program End:</strong>
                                 <t t-out="card.program_id.date_to"/>
                             </div>
                         </div>
@@ -170,7 +170,7 @@
             <t t-if="rewards">
                 <div class="card mt-3">
                     <div class="card-header">
-                        <h5 class="mb-0">可兌換獎勵</h5>
+                        <h5 class="mb-0">Available Rewards</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
@@ -180,7 +180,7 @@
                                         <t t-out="reward.description"/>
                                     </div>
                                     <span class="badge bg-info rounded-pill">
-                                        需 <t t-out="card._format_points(reward.required_points)"/>
+                                        Requires <t t-out="card._format_points(reward.required_points)"/>
                                     </span>
                                 </div>
                             </t>
