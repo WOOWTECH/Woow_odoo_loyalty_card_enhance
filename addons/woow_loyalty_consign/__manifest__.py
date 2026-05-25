@@ -30,7 +30,6 @@
     'depends': [
         'loyalty',
         'sale_loyalty',
-        'pos_loyalty',
         'website_sale_loyalty',
         'stock',
         'mail',
@@ -56,11 +55,7 @@
         'report/consign_card_report_templates.xml',
         'report/consign_card_report_actions.xml',
     ],
-    'assets': {
-        'point_of_sale._assets_pos': [
-            'woow_loyalty_consign/static/src/**/*',
-        ],
-    },
+    'assets': {},
     'installable': True,
     'application': False,
     'auto_install': False,

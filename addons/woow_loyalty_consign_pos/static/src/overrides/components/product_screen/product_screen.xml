@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Add "Consignment" button to ControlButtons (inside the Actions popup) -->
+    <t t-name="woow_loyalty_consign_pos.ControlButtons"
+       t-inherit="point_of_sale.ControlButtons"
+       t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='props.showRemainingButtons']/div" position="inside">
+            <button t-att-class="buttonClass"
+                    t-on-click="onClickConsignRedemption">
+                <i class="fa fa-archive me-1"/>Consignment
+            </button>
+        </xpath>
+    </t>
+
+</templates>

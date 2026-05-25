@@ -5,12 +5,13 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     def _load_pos_data(self, data):
+        """Ensure the consignment redemption service product is loaded into POS."""
         res = super()._load_pos_data(data)
         config_id = self.env['pos.config'].browse(
             data['pos.config']['data'][0]['id']
         )
         redemption_product = self.env.ref(
-            'woow_loyalty_consign.consign_redemption_product',
+            'woow_loyalty_consign_pos.consign_pos_redemption_product',
             raise_if_not_found=False,
         )
         if not redemption_product:

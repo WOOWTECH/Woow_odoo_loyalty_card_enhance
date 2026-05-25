@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
-    <t t-name="woow_loyalty_consign.ConsignCardPopup">
+    <t t-name="woow_loyalty_consign_pos.ConsignCardPopup">
         <Dialog title="title" size="'lg'">
             <div class="consign-card-popup">
                 <div class="mb-3 text-muted fs-5">
@@ -9,10 +9,10 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>品項</th>
-                            <th class="text-center">可用數量</th>
-                            <th class="text-center">核銷數量</th>
-                            <th class="text-end">到期日</th>
+                            <th>Item</th>
+                            <th class="text-center">Available</th>
+                            <th class="text-center">Redeem Qty</th>
+                            <th class="text-end">Expiry</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,10 +56,10 @@
                 <button class="btn btn-primary btn-lg"
                         t-att-disabled="!hasSelection"
                         t-on-click="confirm">
-                    <i class="fa fa-check me-1"/>確認核銷
+                    <i class="fa fa-check me-1"/>Confirm Redemption
                 </button>
                 <button class="btn btn-secondary btn-lg" t-on-click="props.close">
-                    取消
+                    Cancel
                 </button>
             </t>
         </Dialog>
