@@ -68,6 +68,7 @@
                                 <th>方案</th>
                                 <th>卡號</th>
                                 <th class="text-end">餘額</th>
+                                <th class="text-center">狀態</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,12 +79,23 @@
                                             <t t-out="card.program_id.name"/>
                                         </a>
                                     </td>
-                                    <td><t t-out="card.code"/></td>
+                                    <td><code><t t-out="card.code"/></code></td>
                                     <td class="text-end">
                                         <strong>
                                             <t t-out="'{:,.0f}'.format(card.points)"/>
                                             <t t-out="card.point_name"/>
                                         </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <t t-if="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
+                                            <span class="badge bg-secondary">已過期</span>
+                                        </t>
+                                        <t t-elif="card.points &lt;= 0">
+                                            <span class="badge bg-warning text-dark">餘額為零</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-success">有效</span>
+                                        </t>
                                     </td>
                                 </tr>
                             </t>
@@ -114,6 +126,15 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <!-- 條碼區 -->
+                    <div class="mc-barcode-section text-center mb-3">
+                        <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
+                             class="mc-barcode-img" alt="barcode"/>
+                        <div class="mc-barcode-code mt-1">
+                            <code><t t-out="card.code"/></code>
+                        </div>
+                    </div>
+                    <hr/>
                     <div class="row">
                         <div class="col-md-6 mb-2">
                             <strong>卡號：</strong>
@@ -122,6 +143,12 @@
                         <div class="col-md-6 mb-2">
                             <strong>建立日期：</strong>
                             <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-2" t-if="card.expiration_date">
+                            <strong>到期日：</strong>
+                            <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
                         </div>
                     </div>
                     <t t-if="card.program_id.date_from or card.program_id.date_to">

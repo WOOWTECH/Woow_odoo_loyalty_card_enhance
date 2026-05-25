@@ -161,3 +161,33 @@
         font-size: 2rem;
     }
 }
+
+/* ============================================================
+   Barcode Section (card detail pages)
+   ============================================================ */
+
+.mc-barcode-section {
+    padding: 1.5rem 1rem;
+    background: var(--mc-light-gray);
+    border-radius: var(--mc-radius);
+}
+
+.mc-barcode-img {
+    max-width: 100%;
+    height: auto;
+}
+
+.mc-barcode-code {
+    font-size: 0.9rem;
+    color: var(--mc-gray);
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+    .mc-barcode-section {
+        padding: 1rem 0.5rem;
+    }
+    .mc-barcode-img {
+        max-width: 280px;
+    }
+}
