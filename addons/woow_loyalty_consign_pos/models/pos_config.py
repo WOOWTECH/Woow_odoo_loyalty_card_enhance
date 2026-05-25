@@ -1,5 +1,4 @@
 from odoo import models
-from odoo.osv import expression
 
 
 class PosConfig(models.Model):
@@ -39,17 +38,17 @@ class PosConfig(models.Model):
             'payload': self._prepare_consign_card_payload(card),
         }
 
-    def search_consign_cards(self, query):
-        """Search consignment cards by customer name or card code (partial match)."""
+    def get_partner_consign_cards(self, partner_id):
+        """Get all active consignment cards for a specific partner."""
         self.ensure_one()
-        domain = [('is_consign', '=', True), ('active', '=', True)]
-        if query:
-            domain = expression.AND([domain, [
-                '|',
-                ('partner_id.name', 'ilike', query),
-                ('code', 'ilike', query),
-            ]])
-        cards = self.env['loyalty.card'].search(domain, limit=20)
+        if not partner_id:
+            return {'successful': False, 'payload': {'error_message': 'No customer selected.'}}
+
+        cards = self.env['loyalty.card'].search([
+            ('is_consign', '=', True),
+            ('active', '=', True),
+            ('partner_id', '=', partner_id),
+        ])
 
         result = []
         for card in cards:

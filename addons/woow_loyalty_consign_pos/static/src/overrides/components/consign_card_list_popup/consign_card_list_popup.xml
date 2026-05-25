@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="woow_loyalty_consign_pos.ConsignCardListPopup">
+        <Dialog title="title" size="'lg'">
+            <div class="consign-card-list-popup">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Card Code</th>
+                            <th class="text-center">Items</th>
+                            <th class="text-center">Remaining Qty</th>
+                            <th/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="props.cards" t-as="card" t-key="card.card_id">
+                            <tr class="cursor-pointer" t-on-click="() => this.selectCard(card)">
+                                <td t-esc="card.program_name"/>
+                                <td>
+                                    <code t-esc="card.card_code"/>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary" t-esc="card.active_items"/>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info" t-esc="card.total_remaining_qty"/>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="fa fa-arrow-right"/>
+                                    </button>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary btn-lg" t-on-click="props.close">
+                    Close
+                </button>
+            </t>
+        </Dialog>
+    </t>
+</templates>
