@@ -5,10 +5,10 @@ class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
 
     consign_line_id = fields.Many2one(
-        'loyalty.consign.line', string='寄品明細',
+        'loyalty.consign.line', string='Consignment Line',
     )
     is_consign_redemption = fields.Boolean(
-        string='寄品核銷行', default=False,
+        string='Is Consignment Redemption', default=False,
     )
 
     @api.model

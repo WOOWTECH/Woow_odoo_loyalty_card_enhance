@@ -5,7 +5,7 @@ class PosOrder(models.Model):
     _inherit = 'pos.order'
 
     def confirm_consign_redemptions(self, consign_data):
-        """POS 結帳後建立寄品核銷紀錄。
+        """Create a consignment redemption record after POS order is synced.
 
         Args:
             consign_data: {
@@ -21,13 +21,13 @@ class PosOrder(models.Model):
         if not card.exists() or not card.is_consign:
             return {
                 'successful': False,
-                'payload': {'error_message': '寄品卡不存在或非寄品卡類型。'},
+                'payload': {'error_message': 'Invalid consignment card.'},
             }
 
         redemption = self.env['loyalty.consign.redemption'].create({
             'card_id': card.id,
             'staff_user_id': self.env.user.id,
-            'service_note': f'POS 核銷 - {self.name}',
+            'service_note': f'POS Redemption - {self.name}',
             'line_ids': [(0, 0, {
                 'consign_line_id': line['consign_line_id'],
                 'qty_redeemed': line['qty_redeemed'],

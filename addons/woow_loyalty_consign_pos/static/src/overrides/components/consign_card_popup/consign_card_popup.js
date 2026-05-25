@@ -5,7 +5,7 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { _t } from "@web/core/l10n/translation";
 
 export class ConsignCardPopup extends Component {
-    static template = "woow_loyalty_consign.ConsignCardPopup";
+    static template = "woow_loyalty_consign_pos.ConsignCardPopup";
     static components = { Dialog };
     static props = {
         cardData: Object,
@@ -23,7 +23,7 @@ export class ConsignCardPopup extends Component {
     }
 
     get title() {
-        return _t("寄品卡核銷 - %s", this.props.cardData.program_name);
+        return _t("Consignment Redemption - %s", this.props.cardData.program_name);
     }
 
     get subtitle() {
