@@ -8,7 +8,7 @@ class CouponPortal(MemberCenterPortal):
     def _prepare_hub_values(self):
         values = super()._prepare_hub_values()
         partner = request.env.user.partner_id
-        # 只計算尚未使用的優惠券（points > 0）
+        # Only count unused coupons (points > 0)
         coupon_count = request.env['loyalty.card'].sudo().search_count([
             ('partner_id', '=', partner.id),
             ('program_id.program_type', '=', 'coupons'),

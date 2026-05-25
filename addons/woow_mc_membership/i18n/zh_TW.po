@@ -1,0 +1,77 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_mc_membership
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_mc_membership
+msgid "Membership"
+msgstr "會員資格"
+
+#. module: woow_mc_membership
+msgid "View Membership Plans & Duration"
+msgstr "查看會員方案與有效期間"
+
+#. module: woow_mc_membership
+msgid "Membership Status"
+msgstr "會員狀態"
+
+#. module: woow_mc_membership
+msgid "You have not joined any membership plan yet."
+msgstr "目前尚未加入任何會員方案。"
+
+#. module: woow_mc_membership
+msgid "Membership Plan"
+msgstr "會員方案"
+
+#. module: woow_mc_membership
+msgid "Start Date"
+msgstr "起始日"
+
+#. module: woow_mc_membership
+msgid "End Date"
+msgstr "到期日"
+
+#. module: woow_mc_membership
+msgid "Fee"
+msgstr "會費"
+
+#. module: woow_mc_membership
+msgid "Status"
+msgstr "狀態"
+
+#. module: woow_mc_membership
+msgid "Paid"
+msgstr "已付費"
+
+#. module: woow_mc_membership
+msgid "Invoiced"
+msgstr "已開立帳單"
+
+#. module: woow_mc_membership
+msgid "Free Member"
+msgstr "免費會員"
+
+#. module: woow_mc_membership
+msgid "Canceled"
+msgstr "已取消"
+
+#. module: woow_mc_membership
+msgid "None"
+msgstr "無"
+
+#. module: woow_mc_membership
+msgid "Waiting"
+msgstr "等待中"

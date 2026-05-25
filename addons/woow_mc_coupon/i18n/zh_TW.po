@@ -1,0 +1,89 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_mc_coupon
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_mc_coupon
+msgid "Coupon"
+msgstr "優惠券"
+
+#. module: woow_mc_coupon
+msgid "Coupons"
+msgstr "優惠券"
+
+#. module: woow_mc_coupon
+msgid "View Available Coupons"
+msgstr "查看可用優惠券"
+
+#. module: woow_mc_coupon
+msgid "No coupons found."
+msgstr "目前沒有優惠券。"
+
+#. module: woow_mc_coupon
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_mc_coupon
+msgid "Coupon Code"
+msgstr "優惠碼"
+
+#. module: woow_mc_coupon
+msgid "Description"
+msgstr "說明"
+
+#. module: woow_mc_coupon
+msgid "Status"
+msgstr "狀態"
+
+#. module: woow_mc_coupon
+msgid "Used"
+msgstr "已使用"
+
+#. module: woow_mc_coupon
+msgid "Expired"
+msgstr "已過期"
+
+#. module: woow_mc_coupon
+msgid "Available"
+msgstr "可使用"
+
+#. module: woow_mc_coupon
+msgid "Coupon Code:"
+msgstr "優惠碼："
+
+#. module: woow_mc_coupon
+msgid "Created:"
+msgstr "建立日期："
+
+#. module: woow_mc_coupon
+msgid "Expires:"
+msgstr "到期日："
+
+#. module: woow_mc_coupon
+msgid "Valid From:"
+msgstr "有效開始："
+
+#. module: woow_mc_coupon
+msgid "Valid Until:"
+msgstr "有效結束："
+
+#. module: woow_mc_coupon
+msgid "Reward Details"
+msgstr "優惠內容"
+
+#. module: woow_mc_coupon
+msgid "Communication"
+msgstr "溝通紀錄"

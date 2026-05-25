@@ -17,7 +17,7 @@ class LoyaltyPortal(MemberCenterPortal):
             values.update({
                 'show_loyalty': True,
                 'loyalty_points': sum(cards.mapped('points')),
-                'loyalty_point_name': cards[:1].point_name or '點',
+                'loyalty_point_name': cards[:1].point_name or 'Points',
             })
         return values
 
@@ -53,7 +53,7 @@ class LoyaltyPortal(MemberCenterPortal):
         card = self._get_single_card(card_id, 'loyalty')
         if not card:
             return request.redirect('/my/member-center/loyalty')
-        # 查詢可兌換獎勵（點數足夠的獎勵）
+        # Query redeemable rewards (where points are sufficient)
         rewards = request.env['loyalty.reward'].sudo().search([
             ('program_id', '=', card.program_id.id),
             ('required_points', '<=', card.points),

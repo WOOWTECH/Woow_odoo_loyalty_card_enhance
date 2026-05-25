@@ -2,9 +2,9 @@
 <odoo>
 
     <!-- ============================================================ -->
-    <!-- 共用交易紀錄表格片段（嵌入各卡片明細頁）                       -->
+    <!-- Shared Transaction History Table Snippet (embedded in detail) -->
     <!-- ============================================================ -->
-    <template id="portal_loyalty_history_table" name="Portal: 交易紀錄表格片段">
+    <template id="portal_loyalty_history_table" name="Portal: Transaction History Snippet">
         <t t-if="history_lines">
             <div class="card mt-3 mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -18,13 +18,13 @@
                         <table class="table table-sm table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>日期</th>
-                                    <th>說明</th>
-                                    <th>關聯訂單</th>
-                                    <th class="text-end">前餘額</th>
-                                    <th class="text-end">增加</th>
-                                    <th class="text-end">使用</th>
-                                    <th class="text-end">後餘額</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Related Order</th>
+                                    <th class="text-end">Previous Balance</th>
+                                    <th class="text-end">Earned</th>
+                                    <th class="text-end">Used</th>
+                                    <th class="text-end">New Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -34,13 +34,7 @@
                                             <t t-out="line.create_date" t-options="{'widget': 'date'}"/>
                                         </td>
                                         <td>
-                                            <t t-set="desc" t-value="line.description or ''"/>
-                                            <t t-if="desc.startswith('Order ')">
-                                                訂單 <t t-out="desc[6:]"/>
-                                            </t>
-                                            <t t-else="">
-                                                <t t-out="desc"/>
-                                            </t>
+                                            <t t-out="line.description or ''"/>
                                         </td>
                                         <td>
                                             <t t-if="line.order_id">
@@ -78,10 +72,10 @@
                         </table>
                     </div>
                 </div>
-                <!-- 超過 10 筆時顯示「查看全部」 -->
+                <!-- Show "View All" when more than 10 records -->
                 <div class="card-footer text-center" t-if="show_history_link">
                     <a t-att-href="history_url">
-                        查看全部歷史紀錄 (<t t-out="history_count"/> 筆)
+                        View All History (<t t-out="history_count"/> records)
                     </a>
                 </div>
             </div>
