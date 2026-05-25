@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Hub Card: 會員資格 -->
+    <!-- Hub Card: Membership -->
     <template id="mc_hub_membership_card"
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
@@ -34,27 +34,27 @@
               priority="30">
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name == 'mc_membership'" class="breadcrumb-item">
-                <a href="/my/member-center">會員中心</a>
+                <a href="/my/member-center">Member Center</a>
             </li>
             <li t-if="page_name == 'mc_membership'"
-                class="breadcrumb-item active">會員資格</li>
+                class="breadcrumb-item active">Membership</li>
         </xpath>
     </template>
 
-    <!-- 會員資格 -->
-    <template id="portal_mc_membership" name="Portal: 會員資格">
+    <!-- Membership Page -->
+    <template id="portal_mc_membership" name="Portal: Membership">
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
-                <t t-set="title">會員資格</t>
+                <t t-set="title">Membership</t>
             </t>
 
-            <!-- 狀態卡片 -->
+            <!-- Status Card -->
             <div class="card mt-3">
                 <div class="card-header">
                     <div class="row align-items-center">
                         <div class="col-12 col-md-6">
-                            <h3 class="mb-0">會員狀態</h3>
+                            <h3 class="mb-0">Membership Status</h3>
                         </div>
                         <div class="col-12 col-md-6 text-md-end">
                             <span t-attf-class="badge fs-5 #{
@@ -72,7 +72,7 @@
                     <t t-if="not member_lines">
                         <div class="text-center text-muted py-4">
                             <i class="fa fa-id-card fa-3x mb-3 d-block"/>
-                            <p>目前尚未加入任何會員方案。</p>
+                            <p>You have not joined any membership plan yet.</p>
                         </div>
                     </t>
 
@@ -81,11 +81,11 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>會員方案</th>
-                                        <th class="text-center">起始日</th>
-                                        <th class="text-center">到期日</th>
-                                        <th class="text-end">會費</th>
-                                        <th class="text-center">狀態</th>
+                                        <th>Membership Plan</th>
+                                        <th class="text-center">Start Date</th>
+                                        <th class="text-center">End Date</th>
+                                        <th class="text-end">Fee</th>
+                                        <th class="text-center">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -105,17 +105,17 @@
                                             </td>
                                             <td class="text-center">
                                                 <span t-if="line.state == 'paid'"
-                                                      class="badge bg-success">已付費</span>
+                                                      class="badge bg-success">Paid</span>
                                                 <span t-if="line.state == 'invoiced'"
-                                                      class="badge bg-warning text-dark">已開立帳單</span>
+                                                      class="badge bg-warning text-dark">Invoiced</span>
                                                 <span t-if="line.state == 'free'"
-                                                      class="badge bg-info">免費會員</span>
+                                                      class="badge bg-info">Free Member</span>
                                                 <span t-if="line.state == 'canceled'"
-                                                      class="badge bg-danger">已取消</span>
+                                                      class="badge bg-danger">Canceled</span>
                                                 <span t-if="line.state == 'none'"
-                                                      class="badge bg-secondary">無</span>
+                                                      class="badge bg-secondary">None</span>
                                                 <span t-if="line.state == 'waiting'"
-                                                      class="badge bg-secondary">等待中</span>
+                                                      class="badge bg-secondary">Waiting</span>
                                             </td>
                                         </tr>
                                     </t>

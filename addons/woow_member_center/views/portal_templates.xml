@@ -2,10 +2,10 @@
 <odoo>
 
     <!-- ============================================================ -->
-    <!-- Portal Home: 加入「會員中心」入口卡片                          -->
+    <!-- Portal Home: Member Center Entry Card                        -->
     <!-- ============================================================ -->
     <template id="portal_my_home_member_center"
-              name="Portal: 會員中心入口"
+              name="Portal: Member Center Entry"
               inherit_id="portal.portal_my_home"
               priority="25">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
@@ -23,9 +23,9 @@
     </template>
 
     <!-- ============================================================ -->
-    <!-- Hub Page: 會員中心主頁（空 grid，子模組透過 xpath 注入卡片）    -->
+    <!-- Hub Page: Member Center Home (empty grid, sub-modules inject) -->
     <!-- ============================================================ -->
-    <template id="portal_member_center_hub" name="Portal: 會員中心">
+    <template id="portal_member_center_hub" name="Portal: Member Center Hub">
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
@@ -33,10 +33,10 @@
             </t>
 
             <div class="mc-hub-grid mt-4" id="mc_hub_grid">
-                <!-- 子模組透過 xpath position="inside" 注入各自的卡片 -->
+                <!-- Sub-modules inject their cards via xpath position="inside" -->
             </div>
 
-            <!-- 空狀態提示（當沒有任何子模組安裝或無資料時） -->
+            <!-- Empty state (when no sub-modules installed or no data) -->
             <div class="mc-hub-empty text-center text-muted py-5" id="mc_hub_empty">
                 <img src="/woow_member_center/static/src/img/member-center.svg"
                      style="width:64px; opacity:.5;" class="mb-3" alt=""/>
@@ -46,7 +46,7 @@
     </template>
 
     <!-- ============================================================ -->
-    <!-- Breadcrumbs (Hub only — 子模組各自加入自己的 breadcrumb)      -->
+    <!-- Breadcrumbs (Hub only - sub-modules add their own)           -->
     <!-- ============================================================ -->
     <template id="portal_breadcrumb_member_center"
               inherit_id="portal.portal_breadcrumbs"
@@ -56,7 +56,7 @@
             <li t-if="page_name == 'member_center'"
                 class="breadcrumb-item active">Member Center</li>
 
-            <!-- 交易紀錄歷史頁 -->
+            <!-- Transaction History Page -->
             <li t-if="page_name == 'mc_card_history'" class="breadcrumb-item">
                 <a href="/my/member-center">Member Center</a>
             </li>

@@ -4,8 +4,8 @@ from odoo import api, fields, models
 class LoyaltyHistory(models.Model):
     _inherit = 'loyalty.history'
 
-    balance_before = fields.Float(string="前餘額", default=0)
-    balance_after = fields.Float(string="後餘額", default=0)
+    balance_before = fields.Float(string="Previous Balance", default=0)
+    balance_after = fields.Float(string="New Balance", default=0)
 
     @api.model_create_multi
     def create(self, vals_list):

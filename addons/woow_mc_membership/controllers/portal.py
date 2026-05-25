@@ -12,7 +12,7 @@ class MembershipPortal(MemberCenterPortal):
         membership_state_label = dict(
             partner.fields_get(['membership_state'])['membership_state']['selection']
         ).get(membership_state, membership_state)
-        # 會員資格永遠顯示（只要模組安裝就顯示）
+        # Membership always shown when module is installed
         values.update({
             'show_membership': True,
             'membership_state': membership_state,

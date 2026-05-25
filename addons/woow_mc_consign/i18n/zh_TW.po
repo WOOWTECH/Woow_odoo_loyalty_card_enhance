@@ -1,0 +1,169 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_mc_consign
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_mc_consign
+msgid "Consignment Card"
+msgstr "寄品卡"
+
+#. module: woow_mc_consign
+msgid "View Cards & Redemption Records"
+msgstr "查看寄品卡與核銷紀錄"
+
+#. module: woow_mc_consign
+msgid "No consignment cards found."
+msgstr "目前沒有寄品卡。"
+
+#. module: woow_mc_consign
+msgid "Card No."
+msgstr "卡號"
+
+#. module: woow_mc_consign
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_mc_consign
+msgid "Active Items"
+msgstr "有效品項"
+
+#. module: woow_mc_consign
+msgid "Remaining Qty"
+msgstr "剩餘數量"
+
+#. module: woow_mc_consign
+msgid "Remaining Amount"
+msgstr "剩餘金額"
+
+#. module: woow_mc_consign
+msgid "Active Items:"
+msgstr "有效品項："
+
+#. module: woow_mc_consign
+msgid "Remaining Qty:"
+msgstr "剩餘數量："
+
+#. module: woow_mc_consign
+msgid "Remaining Amount:"
+msgstr "剩餘金額："
+
+#. module: woow_mc_consign
+msgid "Deposited Items"
+msgstr "寄存品項"
+
+#. module: woow_mc_consign
+msgid "Item"
+msgstr "品項"
+
+#. module: woow_mc_consign
+msgid "Deposited"
+msgstr "存入"
+
+#. module: woow_mc_consign
+msgid "Redeemed"
+msgstr "已核銷"
+
+#. module: woow_mc_consign
+msgid "Remaining"
+msgstr "剩餘"
+
+#. module: woow_mc_consign
+msgid "Status"
+msgstr "狀態"
+
+#. module: woow_mc_consign
+msgid "Active"
+msgstr "有效"
+
+#. module: woow_mc_consign
+msgid "Depleted"
+msgstr "已用完"
+
+#. module: woow_mc_consign
+msgid "Redemption Records"
+msgstr "核銷紀錄"
+
+#. module: woow_mc_consign
+msgid "Reference"
+msgstr "單號"
+
+#. module: woow_mc_consign
+msgid "Date"
+msgstr "日期"
+
+#. module: woow_mc_consign
+msgid "Staff"
+msgstr "服務人員"
+
+#. module: woow_mc_consign
+msgid "Amount"
+msgstr "金額"
+
+#. module: woow_mc_consign
+msgid "Draft"
+msgstr "草稿"
+
+#. module: woow_mc_consign
+msgid "Completed"
+msgstr "已完成"
+
+#. module: woow_mc_consign
+msgid "Consignment Card:"
+msgstr "寄品卡："
+
+#. module: woow_mc_consign
+msgid "Redemption Date:"
+msgstr "核銷日期："
+
+#. module: woow_mc_consign
+msgid "Staff:"
+msgstr "服務人員："
+
+#. module: woow_mc_consign
+msgid "Service Note:"
+msgstr "服務備註："
+
+#. module: woow_mc_consign
+msgid "Redemption Details"
+msgstr "核銷明細"
+
+#. module: woow_mc_consign
+msgid "Qty Redeemed"
+msgstr "核銷數量"
+
+#. module: woow_mc_consign
+msgid "Unit Price"
+msgstr "單價"
+
+#. module: woow_mc_consign
+msgid "Subtotal"
+msgstr "小計"
+
+#. module: woow_mc_consign
+msgid "Note"
+msgstr "備註"
+
+#. module: woow_mc_consign
+msgid "Total"
+msgstr "合計"
+
+#. module: woow_mc_consign
+msgid "Redemption"
+msgstr "核銷單"
+
+#. module: woow_mc_consign
+msgid "Communication"
+msgstr "溝通紀錄"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Hub Card: 禮品卡 -->
+    <!-- Hub Card: Gift Card -->
     <template id="mc_hub_gift_card"
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
@@ -46,8 +46,8 @@
         </xpath>
     </template>
 
-    <!-- 禮品卡列表 -->
-    <template id="portal_mc_gift_card_list" name="Portal: 禮品卡列表">
+    <!-- Gift Card List -->
+    <template id="portal_mc_gift_card_list" name="Portal: Gift Card List">
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
@@ -106,8 +106,8 @@
         </t>
     </template>
 
-    <!-- 禮品卡明細 -->
-    <template id="portal_mc_gift_card_detail" name="Portal: 禮品卡明細">
+    <!-- Gift Card Detail -->
+    <template id="portal_mc_gift_card_detail" name="Portal: Gift Card Detail">
         <t t-call="portal.portal_layout">
             <div class="card mt-3">
                 <div class="card-header">
@@ -126,7 +126,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- 條碼區 -->
+                    <!-- Barcode Section -->
                     <div class="mc-barcode-section text-center mb-3">
                         <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
                              class="mc-barcode-img" alt="barcode"/>
@@ -166,10 +166,10 @@
                 </div>
             </div>
 
-            <!-- 交易紀錄 -->
+            <!-- Transaction History -->
             <t t-call="woow_member_center.portal_loyalty_history_table"/>
 
-            <!-- chatter -->
+            <!-- Chatter -->
             <hr/>
             <div id="gift_card_communication" class="mt-4">
                 <h3>Communication</h3>

@@ -1,0 +1,81 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_mc_gift_card
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_mc_gift_card
+msgid "Gift Card"
+msgstr "禮品卡"
+
+#. module: woow_mc_gift_card
+msgid "View Gift Card Balance"
+msgstr "查看禮品卡餘額"
+
+#. module: woow_mc_gift_card
+msgid "No gift cards found."
+msgstr "目前沒有禮品卡。"
+
+#. module: woow_mc_gift_card
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_mc_gift_card
+msgid "Card No."
+msgstr "卡號"
+
+#. module: woow_mc_gift_card
+msgid "Balance"
+msgstr "餘額"
+
+#. module: woow_mc_gift_card
+msgid "Status"
+msgstr "狀態"
+
+#. module: woow_mc_gift_card
+msgid "Expired"
+msgstr "已過期"
+
+#. module: woow_mc_gift_card
+msgid "Zero Balance"
+msgstr "零餘額"
+
+#. module: woow_mc_gift_card
+msgid "Active"
+msgstr "有效"
+
+#. module: woow_mc_gift_card
+msgid "Card No.:"
+msgstr "卡號："
+
+#. module: woow_mc_gift_card
+msgid "Created:"
+msgstr "建立日期："
+
+#. module: woow_mc_gift_card
+msgid "Expires:"
+msgstr "到期日："
+
+#. module: woow_mc_gift_card
+msgid "Program Start:"
+msgstr "有效開始："
+
+#. module: woow_mc_gift_card
+msgid "Program End:"
+msgstr "有效結束："
+
+#. module: woow_mc_gift_card
+msgid "Communication"
+msgstr "溝通紀錄"

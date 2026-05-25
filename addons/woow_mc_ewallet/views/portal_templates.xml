@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Hub Card: 電子錢包 -->
+    <!-- Hub Card: E-Wallet -->
     <template id="mc_hub_ewallet_card"
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
@@ -45,8 +45,8 @@
         </xpath>
     </template>
 
-    <!-- 電子錢包列表 -->
-    <template id="portal_mc_ewallet" name="Portal: 電子錢包">
+    <!-- E-Wallet List -->
+    <template id="portal_mc_ewallet" name="Portal: E-Wallet List">
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
@@ -60,7 +60,7 @@
             </t>
 
             <t t-if="cards">
-                <!-- 總餘額 -->
+                <!-- Total Balance -->
                 <div class="mc-balance-hero mt-4">
                     <div class="mc-balance-hero-label">Total Balance</div>
                     <div class="mc-balance-hero-amount">
@@ -71,7 +71,7 @@
                     </div>
                 </div>
 
-                <!-- 各錢包明細 -->
+                <!-- Wallet Details -->
                 <div class="table-responsive mt-4">
                     <table class="table table-hover o_portal_my_doc_table">
                         <thead>
@@ -117,8 +117,8 @@
         </t>
     </template>
 
-    <!-- 電子錢包明細 -->
-    <template id="portal_mc_ewallet_detail" name="Portal: 電子錢包明細">
+    <!-- E-Wallet Detail -->
+    <template id="portal_mc_ewallet_detail" name="Portal: E-Wallet Detail">
         <t t-call="portal.portal_layout">
             <div class="card mt-3">
                 <div class="card-header">
@@ -137,7 +137,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- 條碼區 -->
+                    <!-- Barcode Section -->
                     <div class="mc-barcode-section text-center mb-3">
                         <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
                              class="mc-barcode-img" alt="barcode"/>
@@ -167,10 +167,10 @@
                 </div>
             </div>
 
-            <!-- 交易紀錄 -->
+            <!-- Transaction History -->
             <t t-call="woow_member_center.portal_loyalty_history_table"/>
 
-            <!-- chatter -->
+            <!-- Chatter -->
             <hr/>
             <div id="ewallet_communication" class="mt-4">
                 <h3>Communication</h3>

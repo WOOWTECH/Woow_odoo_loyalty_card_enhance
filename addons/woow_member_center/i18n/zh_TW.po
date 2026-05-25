@@ -1,0 +1,73 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* woow_member_center
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese (Traditional)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: woow_member_center
+msgid "Member Center"
+msgstr "會員中心"
+
+#. module: woow_member_center
+msgid "My Member Services"
+msgstr "我的會員服務"
+
+#. module: woow_member_center
+msgid "No member services available."
+msgstr "目前沒有會員服務。"
+
+#. module: woow_member_center
+msgid "Transaction History"
+msgstr "交易紀錄"
+
+#. module: woow_member_center
+msgid "No transaction history available."
+msgstr "目前沒有交易紀錄。"
+
+#. module: woow_member_center
+msgid "Date"
+msgstr "日期"
+
+#. module: woow_member_center
+msgid "Description"
+msgstr "說明"
+
+#. module: woow_member_center
+msgid "Related Order"
+msgstr "關聯訂單"
+
+#. module: woow_member_center
+msgid "Previous Balance"
+msgstr "前餘額"
+
+#. module: woow_member_center
+msgid "Earned"
+msgstr "增加"
+
+#. module: woow_member_center
+msgid "Used"
+msgstr "使用"
+
+#. module: woow_member_center
+msgid "New Balance"
+msgstr "後餘額"
+
+#. module: woow_member_center
+msgid "View All History"
+msgstr "查看全部紀錄"
+
+#. module: woow_member_center
+msgid "records"
+msgstr "筆"

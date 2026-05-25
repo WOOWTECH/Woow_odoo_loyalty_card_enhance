@@ -22,10 +22,10 @@ _CARD_LIST_URLS = {
 
 # Mapping: URL slug → breadcrumb labels
 _CARD_TYPE_LABELS = {
-    'ewallet': '電子錢包',
-    'loyalty': '集點卡',
-    'gift-cards': '禮品卡',
-    'coupons': '優惠券',
+    'ewallet': 'E-Wallet',
+    'loyalty': 'Loyalty Card',
+    'gift-cards': 'Gift Card',
+    'coupons': 'Coupon',
 }
 
 _HISTORY_PAGE_SIZE = 10      # detail page: latest N
@@ -45,7 +45,7 @@ class MemberCenterPortal(CustomerPortal):
         return values
 
     # ----------------------------------------------------------------
-    # Hub Values — 子模組透過 super() 覆寫此方法注入資料
+    # Hub Values — Sub-modules override via super() to inject data
     # ----------------------------------------------------------------
 
     def _prepare_hub_values(self):
@@ -101,10 +101,10 @@ class MemberCenterPortal(CustomerPortal):
 
     def _get_history_searchbar_sortings(self):
         return {
-            'date': {'label': _("日期"), 'order': 'create_date desc'},
-            'issued': {'label': _("增加"), 'order': 'issued desc'},
-            'used': {'label': _("使用"), 'order': 'used desc'},
-            'description': {'label': _("說明"), 'order': 'description'},
+            'date': {'label': _("Date"), 'order': 'create_date desc'},
+            'issued': {'label': _("Earned"), 'order': 'issued desc'},
+            'used': {'label': _("Used"), 'order': 'used desc'},
+            'description': {'label': _("Description"), 'order': 'description'},
         }
 
     # ----------------------------------------------------------------
