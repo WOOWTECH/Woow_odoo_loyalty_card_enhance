@@ -6,20 +6,13 @@
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
             <t t-if="show_consign">
-                <a href="/my/consign-cards" class="mc-hub-card" data-mc-order="50">
-                    <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_consign/static/src/img/consign.svg" alt="Consignment Card"/>
-                    </div>
-                    <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">Consignment Card</div>
-                        <div class="mc-hub-card-text">View Cards &amp; Redemption Records</div>
-                    </div>
-                    <div class="mc-hub-card-metric">
-                        <span class="badge rounded-pill bg-secondary">
-                            <t t-out="consign_count"/>
-                        </span>
-                    </div>
-                </a>
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="icon" t-value="'/woow_mc_consign/static/src/img/consign.svg'"/>
+                    <t t-set="title">Consignment Card</t>
+                    <t t-set="url" t-value="'/my/consign-cards'"/>
+                    <t t-set="text">View Cards &amp; Redemption Records</t>
+                    <t t-set="config_card" t-value="True"/>
+                </t>
             </t>
         </xpath>
     </template>
@@ -73,49 +66,45 @@
                     No consignment cards found.
                 </div>
             </t>
-            <t t-if="cards">
-                <div class="table-responsive">
-                    <table class="table table-hover o_portal_my_doc_table">
-                        <thead>
-                            <tr class="active">
-                                <th>Card No.</th>
-                                <th>Program</th>
-                                <th class="text-center">Active Items</th>
-                                <th class="text-center">Remaining Qty</th>
-                                <th class="text-end">Remaining Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="cards" t-as="card">
-                                <tr>
-                                    <td>
-                                        <a t-attf-href="/my/consign-cards/#{card.id}">
-                                            <t t-out="card.code"/>
-                                        </a>
-                                    </td>
-                                    <td><t t-out="card.program_id.name"/></td>
-                                    <td class="text-center">
-                                        <t t-out="card.consign_active_lines"/>
-                                    </td>
-                                    <td class="text-center">
-                                        <t t-out="card.consign_total_remaining_qty"/>
-                                    </td>
-                                    <td class="text-end">
-                                        <t t-out="card.consign_total_remaining_value"
-                                           t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                </div>
+            <t t-if="cards" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Card No.</th>
+                        <th>Program</th>
+                        <th class="text-center">Active Items</th>
+                        <th class="text-center">Remaining Qty</th>
+                        <th class="text-end">Remaining Amount</th>
+                    </tr>
+                </thead>
+                <t t-foreach="cards" t-as="card">
+                    <tr>
+                        <td>
+                            <a t-attf-href="/my/consign-cards/#{card.id}">
+                                <t t-out="card.code"/>
+                            </a>
+                        </td>
+                        <td><t t-out="card.program_id.name"/></td>
+                        <td class="text-center">
+                            <t t-out="card.consign_active_lines"/>
+                        </td>
+                        <td class="text-center">
+                            <t t-out="card.consign_total_remaining_qty"/>
+                        </td>
+                        <td class="text-end">
+                            <t t-out="card.consign_total_remaining_value"
+                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                        </td>
+                    </tr>
+                </t>
             </t>
         </t>
     </template>
 
     <!-- Consignment Card Detail -->
-    <template id="portal_consign_card_detail" name="Portal: Consignment Card Detail">
-        <t t-call="portal.portal_layout">
+    <template id="portal_consign_card_detail" name="Portal: Consignment Card Detail"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+
             <t t-set="o_portal_fullwidth_alert" groups="sales_team.group_sale_salesman">
                 <t t-call="portal.portal_back_in_edit_mode">
                     <t t-set="backend_url"
@@ -123,228 +112,305 @@
                 </t>
             </t>
 
-            <div class="card mt-3">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <h3 class="mb-0">
-                                Consignment Card <t t-out="card.code"/>
-                            </h3>
+            <div class="row o_portal_consign_sidebar">
+                <t t-call="portal.portal_record_sidebar">
+                    <t t-set="classes" t-value="'col-lg-4 col-xxl-3 d-print-none'"/>
+
+                    <t t-set="entries">
+                        <div class="d-flex flex-wrap flex-column gap-4">
+                            <div class="d-flex align-items-center flex-grow-1 p-0" t-ignore="true" role="complementary">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#card_header">Details</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#deposited_items">Deposited Items</a>
+                                    </li>
+                                    <li class="nav-item" t-if="card.consign_redemption_ids">
+                                        <a class="nav-link p-0" href="#redemption_records">Redemption Records</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#discussion">Communication</a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2">
+                                <h6><small class="text-muted">Program</small></h6>
+                                <span class="badge rounded-pill text-bg-info">
+                                    <t t-out="card.program_id.name"/>
+                                </span>
+                            </div>
                         </div>
-                        <div class="col-12 col-md-6 text-md-end">
-                            <span class="badge bg-info fs-6">
-                                <t t-out="card.program_id.name"/>
-                            </span>
+                    </t>
+                </t>
+
+                <div id="consign_content" class="o_portal_content col-12 col-lg-8 col-xxl-9">
+                    <div id="card">
+                        <div id="card_header" data-anchor="true">
+                            <div class="row justify-content-between mb-3">
+                                <div class="col-12 col-md-9">
+                                    <h3 class="my-0">
+                                        Consignment Card <t t-out="card.code"/>
+                                    </h3>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge rounded-pill text-bg-info">
+                                        <t t-out="card.program_id.name"/>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Active Items:</strong>
-                            <t t-out="card.consign_active_lines"/>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Remaining Qty:</strong>
-                            <t t-out="card.consign_total_remaining_qty"/>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Remaining Amount:</strong>
-                            <t t-out="card.consign_total_remaining_value"
-                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                        <div id="card_body">
+                            <div class="row mb-4">
+                                <div class="col-12 col-md-6">
+                                    <div><strong>Active Items:</strong>
+                                        <t t-out="card.consign_active_lines"/>
+                                    </div>
+                                    <div><strong>Remaining Qty:</strong>
+                                        <t t-out="card.consign_total_remaining_qty"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div><strong>Remaining Amount:</strong>
+                                        <t t-out="card.consign_total_remaining_value"
+                                           t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <h5>Deposited Items</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th class="text-center">Deposited</th>
-                                    <th class="text-center">Redeemed</th>
-                                    <th class="text-center">Remaining</th>
-                                    <th class="text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
-                                   t-as="line">
-                                    <tr t-attf-class="#{
-                                        'text-muted' if line.state == 'depleted' else ''
-                                    }">
-                                        <td>
-                                            <t t-out="line.product_desc or line.product_id.name"/>
-                                        </td>
-                                        <td class="text-center">
-                                            <t t-out="line.qty_deposited"/>
-                                        </td>
-                                        <td class="text-center">
-                                            <t t-out="line.qty_redeemed"/>
-                                        </td>
-                                        <td class="text-center">
-                                            <strong><t t-out="line.qty_remaining"/></strong>
-                                        </td>
-                                        <td class="text-center">
-                                            <span t-if="line.state == 'active'"
-                                                  class="badge bg-success">Active</span>
-                                            <span t-if="line.state == 'depleted'"
-                                                  class="badge bg-secondary">Depleted</span>
-                                        </td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <t t-if="card.consign_redemption_ids">
-                        <h5 class="mt-4">Redemption Records</h5>
+                    <div id="deposited_items" data-anchor="true">
+                        <h5 class="mb-1">Deposited Items</h5>
+                        <hr class="mt-1 mb-2"/>
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
                                     <tr>
-                                        <th>Reference</th>
-                                        <th>Date</th>
-                                        <th>Staff</th>
-                                        <th class="text-end">Amount</th>
+                                        <th>Item</th>
+                                        <th class="text-center">Deposited</th>
+                                        <th class="text-center">Redeemed</th>
+                                        <th class="text-center">Remaining</th>
                                         <th class="text-center">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="card.consign_redemption_ids" t-as="redemption">
-                                        <tr>
+                                    <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
+                                       t-as="line">
+                                        <tr t-attf-class="#{
+                                            'text-muted' if line.state == 'depleted' else ''
+                                        }">
                                             <td>
-                                                <a t-attf-href="/my/consign-redemptions/#{redemption.id}">
-                                                    <t t-out="redemption.name"/>
-                                                </a>
-                                            </td>
-                                            <td><t t-out="redemption.date_redemption"
-                                                   t-options="{'widget': 'datetime'}"/></td>
-                                            <td><t t-out="redemption.staff_user_id.name"/></td>
-                                            <td class="text-end">
-                                                <t t-out="redemption.total_redeemed_value"
-                                                   t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                                <t t-out="line.product_desc or line.product_id.name"/>
                                             </td>
                                             <td class="text-center">
-                                                <span t-if="redemption.state == 'draft'"
-                                                      class="badge bg-warning">Draft</span>
-                                                <span t-if="redemption.state == 'done'"
-                                                      class="badge bg-success">Completed</span>
+                                                <t t-out="line.qty_deposited"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <t t-out="line.qty_redeemed"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <strong><t t-out="line.qty_remaining"/></strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-if="line.state == 'active'"
+                                                      class="badge rounded-pill text-bg-success">Active</span>
+                                                <span t-if="line.state == 'depleted'"
+                                                      class="badge rounded-pill text-bg-secondary">Depleted</span>
                                             </td>
                                         </tr>
                                     </t>
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+
+                    <t t-if="card.consign_redemption_ids">
+                        <div id="redemption_records" data-anchor="true">
+                            <h5 class="mb-1 mt-4">Redemption Records</h5>
+                            <hr class="mt-1 mb-2"/>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Date</th>
+                                            <th>Staff</th>
+                                            <th class="text-end">Amount</th>
+                                            <th class="text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="card.consign_redemption_ids" t-as="redemption">
+                                            <tr>
+                                                <td>
+                                                    <a t-attf-href="/my/consign-redemptions/#{redemption.id}">
+                                                        <t t-out="redemption.name"/>
+                                                    </a>
+                                                </td>
+                                                <td><t t-out="redemption.date_redemption"
+                                                       t-options="{'widget': 'datetime'}"/></td>
+                                                <td><t t-out="redemption.staff_user_id.name"/></td>
+                                                <td class="text-end">
+                                                    <t t-out="redemption.total_redeemed_value"
+                                                       t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-if="redemption.state == 'draft'"
+                                                          class="badge rounded-pill text-bg-warning">Draft</span>
+                                                    <span t-if="redemption.state == 'done'"
+                                                          class="badge rounded-pill text-bg-success">Completed</span>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </t>
+
+                    <hr/>
+                    <div id="discussion" data-anchor="true">
+                        <h3>Communication</h3>
+                        <t t-call="portal.message_thread"/>
+                    </div>
                 </div>
             </div>
-
-            <!-- Portal Chatter -->
-            <div class="mt-4">
-                <h5>Communication</h5>
-                <t t-call="portal.message_thread"/>
-            </div>
-        </t>
+        </xpath>
     </template>
 
     <!-- Redemption Detail Page -->
-    <template id="portal_consign_redemption_detail" name="Portal: Redemption Detail">
-        <t t-call="portal.portal_layout">
-            <div class="card mt-3">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <h3 class="mb-0">
-                                Redemption <t t-out="redemption.name"/>
-                            </h3>
-                        </div>
-                        <div class="col-12 col-md-6 text-md-end">
-                            <span t-if="redemption.state == 'draft'"
-                                  class="badge bg-warning fs-6">Draft</span>
-                            <span t-if="redemption.state == 'done'"
-                                  class="badge bg-success fs-6">Completed</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Consignment Card:</strong>
-                            <a t-attf-href="/my/consign-cards/#{redemption.card_id.id}">
-                                <t t-out="redemption.card_id.code"/>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Redemption Date:</strong>
-                            <t t-out="redemption.date_redemption"
-                               t-options="{'widget': 'datetime'}"/>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Staff:</strong>
-                            <t t-out="redemption.staff_user_id.name"/>
-                        </div>
-                    </div>
+    <template id="portal_consign_redemption_detail" name="Portal: Redemption Detail"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
 
-                    <t t-if="redemption.service_note">
-                        <div class="mb-3">
-                            <strong>Service Note:</strong>
-                            <p class="mb-0"><t t-out="redemption.service_note"/></p>
+            <div class="row o_portal_redemption_sidebar">
+                <t t-call="portal.portal_record_sidebar">
+                    <t t-set="classes" t-value="'col-lg-4 col-xxl-3 d-print-none'"/>
+
+                    <t t-set="entries">
+                        <div class="d-flex flex-wrap flex-column gap-4">
+                            <div class="d-flex align-items-center flex-grow-1 p-0" t-ignore="true" role="complementary">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#card_header">Details</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#discussion">Communication</a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2">
+                                <h6><small class="text-muted">Status</small></h6>
+                                <span t-if="redemption.state == 'draft'"
+                                      class="badge rounded-pill text-bg-warning">Draft</span>
+                                <span t-if="redemption.state == 'done'"
+                                      class="badge rounded-pill text-bg-success">Completed</span>
+                            </div>
                         </div>
                     </t>
+                </t>
 
-                    <h5>Redemption Details</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th class="text-center">Qty Redeemed</th>
-                                    <th class="text-end">Unit Price</th>
-                                    <th class="text-end">Subtotal</th>
-                                    <th>Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="redemption.line_ids" t-as="line">
-                                    <tr>
-                                        <td><t t-out="line.product_desc or line.product_id.name"/></td>
-                                        <td class="text-center"><t t-out="line.qty_redeemed"/></td>
-                                        <td class="text-end">
-                                            <t t-out="line.unit_price"
-                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
-                                        </td>
-                                        <td class="text-end">
-                                            <t t-out="line.subtotal"
-                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
-                                        </td>
-                                        <td><t t-out="line.note or ''"/></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Total</strong></td>
-                                    <td class="text-end">
-                                        <strong>
-                                            <t t-out="redemption.total_redeemed_value"
-                                               t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
-                                        </strong>
-                                    </td>
-                                    <td/>
-                                </tr>
-                            </tfoot>
-                        </table>
+                <div id="redemption_content" class="o_portal_content col-12 col-lg-8 col-xxl-9">
+                    <div id="card">
+                        <div id="card_header" data-anchor="true">
+                            <div class="row justify-content-between mb-3">
+                                <div class="col-12 col-md-9">
+                                    <h3 class="my-0">
+                                        Redemption <t t-out="redemption.name"/>
+                                    </h3>
+                                </div>
+                                <div class="col-auto">
+                                    <span t-if="redemption.state == 'draft'"
+                                          class="badge rounded-pill text-bg-warning">Draft</span>
+                                    <span t-if="redemption.state == 'done'"
+                                          class="badge rounded-pill text-bg-success">Completed</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="card_body">
+                            <div class="row mb-4">
+                                <div class="col-12 col-md-6">
+                                    <div><strong>Consignment Card:</strong>
+                                        <a t-attf-href="/my/consign-cards/#{redemption.card_id.id}">
+                                            <t t-out="redemption.card_id.code"/>
+                                        </a>
+                                    </div>
+                                    <div><strong>Redemption Date:</strong>
+                                        <t t-out="redemption.date_redemption"
+                                           t-options="{'widget': 'datetime'}"/>
+                                    </div>
+                                    <div><strong>Staff:</strong>
+                                        <t t-out="redemption.staff_user_id.name"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div t-if="redemption.service_note">
+                                <h5 class="mb-1">Service Note</h5>
+                                <hr class="mt-1 mb-2"/>
+                                <div class="py-1 px-2 bg-100 small" style="white-space: pre-wrap;">
+                                    <t t-out="redemption.service_note"/>
+                                </div>
+                            </div>
+
+                            <h5 class="mb-1 mt-3">Redemption Details</h5>
+                            <hr class="mt-1 mb-2"/>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th class="text-center">Qty Redeemed</th>
+                                            <th class="text-end">Unit Price</th>
+                                            <th class="text-end">Subtotal</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="redemption.line_ids" t-as="line">
+                                            <tr>
+                                                <td><t t-out="line.product_desc or line.product_id.name"/></td>
+                                                <td class="text-center"><t t-out="line.qty_redeemed"/></td>
+                                                <td class="text-end">
+                                                    <t t-out="line.unit_price"
+                                                       t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <t t-out="line.subtotal"
+                                                       t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                                </td>
+                                                <td><t t-out="line.note or ''"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total</strong></td>
+                                            <td class="text-end">
+                                                <strong>
+                                                    <t t-out="redemption.total_redeemed_value"
+                                                       t-options="{'widget': 'monetary', 'display_currency': redemption.currency_id}"/>
+                                                </strong>
+                                            </td>
+                                            <td/>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr/>
+                    <div id="discussion" data-anchor="true">
+                        <h3>Communication</h3>
+                        <t t-call="portal.message_thread"/>
                     </div>
                 </div>
             </div>
-
-            <!-- Portal Chatter -->
-            <div class="mt-4">
-                <h5>Communication</h5>
-                <t t-call="portal.message_thread"/>
-            </div>
-        </t>
+        </xpath>
     </template>
 
 </odoo>

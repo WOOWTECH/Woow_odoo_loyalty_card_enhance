@@ -6,20 +6,13 @@
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
             <t t-if="show_coupon">
-                <a href="/my/member-center/coupons" class="mc-hub-card" data-mc-order="40">
-                    <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_coupon/static/src/img/coupon.svg" alt="Coupon"/>
-                    </div>
-                    <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">Coupon</div>
-                        <div class="mc-hub-card-text">View Available Coupons</div>
-                    </div>
-                    <div class="mc-hub-card-metric">
-                        <span class="badge rounded-pill bg-warning text-dark">
-                            <t t-out="coupon_count"/>
-                        </span>
-                    </div>
-                </a>
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="icon" t-value="'/woow_mc_coupon/static/src/img/coupon.svg'"/>
+                    <t t-set="title">Coupon</t>
+                    <t t-set="url" t-value="'/my/member-center/coupons'"/>
+                    <t t-set="text">View Available Coupons</t>
+                    <t t-set="config_card" t-value="True"/>
+                </t>
             </t>
         </xpath>
     </template>
@@ -59,134 +52,165 @@
                 </div>
             </t>
 
-            <t t-if="cards">
-                <div class="table-responsive mt-3">
-                    <table class="table table-hover o_portal_my_doc_table">
-                        <thead>
-                            <tr class="active">
-                                <th>Program</th>
-                                <th>Coupon Code</th>
-                                <th>Description</th>
-                                <th class="text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="cards" t-as="card">
-                                <tr>
-                                    <td>
-                                        <a t-attf-href="/my/member-center/coupons/#{card.id}">
-                                            <t t-out="card.program_id.name"/>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <code><t t-out="card.code"/></code>
-                                    </td>
-                                    <td>
-                                        <t t-if="card.program_id.reward_ids">
-                                            <t t-out="card.program_id.reward_ids[:1].description"/>
-                                        </t>
-                                    </td>
-                                    <td class="text-center">
-                                        <t t-if="card.points &lt;= 0">
-                                            <span class="badge bg-secondary">Used</span>
-                                        </t>
-                                        <t t-elif="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
-                                            <span class="badge bg-danger">Expired</span>
-                                        </t>
-                                        <t t-else="">
-                                            <span class="badge bg-success">Available</span>
-                                        </t>
-                                    </td>
-                                </tr>
+            <t t-if="cards" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Program</th>
+                        <th>Coupon Code</th>
+                        <th>Description</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <t t-foreach="cards" t-as="card">
+                    <tr>
+                        <td>
+                            <a t-attf-href="/my/member-center/coupons/#{card.id}">
+                                <t t-out="card.program_id.name"/>
+                            </a>
+                        </td>
+                        <td>
+                            <code><t t-out="card.code"/></code>
+                        </td>
+                        <td>
+                            <t t-if="card.program_id.reward_ids">
+                                <t t-out="card.program_id.reward_ids[:1].description"/>
                             </t>
-                        </tbody>
-                    </table>
-                </div>
+                        </td>
+                        <td class="text-center">
+                            <t t-if="card.points &lt;= 0">
+                                <span class="badge rounded-pill text-bg-secondary">Used</span>
+                            </t>
+                            <t t-elif="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
+                                <span class="badge rounded-pill text-bg-danger">Expired</span>
+                            </t>
+                            <t t-else="">
+                                <span class="badge rounded-pill text-bg-success">Available</span>
+                            </t>
+                        </td>
+                    </tr>
+                </t>
             </t>
         </t>
     </template>
 
     <!-- Coupon Detail -->
-    <template id="portal_mc_coupon_detail" name="Portal: Coupon Detail">
-        <t t-call="portal.portal_layout">
-            <div class="card mt-3">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-md-6">
-                            <h3 class="mb-0">
-                                <t t-out="card.program_id.name"/>
-                            </h3>
-                        </div>
-                        <div class="col-12 col-md-6 text-md-end">
-                            <span class="badge bg-warning text-dark fs-5">
-                                <t t-out="card.code"/>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <!-- Barcode Section -->
-                    <div class="mc-barcode-section text-center mb-3">
-                        <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
-                             class="mc-barcode-img" alt="barcode"/>
-                        <div class="mc-barcode-code mt-1">
-                            <code><t t-out="card.code"/></code>
-                        </div>
-                    </div>
-                    <hr/>
-                    <div class="row">
-                        <div class="col-md-6 mb-2">
-                            <strong>Coupon Code:</strong>
-                            <code class="fs-5"><t t-out="card.code"/></code>
-                        </div>
-                        <div class="col-md-6 mb-2">
-                            <strong>Created:</strong>
-                            <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-2" t-if="card.expiration_date">
-                            <strong>Expires:</strong>
-                            <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
-                        </div>
-                    </div>
-                    <t t-if="card.program_id.date_from or card.program_id.date_to">
-                        <div class="row">
-                            <div class="col-md-6 mb-2" t-if="card.program_id.date_from">
-                                <strong>Valid From:</strong>
-                                <t t-out="card.program_id.date_from"/>
+    <template id="portal_mc_coupon_detail" name="Portal: Coupon Detail"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+
+            <div class="row o_portal_coupon_sidebar">
+                <t t-call="portal.portal_record_sidebar">
+                    <t t-set="classes" t-value="'col-lg-4 col-xxl-3 d-print-none'"/>
+
+                    <t t-set="entries">
+                        <div class="d-flex flex-wrap flex-column gap-4">
+                            <div class="d-flex align-items-center flex-grow-1 p-0" t-ignore="true" role="complementary">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#card_header">Details</a>
+                                    </li>
+                                    <li class="nav-item" t-if="history_lines">
+                                        <a class="nav-link p-0" href="#transaction_history">Transaction History</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link p-0" href="#discussion">Communication</a>
+                                    </li>
+                                </ul>
                             </div>
-                            <div class="col-md-6 mb-2" t-if="card.program_id.date_to">
-                                <strong>Valid Until:</strong>
-                                <t t-out="card.program_id.date_to"/>
+
+                            <div class="d-flex flex-column gap-2">
+                                <h6><small class="text-muted">Status</small></h6>
+                                <t t-if="card.points &lt;= 0">
+                                    <span class="badge rounded-pill text-bg-secondary">Used</span>
+                                </t>
+                                <t t-elif="card.expiration_date and card.expiration_date &lt; datetime.date.today()">
+                                    <span class="badge rounded-pill text-bg-danger">Expired</span>
+                                </t>
+                                <t t-else="">
+                                    <span class="badge rounded-pill text-bg-success">Available</span>
+                                </t>
                             </div>
                         </div>
                     </t>
+                </t>
 
-                    <!-- Reward Details -->
-                    <t t-if="card.program_id.reward_ids">
-                        <h5 class="mt-3">Reward Details</h5>
-                        <t t-foreach="card.program_id.reward_ids" t-as="reward">
-                            <div class="card mb-2">
-                                <div class="card-body py-2">
-                                    <t t-out="reward.description"/>
+                <div id="coupon_content" class="o_portal_content col-12 col-lg-8 col-xxl-9">
+                    <div id="card">
+                        <div id="card_header" data-anchor="true">
+                            <div class="row justify-content-between mb-3">
+                                <div class="col-12 col-md-9">
+                                    <h3 class="my-0">
+                                        <t t-out="card.program_id.name"/>
+                                    </h3>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge rounded-pill text-bg-warning">
+                                        <t t-out="card.code"/>
+                                    </span>
                                 </div>
                             </div>
-                        </t>
-                    </t>
+                        </div>
+                        <div id="card_body">
+                            <!-- Barcode Section -->
+                            <div class="mc-barcode-section text-center mb-3">
+                                <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=350&amp;height=60' % card.code"
+                                     class="mc-barcode-img" alt="barcode"/>
+                                <div class="mc-barcode-code mt-1">
+                                    <code><t t-out="card.code"/></code>
+                                </div>
+                            </div>
+                            <hr/>
+                            <div class="row mb-4">
+                                <div class="col-12 col-md-6">
+                                    <div><strong>Coupon Code:</strong>
+                                        <code class="fs-5"><t t-out="card.code"/></code>
+                                    </div>
+                                    <div><strong>Created:</strong>
+                                        <t t-out="card.create_date" t-options="{'widget': 'date'}"/>
+                                    </div>
+                                    <div t-if="card.expiration_date">
+                                        <strong>Expires:</strong>
+                                        <t t-out="card.expiration_date" t-options="{'widget': 'date'}"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div t-if="card.program_id.date_from">
+                                        <strong>Valid From:</strong>
+                                        <t t-out="card.program_id.date_from"/>
+                                    </div>
+                                    <div t-if="card.program_id.date_to">
+                                        <strong>Valid Until:</strong>
+                                        <t t-out="card.program_id.date_to"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reward Details -->
+                            <t t-if="card.program_id.reward_ids">
+                                <h5 class="mb-1">Reward Details</h5>
+                                <hr class="mt-1 mb-2"/>
+                                <t t-foreach="card.program_id.reward_ids" t-as="reward">
+                                    <div class="py-1 px-2 bg-100 small mb-2">
+                                        <t t-out="reward.description"/>
+                                    </div>
+                                </t>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div id="transaction_history" data-anchor="true">
+                        <t t-call="woow_member_center.portal_loyalty_history_table"/>
+                    </div>
+
+                    <hr/>
+                    <div id="discussion" data-anchor="true">
+                        <h3>Communication</h3>
+                        <t t-call="portal.message_thread"/>
+                    </div>
                 </div>
             </div>
-
-            <!-- Transaction History -->
-            <t t-call="woow_member_center.portal_loyalty_history_table"/>
-
-            <!-- Chatter -->
-            <hr/>
-            <div id="coupon_communication" class="mt-4">
-                <h3>Communication</h3>
-                <t t-call="portal.message_thread"/>
-            </div>
-        </t>
+        </xpath>
     </template>
 
 </odoo>

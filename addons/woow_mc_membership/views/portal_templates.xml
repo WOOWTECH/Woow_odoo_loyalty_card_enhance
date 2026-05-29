@@ -6,24 +6,13 @@
               inherit_id="woow_member_center.portal_member_center_hub">
         <xpath expr="//div[@id='mc_hub_grid']" position="inside">
             <t t-if="show_membership">
-                <a href="/my/member-center/membership" class="mc-hub-card" data-mc-order="60">
-                    <div class="mc-hub-card-icon">
-                        <img src="/woow_mc_membership/static/src/img/membership.svg" alt="Membership"/>
-                    </div>
-                    <div class="mc-hub-card-body">
-                        <div class="mc-hub-card-title">Membership</div>
-                        <div class="mc-hub-card-text">View Membership Plans &amp; Duration</div>
-                    </div>
-                    <div class="mc-hub-card-metric">
-                        <span t-attf-class="badge rounded-pill #{
-                            'bg-success' if membership_state in ('paid', 'free') else
-                            'bg-secondary' if membership_state == 'none' else
-                            'bg-warning text-dark'
-                        }">
-                            <t t-out="membership_state_label"/>
-                        </span>
-                    </div>
-                </a>
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="icon" t-value="'/woow_mc_membership/static/src/img/membership.svg'"/>
+                    <t t-set="title">Membership</t>
+                    <t t-set="url" t-value="'/my/member-center/membership'"/>
+                    <t t-set="text">View Membership Plans &amp; Duration</t>
+                    <t t-set="config_card" t-value="True"/>
+                </t>
             </t>
         </xpath>
     </template>
@@ -76,52 +65,46 @@
                         </div>
                     </t>
 
-                    <t t-if="member_lines">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Membership Plan</th>
-                                        <th class="text-center">Start Date</th>
-                                        <th class="text-center">End Date</th>
-                                        <th class="text-end">Fee</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="member_lines" t-as="line">
-                                        <tr>
-                                            <td>
-                                                <strong><t t-out="line.membership_id.name"/></strong>
-                                            </td>
-                                            <td class="text-center">
-                                                <t t-out="line.date_from"/>
-                                            </td>
-                                            <td class="text-center">
-                                                <t t-out="line.date_to"/>
-                                            </td>
-                                            <td class="text-end">
-                                                <t t-out="'{:,.0f}'.format(line.member_price)"/>
-                                            </td>
-                                            <td class="text-center">
-                                                <span t-if="line.state == 'paid'"
-                                                      class="badge bg-success">Paid</span>
-                                                <span t-if="line.state == 'invoiced'"
-                                                      class="badge bg-warning text-dark">Invoiced</span>
-                                                <span t-if="line.state == 'free'"
-                                                      class="badge bg-info">Free Member</span>
-                                                <span t-if="line.state == 'canceled'"
-                                                      class="badge bg-danger">Canceled</span>
-                                                <span t-if="line.state == 'none'"
-                                                      class="badge bg-secondary">None</span>
-                                                <span t-if="line.state == 'waiting'"
-                                                      class="badge bg-secondary">Waiting</span>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                        </div>
+                    <t t-if="member_lines" t-call="portal.portal_table">
+                        <thead>
+                            <tr class="active">
+                                <th>Membership Plan</th>
+                                <th class="text-center">Start Date</th>
+                                <th class="text-center">End Date</th>
+                                <th class="text-end">Fee</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <t t-foreach="member_lines" t-as="line">
+                            <tr>
+                                <td>
+                                    <strong><t t-out="line.membership_id.name"/></strong>
+                                </td>
+                                <td class="text-center">
+                                    <t t-out="line.date_from"/>
+                                </td>
+                                <td class="text-center">
+                                    <t t-out="line.date_to"/>
+                                </td>
+                                <td class="text-end">
+                                    <t t-out="'{:,.0f}'.format(line.member_price)"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-if="line.state == 'paid'"
+                                          class="badge rounded-pill text-bg-success">Paid</span>
+                                    <span t-if="line.state == 'invoiced'"
+                                          class="badge rounded-pill text-bg-warning">Invoiced</span>
+                                    <span t-if="line.state == 'free'"
+                                          class="badge rounded-pill text-bg-info">Free Member</span>
+                                    <span t-if="line.state == 'canceled'"
+                                          class="badge rounded-pill text-bg-danger">Canceled</span>
+                                    <span t-if="line.state == 'none'"
+                                          class="badge rounded-pill text-bg-secondary">None</span>
+                                    <span t-if="line.state == 'waiting'"
+                                          class="badge rounded-pill text-bg-secondary">Waiting</span>
+                                </td>
+                            </tr>
+                        </t>
                     </t>
                 </div>
             </div>
