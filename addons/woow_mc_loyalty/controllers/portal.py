@@ -65,6 +65,6 @@ class LoyaltyPortal(MemberCenterPortal):
         }
         values.update(self._get_card_history_values(card, 'loyalty'))
         values = self._get_page_view_values(
-            card, card._portal_ensure_token(), values, 'my_mc_loyalty_history', False, **kw,
+            card, '', values, 'my_mc_loyalty_history', False, **kw,
         )
         return request.render('woow_mc_loyalty.portal_mc_loyalty_detail', values)

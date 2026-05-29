@@ -64,6 +64,6 @@ class GiftCardPortal(MemberCenterPortal):
         }
         values.update(self._get_card_history_values(card, 'gift-cards'))
         values = self._get_page_view_values(
-            card, card._portal_ensure_token(), values, 'my_mc_gift_card_history', False, **kw,
+            card, '', values, 'my_mc_gift_card_history', False, **kw,
         )
         return request.render('woow_mc_gift_card.portal_mc_gift_card_detail', values)

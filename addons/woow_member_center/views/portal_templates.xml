@@ -27,21 +27,21 @@
     <!-- ============================================================ -->
     <template id="portal_member_center_hub" name="Portal: Member Center Hub">
         <t t-call="portal.portal_layout">
-            <t t-set="breadcrumbs_searchbar" t-value="True"/>
-            <t t-call="portal.portal_searchbar">
-                <t t-set="title">Member Center</t>
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+
+            <div class="o_portal_docs row g-2">
+                <div class="o_portal_category row g-2 mt-3" id="mc_hub_grid">
+                    <!-- Sub-modules inject their cards via xpath position="inside" -->
+                </div>
+            </div>
+
+            <t t-if="not show_ewallet and not show_loyalty and not show_gift_card and not show_coupon and not show_consign and not show_membership">
+                <div class="text-center text-muted py-5" id="mc_hub_empty">
+                    <img src="/woow_member_center/static/src/img/member-center.svg"
+                         style="width:64px; opacity:.5;" class="mb-3" alt=""/>
+                    <p>No member services available.</p>
+                </div>
             </t>
-
-            <div class="mc-hub-grid mt-4" id="mc_hub_grid">
-                <!-- Sub-modules inject their cards via xpath position="inside" -->
-            </div>
-
-            <!-- Empty state (when no sub-modules installed or no data) -->
-            <div class="mc-hub-empty text-center text-muted py-5" id="mc_hub_empty">
-                <img src="/woow_member_center/static/src/img/member-center.svg"
-                     style="width:64px; opacity:.5;" class="mb-3" alt=""/>
-                <p>No member services available.</p>
-            </div>
         </t>
     </template>
 

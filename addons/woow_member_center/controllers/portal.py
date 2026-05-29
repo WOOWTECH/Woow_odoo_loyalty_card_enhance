@@ -50,7 +50,14 @@ class MemberCenterPortal(CustomerPortal):
 
     def _prepare_hub_values(self):
         """Return hub card values. Sub-modules override via super() to inject their data."""
-        return {}
+        return {
+            'show_ewallet': False,
+            'show_loyalty': False,
+            'show_gift_card': False,
+            'show_coupon': False,
+            'show_consign': False,
+            'show_membership': False,
+        }
 
     # ----------------------------------------------------------------
     # Helper: query cards by program_type
