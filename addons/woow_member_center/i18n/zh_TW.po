@@ -1,73 +1,113 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* woow_member_center
+#	* woow_member_center
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 00:00+0000\n"
-"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"POT-Creation-Date: 2026-05-30 00:00+0000\n"
+"PO-Revision-Date: 2026-05-30 00:00+0000\n"
 "Last-Translator: \n"
-"Language-Team: Chinese (Traditional)\n"
+"Language-Team: Chinese (Traditional) <>\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: zh_TW\n"
+"Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. module: woow_member_center
-msgid "Member Center"
-msgstr "會員中心"
 
 #. module: woow_member_center
-msgid "My Member Services"
-msgstr "我的會員服務"
-
-#. module: woow_member_center
-msgid "No member services available."
-msgstr "目前沒有會員服務。"
-
-#. module: woow_member_center
-msgid "Transaction History"
-msgstr "交易紀錄"
-
-#. module: woow_member_center
-msgid "No transaction history available."
-msgstr "目前沒有交易紀錄。"
-
-#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
 msgid "Date"
 msgstr "日期"
 
 #. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
 msgid "Description"
 msgstr "說明"
 
 #. module: woow_member_center
-msgid "Related Order"
-msgstr "關聯訂單"
-
-#. module: woow_member_center
-msgid "Previous Balance"
-msgstr "前餘額"
-
-#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
 msgid "Earned"
 msgstr "增加"
 
 #. module: woow_member_center
-msgid "Used"
-msgstr "使用"
+#: model:ir.model,name:woow_member_center.model_loyalty_history
+msgid "History for Loyalty cards and Ewallets"
+msgstr "集點卡與電子錢包歷史紀錄"
 
 #. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_breadcrumb_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_my_home_member_center
+msgid "Member Center"
+msgstr "會員中心"
+
+#. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_my_home_member_center
+msgid "My Member Services"
+msgstr "我的會員服務"
+
+#. module: woow_member_center
+#: model:ir.model.fields,field_description:woow_member_center.field_loyalty_history__balance_after
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
 msgid "New Balance"
 msgstr "後餘額"
 
 #. module: woow_member_center
-msgid "View All History"
-msgstr "查看全部紀錄"
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_member_center_hub
+msgid "No member services available."
+msgstr "目前沒有會員服務。"
 
 #. module: woow_member_center
-msgid "records"
-msgstr "筆"
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
+msgid "No transaction history available."
+msgstr "目前沒有交易紀錄。"
+
+#. module: woow_member_center
+#: model:ir.model.fields,field_description:woow_member_center.field_loyalty_history__balance_before
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
+msgid "Previous Balance"
+msgstr "前餘額"
+
+#. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
+msgid "Related Order"
+msgstr "關聯訂單"
+
+#. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_breadcrumb_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
+msgid "Transaction History"
+msgstr "交易紀錄"
+
+#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_mc_card_history
+msgid "Used"
+msgstr "使用"
+
+#. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+msgid "View All History ("
+msgstr "查看全部歷史 ("
+
+#. module: woow_member_center
+#: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
+msgid "records)"
+msgstr "筆記錄)"

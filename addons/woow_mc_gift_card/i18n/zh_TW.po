@@ -1,81 +1,125 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* woow_mc_gift_card
+#	* woow_mc_gift_card
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 00:00+0000\n"
-"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"POT-Creation-Date: 2026-05-30 00:00+0000\n"
+"PO-Revision-Date: 2026-05-30 00:00+0000\n"
 "Last-Translator: \n"
-"Language-Team: Chinese (Traditional)\n"
+"Language-Team: Chinese (Traditional) <>\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: zh_TW\n"
+"Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. module: woow_mc_gift_card
-msgid "Gift Card"
-msgstr "禮品卡"
 
 #. module: woow_mc_gift_card
-msgid "View Gift Card Balance"
-msgstr "查看禮品卡餘額"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<small class=\"text-muted\">Balance</small>"
+msgstr "<small class=\"text-muted\">餘額</small>"
 
 #. module: woow_mc_gift_card
-msgid "No gift cards found."
-msgstr "目前沒有禮品卡。"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "<span class=\"badge rounded-pill text-bg-secondary\">Expired</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-secondary\">已過期</span>"
 
 #. module: woow_mc_gift_card
-msgid "Program"
-msgstr "方案"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "<span class=\"badge rounded-pill text-bg-success\">Active</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-success\">使用中</span>"
 
 #. module: woow_mc_gift_card
-msgid "Card No."
-msgstr "卡號"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "<span class=\"badge rounded-pill text-bg-warning\">Zero Balance</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-warning\">零餘額</span>"
 
 #. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<strong>Card No.:</strong>"
+msgstr "<strong>卡號：</strong>"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<strong>Created:</strong>"
+msgstr "<strong>建立日期：</strong>"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<strong>Expires:</strong>"
+msgstr "<strong>到期日：</strong>"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<strong>Program End:</strong>"
+msgstr "<strong>方案結束：</strong>"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "<strong>Program Start:</strong>"
+msgstr "<strong>方案開始：</strong>"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
 msgid "Balance"
 msgstr "餘額"
 
 #. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "Card No."
+msgstr "卡號"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "Communication"
+msgstr "溝通紀錄"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "Details"
+msgstr "詳情"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.mc_hub_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_breadcrumb_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "Gift Card"
+msgstr "禮品卡"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_breadcrumb_gift_card
+msgid "Member Center"
+msgstr "會員中心"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "No gift cards found."
+msgstr "目前沒有禮品卡。"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_mc_gift_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_list
 msgid "Status"
 msgstr "狀態"
 
 #. module: woow_mc_gift_card
-msgid "Expired"
-msgstr "已過期"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "Transaction History"
+msgstr "交易歷史"
 
 #. module: woow_mc_gift_card
-msgid "Zero Balance"
-msgstr "零餘額"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.mc_hub_gift_card
+msgid "View Gift Card Balance"
+msgstr "查看禮品卡餘額"
 
 #. module: woow_mc_gift_card
-msgid "Active"
-msgstr "有效"
-
-#. module: woow_mc_gift_card
-msgid "Card No.:"
-msgstr "卡號："
-
-#. module: woow_mc_gift_card
-msgid "Created:"
-msgstr "建立日期："
-
-#. module: woow_mc_gift_card
-msgid "Expires:"
-msgstr "到期日："
-
-#. module: woow_mc_gift_card
-msgid "Program Start:"
-msgstr "有效開始："
-
-#. module: woow_mc_gift_card
-msgid "Program End:"
-msgstr "有效結束："
-
-#. module: woow_mc_gift_card
-msgid "Communication"
-msgstr "溝通紀錄"
+#: model_terms:ir.ui.view,arch_db:woow_mc_gift_card.portal_mc_gift_card_detail
+msgid "barcode"
+msgstr "條碼"

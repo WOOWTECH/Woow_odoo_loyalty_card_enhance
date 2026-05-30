@@ -1,89 +1,137 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* woow_mc_coupon
+#	* woow_mc_coupon
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 00:00+0000\n"
-"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"POT-Creation-Date: 2026-05-30 00:00+0000\n"
+"PO-Revision-Date: 2026-05-30 00:00+0000\n"
 "Last-Translator: \n"
-"Language-Team: Chinese (Traditional)\n"
+"Language-Team: Chinese (Traditional) <>\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: zh_TW\n"
+"Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+
 #. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<small class=\"text-muted\">Status</small>"
+msgstr "<small class=\"text-muted\">狀態</small>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "<span class=\"badge rounded-pill text-bg-danger\">Expired</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-danger\">已過期</span>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "<span class=\"badge rounded-pill text-bg-secondary\">Used</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-secondary\">已使用</span>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "<span class=\"badge rounded-pill text-bg-success\">Available</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-success\">可使用</span>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<strong>Coupon Code:</strong>"
+msgstr "<strong>優惠碼：</strong>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<strong>Created:</strong>"
+msgstr "<strong>建立日期：</strong>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<strong>Expires:</strong>"
+msgstr "<strong>到期日：</strong>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<strong>Valid From:</strong>"
+msgstr "<strong>有效起始：</strong>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "<strong>Valid Until:</strong>"
+msgstr "<strong>有效截止：</strong>"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "Communication"
+msgstr "溝通紀錄"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.mc_hub_coupon_card
 msgid "Coupon"
 msgstr "優惠券"
 
 #. module: woow_mc_coupon
-msgid "Coupons"
-msgstr "優惠券"
-
-#. module: woow_mc_coupon
-msgid "View Available Coupons"
-msgstr "查看可用優惠券"
-
-#. module: woow_mc_coupon
-msgid "No coupons found."
-msgstr "目前沒有優惠券。"
-
-#. module: woow_mc_coupon
-msgid "Program"
-msgstr "方案"
-
-#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
 msgid "Coupon Code"
 msgstr "優惠碼"
 
 #. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_breadcrumb_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "Coupons"
+msgstr "優惠券"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
 msgid "Description"
 msgstr "說明"
 
 #. module: woow_mc_coupon
-msgid "Status"
-msgstr "狀態"
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "Details"
+msgstr "詳情"
 
 #. module: woow_mc_coupon
-msgid "Used"
-msgstr "已使用"
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_breadcrumb_coupon
+msgid "Member Center"
+msgstr "會員中心"
 
 #. module: woow_mc_coupon
-msgid "Expired"
-msgstr "已過期"
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "No coupons found."
+msgstr "目前沒有優惠券。"
 
 #. module: woow_mc_coupon
-msgid "Available"
-msgstr "可使用"
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "Program"
+msgstr "方案"
 
 #. module: woow_mc_coupon
-msgid "Coupon Code:"
-msgstr "優惠碼："
-
-#. module: woow_mc_coupon
-msgid "Created:"
-msgstr "建立日期："
-
-#. module: woow_mc_coupon
-msgid "Expires:"
-msgstr "到期日："
-
-#. module: woow_mc_coupon
-msgid "Valid From:"
-msgstr "有效開始："
-
-#. module: woow_mc_coupon
-msgid "Valid Until:"
-msgstr "有效結束："
-
-#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
 msgid "Reward Details"
 msgstr "優惠內容"
 
 #. module: woow_mc_coupon
-msgid "Communication"
-msgstr "溝通紀錄"
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_list
+msgid "Status"
+msgstr "狀態"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "Transaction History"
+msgstr "交易歷史"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.mc_hub_coupon_card
+msgid "View Available Coupons"
+msgstr "查看可用優惠券"
+
+#. module: woow_mc_coupon
+#: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
+msgid "barcode"
+msgstr "條碼"

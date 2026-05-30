@@ -1,77 +1,120 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* woow_mc_ewallet
+#	* woow_mc_ewallet
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 00:00+0000\n"
-"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"POT-Creation-Date: 2026-05-30 00:00+0000\n"
+"PO-Revision-Date: 2026-05-30 00:00+0000\n"
 "Last-Translator: \n"
-"Language-Team: Chinese (Traditional)\n"
+"Language-Team: Chinese (Traditional) <>\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: zh_TW\n"
+"Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. module: woow_mc_ewallet
-msgid "E-Wallet"
-msgstr "電子錢包"
 
 #. module: woow_mc_ewallet
-msgid "View Balance & Transactions"
-msgstr "查看餘額與交易"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "<small class=\"text-muted\">Balance</small>"
+msgstr "<small class=\"text-muted\">餘額</small>"
 
 #. module: woow_mc_ewallet
-msgid "No e-wallets found."
-msgstr "目前沒有電子錢包。"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "<span class=\"badge rounded-pill text-bg-secondary\">Expired</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-secondary\">已過期</span>"
 
 #. module: woow_mc_ewallet
-msgid "Total Balance"
-msgstr "總餘額"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "<span class=\"badge rounded-pill text-bg-success\">Active</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-success\">使用中</span>"
 
 #. module: woow_mc_ewallet
-msgid "Program"
-msgstr "方案"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "<span class=\"badge rounded-pill text-bg-warning\">Zero Balance</span>"
+msgstr "<span class=\"badge rounded-pill text-bg-warning\">零餘額</span>"
 
 #. module: woow_mc_ewallet
-msgid "Card No."
-msgstr "卡號"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "<strong>Card No.:</strong>"
+msgstr "<strong>卡號：</strong>"
 
 #. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "<strong>Created:</strong>"
+msgstr "<strong>建立日期：</strong>"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "<strong>Expires:</strong>"
+msgstr "<strong>到期日：</strong>"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
 msgid "Balance"
 msgstr "餘額"
 
 #. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "Card No."
+msgstr "卡號"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "Communication"
+msgstr "溝通紀錄"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "Details"
+msgstr "詳情"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.mc_hub_ewallet_card
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_breadcrumb_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "E-Wallet"
+msgstr "電子錢包"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_breadcrumb_ewallet
+msgid "Member Center"
+msgstr "會員中心"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "No e-wallets found."
+msgstr "目前沒有電子錢包。"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "Program"
+msgstr "方案"
+
+#. module: woow_mc_ewallet
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
 msgid "Status"
 msgstr "狀態"
 
 #. module: woow_mc_ewallet
-msgid "Expired"
-msgstr "已過期"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet
+msgid "Total Balance"
+msgstr "總餘額"
 
 #. module: woow_mc_ewallet
-msgid "Zero Balance"
-msgstr "零餘額"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "Transaction History"
+msgstr "交易歷史"
 
 #. module: woow_mc_ewallet
-msgid "Active"
-msgstr "有效"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.mc_hub_ewallet_card
+msgid "View Balance &amp; Transactions"
+msgstr "查看餘額與交易紀錄"
 
 #. module: woow_mc_ewallet
-msgid "Card No.:"
-msgstr "卡號："
-
-#. module: woow_mc_ewallet
-msgid "Created:"
-msgstr "建立日期："
-
-#. module: woow_mc_ewallet
-msgid "Expires:"
-msgstr "到期日："
-
-#. module: woow_mc_ewallet
-msgid "Communication"
-msgstr "溝通紀錄"
+#: model_terms:ir.ui.view,arch_db:woow_mc_ewallet.portal_mc_ewallet_detail
+msgid "barcode"
+msgstr "條碼"
