@@ -7,7 +7,7 @@
     <template id="portal_my_home_member_center"
               name="Portal: Member Center Entry"
               inherit_id="portal.portal_my_home"
-              priority="25">
+              priority="20">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
             <t t-set="portal_client_category_enable" t-value="True"/>
         </xpath>
