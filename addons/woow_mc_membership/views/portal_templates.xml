@@ -102,6 +102,8 @@
                                           class="badge rounded-pill text-bg-secondary">None</span>
                                     <span t-if="line.state == 'waiting'"
                                           class="badge rounded-pill text-bg-secondary">Waiting</span>
+                                    <span t-if="line.state == 'old'"
+                                          class="badge rounded-pill text-bg-secondary">Expired</span>
                                 </td>
                             </tr>
                         </t>
