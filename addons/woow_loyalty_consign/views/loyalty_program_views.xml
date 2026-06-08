@@ -27,50 +27,82 @@
         </field>
     </record>
 
-    <!-- 3. 寄品方案獨立表單 -->
+    <!-- 3. 寄品方案表單（繼承原生 loyalty 表單，與電子錢包欄位對齊） -->
     <record id="loyalty_program_consign_view_form" model="ir.ui.view">
         <field name="name">loyalty.program.consign.form</field>
         <field name="model">loyalty.program</field>
+        <field name="inherit_id" ref="loyalty.loyalty_program_view_form"/>
+        <field name="mode">primary</field>
         <field name="arch" type="xml">
-            <form string="寄品方案">
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_view_consign_cards"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-id-card-o">
-                            <field name="consign_card_count" widget="statinfo" string="寄品卡"/>
-                        </button>
-                    </div>
-
-                    <widget name="web_ribbon" title="已封存" bg_color="text-bg-danger"
-                            invisible="active"/>
-                    <div class="oe_title">
-                        <label for="name" string="方案名稱"/>
-                        <h1><field name="name" placeholder="例如：療程寄品方案"/></h1>
-                    </div>
-
-                    <field name="program_type" invisible="1"/>
-                    <field name="active" invisible="1"/>
-
-                    <group>
-                        <group string="寄品設定">
-                            <field name="trigger_product_ids" string="觸發產品"
-                                   widget="many2many_tags"
-                                   placeholder="選擇觸發寄品卡建立的產品"/>
-                            <field name="mail_template_id" string="通知模板"/>
-                            <field name="portal_visible" string="Portal 可見"/>
-                        </group>
-                        <group string="限制使用">
-                            <field name="available_on" string="在以下可用"/>
-                        </group>
-                    </group>
-
-                    <p class="text-muted mt-3">
-                        寄品卡在客戶購買「觸發產品」後自動建立。非觸發品項存入卡片，供日後分次取用核銷。
-                    </p>
-                </sheet>
+            <!-- 表單標題 -->
+            <form position="attributes">
+                <attribute name="string">寄品方案</attribute>
             </form>
+
+            <!-- 僅允許選擇 consign 類型 -->
+            <field name="program_type" position="attributes">
+                <attribute name="options">{'whitelisted_values': ['consign']}</attribute>
+            </field>
+
+            <!-- 隱藏原生統計按鈕，改用寄品卡專用按鈕 -->
+            <button name="action_open_loyalty_cards" position="attributes">
+                <attribute name="invisible">program_type == 'consign'</attribute>
+            </button>
+            <button name="action_open_loyalty_cards" position="after">
+                <button name="action_view_consign_cards"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-id-card-o"
+                        invisible="program_type != 'consign'">
+                    <field name="consign_card_count" widget="statinfo" string="寄品卡"/>
+                </button>
+            </button>
+
+            <!-- 新增寄品卡說明文字 -->
+            <xpath expr="//field[@name='program_type']/parent::div/p[last()]" position="after">
+                <p class="text-muted" invisible="program_type != 'consign'" colspan="2">
+                    寄品卡在客戶購買「觸發產品」後自動建立。非觸發品項存入卡片，供日後分次取用核銷。
+                </p>
+            </xpath>
+
+            <!-- 新增 consign 觸發產品欄位 -->
+            <xpath expr="//field[@name='trigger_product_ids'][@string='eWallet Products']" position="after">
+                <field name="trigger_product_ids" string="觸發產品"
+                       widget="many2many_tags"
+                       invisible="program_type != 'consign'"
+                       placeholder="選擇觸發寄品卡建立的產品"/>
+            </xpath>
+
+            <!-- 顯示通知模板（加入 consign） -->
+            <field name="mail_template_id" position="attributes">
+                <attribute name="invisible">program_type not in ('gift_card', 'ewallet', 'consign')</attribute>
+            </field>
+
+            <!-- 隱藏貨幣欄位 -->
+            <field name="currency_id" position="attributes">
+                <attribute name="invisible">program_type == 'consign'</attribute>
+            </field>
+
+            <!-- 隱藏價格表 -->
+            <field name="pricelist_ids" position="attributes">
+                <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
+            </field>
+
+            <!-- 隱藏日期區間 -->
+            <field name="date_from" position="attributes">
+                <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
+            </field>
+            <field name="date_to" position="attributes">
+                <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
+            </field>
+
+            <!-- 隱藏使用次數限制 -->
+            <xpath expr="//label[@for='limit_usage']" position="attributes">
+                <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
+            </xpath>
+            <xpath expr="//span[field[@name='limit_usage']]" position="attributes">
+                <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
+            </xpath>
         </field>
     </record>
 
