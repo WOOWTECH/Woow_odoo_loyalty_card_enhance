@@ -4,6 +4,11 @@
     <!-- 1. 從「禮品卡與電子錢包」表單移除 consign（不再共用） -->
     <!-- 保留原生 gift_card + ewallet，consign 用獨立表單 -->
 
+    <!-- 1.5 把 consign 從「折扣與優惠方案」列表排除 -->
+    <record id="loyalty.loyalty_program_discount_loyalty_action" model="ir.actions.act_window">
+        <field name="domain">[('program_type', 'not in', ('gift_card', 'ewallet', 'consign'))]</field>
+    </record>
+
     <!-- 2. 把 consign 加入「折扣與會員計劃」表單的黑名單 -->
     <record id="loyalty_program_view_form_consign" model="ir.ui.view">
         <field name="name">loyalty.program.form.consign.blacklist</field>
