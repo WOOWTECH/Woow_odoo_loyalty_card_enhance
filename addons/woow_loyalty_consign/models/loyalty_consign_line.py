@@ -76,6 +76,15 @@ class LoyaltyConsignLine(models.Model):
         'loyalty.consign.redemption.line', 'consign_line_id', string='核銷紀錄',
     )
 
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        """選擇產品時自動帶入名稱和單價。"""
+        if self.product_id:
+            if not self.product_desc:
+                self.product_desc = self.product_id.name
+            if not self.unit_price:
+                self.unit_price = self.product_id.list_price
+
     @api.constrains('qty_deposited')
     def _check_qty_deposited(self):
         for line in self:
@@ -129,6 +138,15 @@ class LoyaltyConsignLine(models.Model):
                         % ', '.join(changed_protected)
                     )
         return super().write(vals)
+
+    def unlink(self):
+        """已建立的寄品明細不可刪除，請使用取消功能。"""
+        for line in self:
+            if line.qty_redeemed > 0:
+                raise ValidationError(
+                    '已有核銷紀錄的寄品明細不可刪除（%s）。' % (
+                        line.product_desc or line.product_id.name))
+        return super().unlink()
 
     def action_cancel(self):
         self.write({'is_cancelled': True})
