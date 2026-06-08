@@ -103,7 +103,7 @@ class LoyaltyConsignLine(models.Model):
     @api.depends('qty_deposited', 'qty_redeemed')
     def _compute_qty_remaining(self):
         for line in self:
-            line.qty_remaining = line.qty_deposited - line.qty_redeemed
+            line.qty_remaining = max(0, line.qty_deposited - line.qty_redeemed)
 
     @api.depends('qty_deposited', 'qty_remaining', 'unit_price')
     def _compute_amounts(self):
@@ -150,4 +150,10 @@ class LoyaltyConsignLine(models.Model):
         return super().unlink()
 
     def action_cancel(self):
+        for line in self:
+            if line.qty_redeemed > 0:
+                raise ValidationError(
+                    '已有核銷紀錄的品項不可取消（%s，已核銷 %s）。'
+                    % (line.product_desc or line.product_id.name, line.qty_redeemed)
+                )
         self.write({'is_cancelled': True})

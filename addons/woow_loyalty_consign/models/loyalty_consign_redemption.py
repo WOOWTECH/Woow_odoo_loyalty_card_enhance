@@ -87,6 +87,12 @@ class LoyaltyConsignRedemption(models.Model):
                 )
 
             for line in rec.line_ids:
+                # 跨卡驗證：確保核銷明細的品項屬於同一張卡
+                if line.consign_line_id.card_id != rec.card_id:
+                    raise ValidationError(
+                        f'品項「{line.product_desc or line.product_id.name}」'
+                        f'不屬於此寄品卡，無法核銷。'
+                    )
                 if line.consign_line_id.state != 'active':
                     raise ValidationError(
                         f'品項「{line.product_desc or line.product_id.name}」'

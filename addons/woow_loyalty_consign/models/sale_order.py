@@ -36,6 +36,8 @@ class SaleOrder(models.Model):
     def _action_create_consign_card(self):
         """偵測觸發商品並自動建立/累加寄品卡。"""
         self.ensure_one()
+        if not self.partner_id:
+            return
         consign_programs = self.env['loyalty.program'].search([
             ('program_type', '=', 'consign'),
             ('active', '=', True),
@@ -69,7 +71,8 @@ class SaleOrder(models.Model):
                 ('active', '=', True),
             ], limit=1)
 
-            if not card:
+            is_new_card = not card
+            if is_new_card:
                 card = self.env['loyalty.card'].with_context(
                     loyalty_no_mail=True,
                 ).create({
@@ -101,8 +104,9 @@ class SaleOrder(models.Model):
                 )
                 sol.is_consigned = True
 
-            # 發送通知
-            card._send_creation_communication(force_send=True)
+            # 發送通知（僅新建卡片時發送，累積不重複通知）
+            if is_new_card:
+                card._send_creation_communication(force_send=True)
 
     def action_view_consign_lines(self):
         """開啟此訂單產生的寄品明細。"""
