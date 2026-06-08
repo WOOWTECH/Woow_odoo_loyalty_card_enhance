@@ -87,6 +87,11 @@ class LoyaltyConsignRedemption(models.Model):
                 )
 
             for line in rec.line_ids:
+                if line.consign_line_id.state != 'active':
+                    raise ValidationError(
+                        f'品項「{line.product_desc or line.product_id.name}」'
+                        f'狀態為「{line.consign_line_id.state}」，僅有效品項可核銷。'
+                    )
                 if line.qty_redeemed <= 0:
                     raise ValidationError(
                         f'品項「{line.product_desc or line.product_id.name}」的核銷數量必須大於 0。'
