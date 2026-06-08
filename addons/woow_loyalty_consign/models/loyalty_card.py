@@ -71,7 +71,7 @@ class LoyaltyCard(models.Model):
         )[:1]
 
         if existing:
-            existing.qty_deposited += qty
+            existing.with_context(consign_accumulate=True).qty_deposited += qty
         else:
             vals = {
                 'card_id': self.id,

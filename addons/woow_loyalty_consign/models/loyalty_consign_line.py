@@ -129,7 +129,8 @@ class LoyaltyConsignLine(models.Model):
         """
         protected = {'qty_deposited', 'product_id', 'unit_price', 'product_desc'}
         changed_protected = protected & set(vals.keys())
-        if changed_protected:
+        # consign_add_line 累加數量時需跳過寫保護
+        if changed_protected and not self.env.context.get('consign_accumulate'):
             for line in self:
                 if not isinstance(line.id, models.NewId):
                     raise ValidationError(
