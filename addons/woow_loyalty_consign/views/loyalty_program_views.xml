@@ -1,45 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- 1. 把 consign 加入「禮品卡與電子錢包」表單的白名單 -->
-    <record id="loyalty_program_gift_ewallet_view_form_consign" model="ir.ui.view">
-        <field name="name">loyalty.program.gift_ewallet.form.consign</field>
-        <field name="model">loyalty.program</field>
-        <field name="inherit_id" ref="loyalty.loyalty_program_gift_ewallet_view_form"/>
-        <field name="arch" type="xml">
-            <!-- 修改 program_type 白名單加入 consign -->
-            <field name="program_type" position="attributes">
-                <attribute name="options">{'whitelisted_values': ['gift_card', 'ewallet', 'consign']}</attribute>
-            </field>
-
-            <!-- 在 program_type 的描述文字區塊後加入 consign 說明 -->
-            <xpath expr="//p[contains(@invisible, 'ewallet')][last()]" position="after">
-                <p class="text-muted" invisible="program_type != 'consign'" colspan="2">
-                    寄品卡在客戶購買「寄品服務」觸發商品後自動建立，非觸發品項存入卡片供日後分次取用。
-                </p>
-            </xpath>
-
-            <!-- 加入觸發商品欄位（寄品卡用） -->
-            <xpath expr="//field[@name='trigger_product_ids'][last()]" position="after">
-                <field name="trigger_product_ids" string="寄品卡產品"
-                       widget="many2many_tags"
-                       invisible="program_type != 'consign'"/>
-            </xpath>
-
-            <!-- 讓原生 mail_template_id 也在 consign 類型顯示 -->
-            <field name="mail_template_id" position="attributes">
-                <attribute name="invisible">program_type not in ('gift_card', 'ewallet', 'consign')</attribute>
-            </field>
-
-            <!-- 寄品卡隱藏限制使用欄位（含 label） -->
-            <xpath expr="//field[@name='limit_usage']" position="attributes">
-                <attribute name="invisible">program_type == 'consign'</attribute>
-            </xpath>
-            <xpath expr="//label[@for='limit_usage']" position="attributes">
-                <attribute name="invisible">program_type == 'consign'</attribute>
-            </xpath>
-        </field>
-    </record>
+    <!-- 1. 從「禮品卡與電子錢包」表單移除 consign（不再共用） -->
+    <!-- 保留原生 gift_card + ewallet，consign 用獨立表單 -->
 
     <!-- 2. 把 consign 加入「折扣與會員計劃」表單的黑名單 -->
     <record id="loyalty_program_view_form_consign" model="ir.ui.view">
@@ -50,22 +13,65 @@
             <field name="program_type" position="attributes">
                 <attribute name="options">{'blacklisted_values': ['gift_card', 'ewallet', 'consign']}</attribute>
             </field>
-
-            <!-- 隱藏 consign 的「規則及獎勵」分頁 -->
             <page name="rules_rewards" position="attributes">
                 <attribute name="invisible">program_type in ('gift_card', 'ewallet', 'consign')</attribute>
             </page>
-
-            <!-- 隱藏 consign 的「通訊」分頁 -->
             <page name="communications" position="attributes">
                 <attribute name="invisible">applies_on == 'current' or program_type in ('gift_card', 'ewallet', 'consign')</attribute>
             </page>
         </field>
     </record>
 
-    <!-- 3. 寄品方案動作（獨立選單用） -->
+    <!-- 3. 寄品方案獨立表單 -->
+    <record id="loyalty_program_consign_view_form" model="ir.ui.view">
+        <field name="name">loyalty.program.consign.form</field>
+        <field name="model">loyalty.program</field>
+        <field name="arch" type="xml">
+            <form string="寄品方案">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_consign_cards"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-id-card-o">
+                            <field name="consign_card_count" widget="statinfo" string="寄品卡"/>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="已封存" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="方案名稱"/>
+                        <h1><field name="name" placeholder="例如：療程寄品方案"/></h1>
+                    </div>
+
+                    <field name="program_type" invisible="1"/>
+                    <field name="active" invisible="1"/>
+
+                    <group>
+                        <group string="寄品設定">
+                            <field name="trigger_product_ids" string="觸發產品"
+                                   widget="many2many_tags"
+                                   placeholder="選擇觸發寄品卡建立的產品"/>
+                            <field name="mail_template_id" string="通知模板"/>
+                            <field name="portal_visible" string="Portal 可見"/>
+                        </group>
+                        <group string="限制使用">
+                            <field name="available_on" string="在以下可用"/>
+                        </group>
+                    </group>
+
+                    <p class="text-muted mt-3">
+                        寄品卡在客戶購買「觸發產品」後自動建立。非觸發品項存入卡片，供日後分次取用核銷。
+                    </p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 4. 寄品方案動作 -->
     <record id="loyalty_program_consign_action" model="ir.actions.act_window">
-        <field name="name">寄品方案</field>
+        <field name="name">寄品管理</field>
         <field name="res_model">loyalty.program</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('program_type', '=', 'consign')]</field>
@@ -80,11 +86,11 @@
         </field>
     </record>
 
-    <!-- 5. 寄品方案動作使用禮品卡/電子錢包 form view -->
+    <!-- 5. 寄品方案動作使用獨立 form view -->
     <record id="action_loyalty_program_form_consign" model="ir.actions.act_window.view">
         <field name="view_mode">form</field>
         <field name="sequence">2</field>
-        <field name="view_id" ref="loyalty.loyalty_program_gift_ewallet_view_form"/>
+        <field name="view_id" ref="loyalty_program_consign_view_form"/>
         <field name="act_window_id" ref="loyalty_program_consign_action"/>
     </record>
 
