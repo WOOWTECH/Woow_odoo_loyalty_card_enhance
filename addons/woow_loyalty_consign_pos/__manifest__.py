@@ -12,6 +12,7 @@
     ],
     'data': [
         'data/consign_pos_product_data.xml',
+        'views/pos_consign_menu_views.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [

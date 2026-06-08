@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- POS > Products > 寄品方案 -->
+    <!-- 與 Discount & Loyalty (seq 91)、Gift cards & eWallet (seq 92) 並列 -->
+    <menuitem
+        id="menu_consign_pos"
+        action="woow_loyalty_consign.loyalty_program_consign_action"
+        name="寄品方案"
+        parent="point_of_sale.pos_config_menu_catalog"
+        groups="point_of_sale.group_pos_manager"
+        sequence="93"
+    />
+
+</odoo>

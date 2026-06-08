@@ -34,9 +34,9 @@
             <xpath expr="//button[@name='action_loyalty_update_balance']" position="attributes">
                 <attribute name="invisible">is_consign</attribute>
             </xpath>
-            <!-- 移除原生 history（寄品卡用核銷紀錄 tab + chatter 追蹤替代） -->
-            <xpath expr="//field[@name='history_ids']" position="replace">
-                <field name="history_ids" invisible="is_consign"/>
+            <!-- 隱藏原生「歷史資料行」整個分頁（寄品卡用核銷紀錄 + chatter 替代） -->
+            <xpath expr="//page[field[@name='history_ids']]" position="attributes">
+                <attribute name="invisible">is_consign</attribute>
             </xpath>
 
             <!-- 在 partner_id 後顯示寄品卡現值總額 -->
