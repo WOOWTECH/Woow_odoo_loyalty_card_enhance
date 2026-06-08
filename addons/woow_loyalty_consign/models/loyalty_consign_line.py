@@ -113,21 +113,20 @@ class LoyaltyConsignLine(models.Model):
                 line.state = 'active'
 
     def write(self, vals):
-        """Track admin qty_deposited changes in card chatter."""
-        if 'qty_deposited' in vals:
+        """已建立的寄品明細核心欄位不可修改。
+
+        扣除數量請用「核銷」功能，新增品項請用「加入資料行」。
+        允許修改的：is_cancelled, storage_note, lot_id（非核心欄位）。
+        """
+        protected = {'qty_deposited', 'product_id', 'unit_price', 'product_desc'}
+        changed_protected = protected & set(vals.keys())
+        if changed_protected:
             for line in self:
-                old_qty = line.qty_deposited
-                new_qty = vals['qty_deposited']
-                if old_qty != new_qty and line.card_id:
-                    user = self.env.user
-                    line.card_id.message_post(
-                        body='<p>管理員 <b>%s</b> 調整寄品數量：'
-                             '<b>%s</b> 存入數量 %g → %g</p>' % (
-                                 user.name,
-                                 line.product_desc or line.product_id.name,
-                                 old_qty, new_qty),
-                        message_type='notification',
-                        subtype_xmlid='mail.mt_note',
+                if not isinstance(line.id, models.NewId):
+                    raise ValidationError(
+                        '已建立的寄品明細不可修改（%s）。\n'
+                        '如需扣除請使用「核銷」功能，如需新增請用「加入資料行」。'
+                        % ', '.join(changed_protected)
                     )
         return super().write(vals)
 
