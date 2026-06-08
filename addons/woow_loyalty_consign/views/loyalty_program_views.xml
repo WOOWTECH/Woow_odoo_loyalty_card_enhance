@@ -65,13 +65,13 @@
                 </p>
             </xpath>
 
-            <!-- 新增 consign 觸發產品欄位 -->
-            <xpath expr="//field[@name='trigger_product_ids'][@string='eWallet Products']" position="after">
+            <!-- 新增 consign 觸發產品欄位（放在 mail_template_id 前） -->
+            <field name="mail_template_id" position="before">
                 <field name="trigger_product_ids" string="觸發產品"
                        widget="many2many_tags"
                        invisible="program_type != 'consign'"
                        placeholder="選擇觸發寄品卡建立的產品"/>
-            </xpath>
+            </field>
 
             <!-- 顯示通知模板（加入 consign） -->
             <field name="mail_template_id" position="attributes">
