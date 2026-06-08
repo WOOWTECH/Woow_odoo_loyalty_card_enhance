@@ -21,12 +21,34 @@
                 </header>
             </xpath>
 
-            <!-- 在 partner_id 之後加入寄品卡欄位 -->
-            <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="is_consign" invisible="1"/>
+            <!-- 原生 loyalty.card form 已有 <chatter/>，不需重複加入 -->
+
+            <!-- 隱藏原生「Balance」標籤和點數欄位（寄品卡不用點數） -->
+            <xpath expr="//label[@for='points_display']" position="attributes">
+                <attribute name="invisible">is_consign</attribute>
+            </xpath>
+            <xpath expr="//field[@name='points_display']" position="attributes">
+                <attribute name="invisible">is_consign</attribute>
+            </xpath>
+            <!-- 隱藏原生 update balance 按鈕 -->
+            <xpath expr="//button[@name='action_loyalty_update_balance']" position="attributes">
+                <attribute name="invisible">is_consign</attribute>
+            </xpath>
+            <!-- 隱藏原生 history tab（寄品卡用核銷紀錄 tab 替代） -->
+            <xpath expr="//field[@name='history_ids']" position="attributes">
+                <attribute name="invisible">is_consign</attribute>
             </xpath>
 
-            <!-- 原生 loyalty.card form 已有 <chatter/>，不需重複加入 -->
+            <!-- 在 partner_id 後顯示寄品卡現值總額 -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="is_consign" invisible="1"/>
+                <label string="寄品現值" for="consign_total_remaining_value"
+                       invisible="not is_consign"/>
+                <div invisible="not is_consign">
+                    <field name="consign_total_remaining_value" nolabel="1"
+                           style="font-size: 1.5em; font-weight: bold;"/>
+                </div>
+            </xpath>
 
             <!-- 在 notebook 中加入寄品頁籤 -->
             <xpath expr="//notebook" position="inside">

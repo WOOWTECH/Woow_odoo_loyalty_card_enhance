@@ -112,5 +112,24 @@ class LoyaltyConsignLine(models.Model):
             else:
                 line.state = 'active'
 
+    def write(self, vals):
+        """Track admin qty_deposited changes in card chatter."""
+        if 'qty_deposited' in vals:
+            for line in self:
+                old_qty = line.qty_deposited
+                new_qty = vals['qty_deposited']
+                if old_qty != new_qty and line.card_id:
+                    user = self.env.user
+                    line.card_id.message_post(
+                        body='<p>管理員 <b>%s</b> 調整寄品數量：'
+                             '<b>%s</b> 存入數量 %g → %g</p>' % (
+                                 user.name,
+                                 line.product_desc or line.product_id.name,
+                                 old_qty, new_qty),
+                        message_type='notification',
+                        subtype_xmlid='mail.mt_note',
+                    )
+        return super().write(vals)
+
     def action_cancel(self):
         self.write({'is_cancelled': True})

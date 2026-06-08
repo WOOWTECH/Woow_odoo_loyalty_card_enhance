@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Partner Smart Button: 寄品卡 -->
+    <record id="res_partner_view_form_consign" model="ir.ui.view">
+        <field name="name">res.partner.form.consign</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_consign_cards"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-archive"
+                        invisible="consign_card_count == 0">
+                    <field name="consign_card_count" widget="statinfo" string="寄品卡"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
