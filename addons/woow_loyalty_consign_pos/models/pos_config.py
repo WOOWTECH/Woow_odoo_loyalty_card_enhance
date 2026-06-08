@@ -27,7 +27,13 @@ class PosConfig(models.Model):
                 'payload': {'error_message': _('Consignment card not found.'), 'not_found': True},
             }
 
-        if card.partner_id and partner_id and card.partner_id.id != partner_id:
+        # 驗證卡片擁有者：要求必須指定客戶，且與卡片擁有者一致
+        if not partner_id:
+            return {
+                'successful': False,
+                'payload': {'error_message': _('Please select a customer before scanning a consignment card.')},
+            }
+        if card.partner_id and card.partner_id.id != partner_id:
             return {
                 'successful': False,
                 'payload': {'error_message': _('This card does not belong to the selected customer.')},
