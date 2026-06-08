@@ -91,7 +91,28 @@
         </field>
     </record>
 
-    <!-- 5. 寄品方案動作使用獨立 form view -->
+    <!-- 5. 寄品方案列表 view -->
+    <record id="loyalty_program_consign_view_list" model="ir.ui.view">
+        <field name="name">loyalty.program.consign.list</field>
+        <field name="model">loyalty.program</field>
+        <field name="arch" type="xml">
+            <list string="寄品方案">
+                <field name="name" string="計劃名稱"/>
+                <field name="program_type" string="計劃類型"/>
+                <field name="trigger_product_ids" string="觸發產品" widget="many2many_tags"/>
+                <field name="consign_card_count" string="寄品卡數"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 6. 動作綁定 list + form view -->
+    <record id="action_loyalty_program_list_consign" model="ir.actions.act_window.view">
+        <field name="view_mode">list</field>
+        <field name="sequence">1</field>
+        <field name="view_id" ref="loyalty_program_consign_view_list"/>
+        <field name="act_window_id" ref="loyalty_program_consign_action"/>
+    </record>
     <record id="action_loyalty_program_form_consign" model="ir.actions.act_window.view">
         <field name="view_mode">form</field>
         <field name="sequence">2</field>
