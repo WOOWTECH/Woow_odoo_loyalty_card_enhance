@@ -8,6 +8,28 @@ class LoyaltyProgram(models.Model):
         selection_add=[('consign', '寄品卡')],
         ondelete={'consign': 'set default'},
     )
+    consign_card_count = fields.Integer(
+        string='寄品卡數量', compute='_compute_consign_card_count',
+    )
+
+    def _compute_consign_card_count(self):
+        for program in self:
+            if program.program_type == 'consign':
+                program.consign_card_count = self.env['loyalty.card'].sudo().search_count([
+                    ('program_id', '=', program.id),
+                ])
+            else:
+                program.consign_card_count = 0
+
+    def action_view_consign_cards(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': '寄品卡',
+            'res_model': 'loyalty.card',
+            'view_mode': 'list,form',
+            'domain': [('program_id', '=', self.id)],
+        }
 
     @api.depends('program_type')
     def _compute_is_nominative(self):
