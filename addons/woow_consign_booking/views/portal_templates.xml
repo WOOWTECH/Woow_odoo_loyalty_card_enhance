@@ -8,41 +8,38 @@
               inherit_id="reservation_module.appointment_book_page">
         <xpath expr="//t[@t-if='appointment_type.require_payment']" position="before">
             <t t-if="appointment_type.consign_enabled">
-                <t t-set="partner" t-value="portal_partner or False"/>
-                <t t-if="partner">
-                    <t t-set="consign_card" t-value="request.env['loyalty.card'].sudo().search([
-                        ('program_id', '=', appointment_type.consign_program_id.id),
-                        ('partner_id', '=', partner.id),
-                        ('is_consign', '=', True),
-                        ('active', '=', True),
-                    ], limit=1)"/>
-                    <t t-if="consign_card">
-                        <t t-set="consign_line" t-value="consign_card.consign_line_ids.filtered(
-                            lambda l: l.product_id.id == appointment_type.consign_product_id.id and l.state == 'active'
-                        )[:1]"/>
-                        <div class="alert alert-info">
-                            <i class="fa fa-ticket me-2"/>
-                            <strong>寄品卡扣點</strong>
-                            <div class="mt-2">
-                                <div>品項：<strong><t t-out="appointment_type.consign_product_id.display_name"/></strong></div>
-                                <div>每次扣除：<strong><t t-out="appointment_type.consign_qty"/> 堂</strong></div>
-                                <t t-if="consign_line">
-                                    <div>目前可用：<strong class="text-success"><t t-out="consign_line.qty_available"/> 堂</strong></div>
-                                </t>
-                                <t t-else="">
-                                    <div class="text-danger">⚠ 寄品卡中沒有此品項</div>
-                                </t>
-                            </div>
-                            <small class="text-muted mt-1 d-block">確認預約後將自動從寄品卡扣除</small>
+                <t t-set="_cpartner" t-value="request.env.user.sudo().partner_id"/>
+                <t t-set="_ccard" t-value="request.env['loyalty.card'].sudo().search([
+                    ('program_id', '=', appointment_type.consign_program_id.id),
+                    ('partner_id', '=', _cpartner.id),
+                    ('is_consign', '=', True), ('active', '=', True),
+                ], limit=1) if _cpartner else False"/>
+                <t t-if="_ccard">
+                    <t t-set="_cline" t-value="_ccard.consign_line_ids.filtered(
+                        lambda l: l.product_id.id == appointment_type.consign_product_id.id and l.state == 'active'
+                    )[:1]"/>
+                    <div class="alert alert-info mb-3">
+                        <i class="fa fa-ticket me-2"/>
+                        <strong>寄品卡扣點</strong>
+                        <div class="mt-2">
+                            <div>品項：<strong><t t-out="appointment_type.consign_product_id.display_name"/></strong></div>
+                            <div>每次扣除：<strong><t t-out="appointment_type.consign_qty"/> 堂</strong></div>
+                            <t t-if="_cline">
+                                <div>目前可用：<strong class="text-success"><t t-out="_cline.qty_available"/> 堂</strong></div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-danger">寄品卡中沒有此品項</div>
+                            </t>
                         </div>
-                    </t>
-                    <t t-if="not consign_card">
-                        <div class="alert alert-warning">
-                            <i class="fa fa-exclamation-triangle me-2"/>
-                            <strong>尚無寄品卡</strong>
-                            <div class="mt-1 small">此預約需要寄品卡扣點，但您尚未擁有相關寄品卡。請先購買課程。</div>
-                        </div>
-                    </t>
+                        <small class="text-muted mt-1 d-block">確認預約後將自動從寄品卡扣除</small>
+                    </div>
+                </t>
+                <t t-if="not _ccard and _cpartner">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <strong>尚無寄品卡</strong>
+                        <div class="mt-1 small">此預約需要寄品卡扣點，但您尚未擁有相關寄品卡。</div>
+                    </div>
                 </t>
             </t>
         </xpath>
