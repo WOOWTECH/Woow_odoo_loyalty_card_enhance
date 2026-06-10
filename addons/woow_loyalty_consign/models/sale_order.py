@@ -63,13 +63,17 @@ class SaleOrder(models.Model):
             if not trigger_lines:
                 continue
 
-            # 找既有卡片或建新卡（一客一卡）
-            card = self.env['loyalty.card'].search([
-                ('program_id', '=', program.id),
-                ('partner_id', '=', self.partner_id.id),
-                ('is_consign', '=', True),
-                ('active', '=', True),
-            ], limit=1)
+            # C1 fix: 用 FOR UPDATE 鎖定既有卡片列，防止並發建立重複卡
+            self.env.cr.execute(
+                "SELECT id FROM loyalty_card "
+                "WHERE program_id = %s AND partner_id = %s AND active = TRUE "
+                "FOR UPDATE",
+                (program.id, self.partner_id.id),
+            )
+            locked_ids = [r[0] for r in self.env.cr.fetchall()]
+            card = self.env['loyalty.card'].browse(locked_ids).filtered(
+                'is_consign'
+            )[:1]
 
             is_new_card = not card
             if is_new_card:
@@ -94,6 +98,12 @@ class SaleOrder(models.Model):
                     and l.product_id not in atp
                 )
             )
+
+            # C6 fix: SO 只含觸發商品、無其他品項時不建立空卡
+            if is_new_card and not other_lines:
+                card.unlink()
+                continue
+
             for sol in other_lines:
                 card.consign_add_line(
                     product=sol.product_id,

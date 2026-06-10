@@ -116,39 +116,47 @@ class AppointmentBooking(models.Model):
 
     def action_confirm(self):
         for booking in self:
-            if booking.consign_line_id and booking.consign_reserved_qty > 0:
+            # C2 fix: 冪等保護 — 已有核銷單就跳過，防止重複扣減
+            if (booking.consign_line_id
+                    and booking.consign_reserved_qty > 0
+                    and not booking.consign_redemption_id):
                 booking._consign_deduct()
         return super().action_confirm()
 
     def _consign_deduct(self):
-        """確認預約：建立核銷單 → 釋放預留"""
+        """確認預約：建立核銷單 → 釋放預留
+
+        M4 fix: 使用 savepoint 確保 action_done 失敗時整個核銷單被回滾，
+        避免殘留草稿核銷單造成資料不一致。
+        """
         self.ensure_one()
         consign_line = self.consign_line_id
         qty = self.consign_reserved_qty
         card = consign_line.card_id
 
-        redemption = self.env['loyalty.consign.redemption'].create({
-            'card_id': card.id,
-            'booking_id': self.id,
-            'staff_user_id': self.env.user.id,
-            'service_note': f'預約扣點: {self.name}',
-            'line_ids': [(0, 0, {
-                'consign_line_id': consign_line.id,
-                'qty_redeemed': qty,
-                'note': f'預約 {self.name}',
-            })],
-        })
-        redemption.action_done()
+        with self.env.cr.savepoint():
+            redemption = self.env['loyalty.consign.redemption'].create({
+                'card_id': card.id,
+                'booking_id': self.id,
+                'staff_user_id': self.env.user.id,
+                'service_note': f'預約扣點: {self.name}',
+                'line_ids': [(0, 0, {
+                    'consign_line_id': consign_line.id,
+                    'qty_redeemed': qty,
+                    'note': f'預約 {self.name}',
+                })],
+            })
+            redemption.action_done()
 
-        # 釋放預留
-        self.env.cr.execute(
-            "SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE",
-            [consign_line.id],
-        )
-        consign_line.invalidate_recordset(['reserved_qty'])
-        consign_line.sudo().write({
-            'reserved_qty': max(0, consign_line.reserved_qty - qty),
-        })
+            # 釋放預留
+            self.env.cr.execute(
+                "SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE",
+                [consign_line.id],
+            )
+            consign_line.invalidate_recordset(['reserved_qty'])
+            consign_line.sudo().write({
+                'reserved_qty': max(0, consign_line.reserved_qty - qty),
+            })
 
         self.write({
             'consign_redemption_id': redemption.id,
