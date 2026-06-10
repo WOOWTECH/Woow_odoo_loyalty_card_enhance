@@ -1,5 +1,6 @@
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_round
 
 
 class LoyaltyConsignLine(models.Model):
@@ -107,9 +108,12 @@ class LoyaltyConsignLine(models.Model):
 
     @api.depends('qty_deposited', 'qty_remaining', 'unit_price')
     def _compute_amounts(self):
+        # M2 fix: 使用 float_round 避免浮點精度誤差
         for line in self:
-            line.amount_deposited = line.qty_deposited * line.unit_price
-            line.amount_remaining = line.qty_remaining * line.unit_price
+            line.amount_deposited = float_round(
+                line.qty_deposited * line.unit_price, precision_digits=2)
+            line.amount_remaining = float_round(
+                line.qty_remaining * line.unit_price, precision_digits=2)
 
     @api.depends('qty_remaining', 'is_cancelled')
     def _compute_state(self):
@@ -121,16 +125,21 @@ class LoyaltyConsignLine(models.Model):
             else:
                 line.state = 'active'
 
+    def _write_accumulate(self, vals):
+        """M1 fix: 內部累加專用方法，繞過 write 保護。
+        僅供 consign_add_line 呼叫，不接受外部 context 注入。
+        """
+        return super().write(vals)
+
     def write(self, vals):
         """已建立的寄品明細核心欄位不可修改。
 
         扣除數量請用「核銷」功能，新增品項請用「加入資料行」。
-        允許修改的：is_cancelled, storage_note, lot_id（非核心欄位）。
+        允許修改的：is_cancelled, storage_note, lot_id, reserved_qty（非核心欄位）。
         """
         protected = {'qty_deposited', 'product_id', 'unit_price', 'product_desc'}
         changed_protected = protected & set(vals.keys())
-        # consign_add_line 累加數量時需跳過寫保護
-        if changed_protected and not self.env.context.get('consign_accumulate'):
+        if changed_protected:
             for line in self:
                 if not isinstance(line.id, models.NewId):
                     raise ValidationError(

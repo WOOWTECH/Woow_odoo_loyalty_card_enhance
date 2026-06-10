@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.tools import float_compare
 
 
 class LoyaltyCard(models.Model):
@@ -63,15 +64,18 @@ class LoyaltyCard(models.Model):
         if isinstance(product, int):
             product = self.env['product.product'].browse(product)
 
-        # 同品項同價格的 active line 直接累加
+        # H3 fix: 用 float_compare 取代 == 比對浮點單價
         existing = self.consign_line_ids.filtered(
             lambda l: l.product_id == product
             and l.state == 'active'
-            and l.unit_price == unit_price
+            and float_compare(l.unit_price, unit_price, precision_digits=2) == 0
         )[:1]
 
         if existing:
-            existing.with_context(consign_accumulate=True).qty_deposited += qty
+            # M1 fix: 用內部方法取代可被外部注入的 context flag
+            existing._write_accumulate({
+                'qty_deposited': existing.qty_deposited + qty,
+            })
         else:
             vals = {
                 'card_id': self.id,

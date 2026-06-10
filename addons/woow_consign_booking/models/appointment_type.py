@@ -6,6 +6,13 @@ from odoo.exceptions import ValidationError
 class AppointmentType(models.Model):
     _inherit = 'appointment.type'
 
+    # M3 fix: DB 級互斥約束，防止 SQL 繞過
+    _sql_constraints = [
+        ('payment_consign_exclusive',
+         'CHECK(NOT (require_payment = TRUE AND consign_enabled = TRUE))',
+         '「需要付款」與「啟用寄品扣點」不可同時啟用。'),
+    ]
+
     consign_enabled = fields.Boolean(
         '啟用寄品扣點',
         help='啟用後，建立預約時會從客戶寄品卡扣除點數',

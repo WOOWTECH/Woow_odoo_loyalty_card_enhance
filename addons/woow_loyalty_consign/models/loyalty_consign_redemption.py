@@ -74,41 +74,50 @@ class LoyaltyConsignRedemption(models.Model):
             if not rec.line_ids:
                 raise ValidationError('核銷單至少需要一筆明細。')
 
-            # 鎖定相關寄品明細列，防止並行核銷超額 (TOCTOU)
-            consign_line_ids = rec.line_ids.mapped('consign_line_id').ids
+            # H2 fix: 鎖定 + 用 SQL 直接讀取最新值驗證，確保原子性
+            consign_lines = rec.line_ids.mapped('consign_line_id')
+            consign_line_ids = consign_lines.ids
             if consign_line_ids:
                 self.env.cr.execute(
-                    "SELECT id FROM loyalty_consign_line WHERE id IN %s FOR UPDATE",
+                    "SELECT id, qty_deposited, qty_redeemed "
+                    "FROM loyalty_consign_line WHERE id IN %s FOR UPDATE",
                     [tuple(consign_line_ids)],
                 )
-                # 鎖定後重新讀取最新數量
-                rec.line_ids.mapped('consign_line_id').invalidate_recordset(
-                    ['qty_remaining', 'qty_redeemed'],
+                db_data = {
+                    r[0]: {'qty_deposited': r[1], 'qty_redeemed': r[2]}
+                    for r in self.env.cr.fetchall()
+                }
+                # 重新整理 ORM 快取
+                consign_lines.invalidate_recordset(
+                    ['qty_remaining', 'qty_redeemed', 'qty_deposited'],
                 )
 
             for line in rec.line_ids:
-                # 跨卡驗證：確保核銷明細的品項屬於同一張卡
+                desc = line.product_desc or line.product_id.name
                 if line.consign_line_id.card_id != rec.card_id:
                     raise ValidationError(
-                        f'品項「{line.product_desc or line.product_id.name}」'
-                        f'不屬於此寄品卡，無法核銷。'
+                        f'品項「{desc}」不屬於此寄品卡，無法核銷。'
                     )
                 if line.consign_line_id.state != 'active':
                     raise ValidationError(
-                        f'品項「{line.product_desc or line.product_id.name}」'
-                        f'狀態為「{line.consign_line_id.state}」，僅有效品項可核銷。'
+                        f'品項「{desc}」狀態為「{line.consign_line_id.state}」，僅有效品項可核銷。'
                     )
                 if line.qty_redeemed <= 0:
                     raise ValidationError(
-                        f'品項「{line.product_desc or line.product_id.name}」的核銷數量必須大於 0。'
+                        f'品項「{desc}」的核銷數量必須大於 0。'
                     )
-                if line.qty_redeemed > line.consign_line_id.qty_remaining:
+                # H2 fix: 用 DB 直接讀取的值驗證餘額
+                cl_id = line.consign_line_id.id
+                if cl_id in db_data:
+                    db_remaining = db_data[cl_id]['qty_deposited'] - db_data[cl_id]['qty_redeemed']
+                else:
+                    db_remaining = line.consign_line_id.qty_remaining
+                if line.qty_redeemed > db_remaining:
                     raise ValidationError(
-                        f'品項「{line.product_desc or line.product_id.name}」'
-                        f'核銷數量 ({line.qty_redeemed}) 超過剩餘數量 '
-                        f'({line.consign_line_id.qty_remaining})。'
+                        f'品項「{desc}」核銷數量 ({line.qty_redeemed}) '
+                        f'超過剩餘數量 ({db_remaining})。'
                     )
-            rec.state = 'done'
+            rec.write({'state': 'done'})
             rec.card_id.message_post(
                 body=f'核銷單 {rec.name} 已完成，共核銷 {len(rec.line_ids)} 筆品項。',
                 message_type='notification',
