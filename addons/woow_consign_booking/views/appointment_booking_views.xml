@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 預約表單：在 payment_status 後顯示寄品扣點狀態 -->
+    <record id="appointment_booking_consign_form" model="ir.ui.view">
+        <field name="name">appointment.booking.form.consign</field>
+        <field name="model">appointment.booking</field>
+        <field name="inherit_id" ref="reservation_module.appointment_booking_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_status']" position="after">
+                <field name="consign_enabled" invisible="1"/>
+                <field name="consign_card_id"
+                       invisible="not consign_enabled"
+                       readonly="1" string="寄品卡"/>
+                <field name="consign_line_id"
+                       invisible="not consign_enabled"
+                       readonly="1" string="寄品明細"/>
+                <field name="consign_reserved_qty"
+                       invisible="not consign_enabled"
+                       readonly="1" string="預留數量"/>
+                <field name="consign_redemption_id"
+                       invisible="not consign_enabled"
+                       readonly="1" string="核銷單"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 寄品卡表單：在 consign_line_ids 列表加 reserved_qty / qty_available -->
+    <record id="loyalty_card_consign_add_reserved" model="ir.ui.view">
+        <field name="name">loyalty.card.form.consign.reserved</field>
+        <field name="model">loyalty.card</field>
+        <field name="inherit_id" ref="woow_loyalty_consign.loyalty_card_consign_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='consign_line_ids']//field[@name='qty_remaining']"
+                   position="after">
+                <field name="reserved_qty" readonly="1"/>
+                <field name="qty_available" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
