@@ -7,7 +7,7 @@
     <template id="appointment_book_consign_info"
               inherit_id="reservation_module.appointment_book_page">
         <xpath expr="//t[@t-if='appointment_type.require_payment']" position="before">
-            <t t-if="appointment_type.consign_enabled and request.env.user._is_internal() == False">
+            <t t-if="appointment_type.consign_enabled">
                 <t t-set="partner" t-value="portal_partner or False"/>
                 <t t-if="partner">
                     <t t-set="consign_card" t-value="request.env['loyalty.card'].sudo().search([
