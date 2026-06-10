@@ -105,9 +105,10 @@ class AppointmentBooking(models.Model):
         self.write({
             'consign_line_id': consign_line.id,
             'consign_reserved_qty': qty_needed,
+            'state': 'pending_payment',
         })
         _logger.info(
-            'consign_reserve: booking %s reserved %.1f of %s (card %s)',
+            'consign_reserve: booking %s reserved %.1f of %s (card %s) → pending',
             self.name, qty_needed, product.display_name, card.id,
         )
 
