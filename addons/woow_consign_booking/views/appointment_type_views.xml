@@ -7,7 +7,7 @@
         <field name="model">appointment.type</field>
         <field name="inherit_id" ref="reservation_module.appointment_type_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@string='Payment']" position="after">
+            <xpath expr="//field[@name='payment_per_person']/../.." position="after">
                 <group string="寄品扣點">
                     <field name="consign_enabled"/>
                     <field name="consign_program_id"
