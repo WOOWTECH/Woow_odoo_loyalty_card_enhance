@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- 1. 預約表單頁：付款資訊區塊前加入寄品扣點資訊                    -->
+    <!-- ============================================================ -->
+    <template id="appointment_book_consign_info"
+              inherit_id="reservation_module.appointment_book_page">
+        <xpath expr="//t[@t-if='appointment_type.require_payment']" position="before">
+            <t t-if="appointment_type.consign_enabled and request.env.user._is_internal() == False">
+                <t t-set="partner" t-value="portal_partner or False"/>
+                <t t-if="partner">
+                    <t t-set="consign_card" t-value="request.env['loyalty.card'].sudo().search([
+                        ('program_id', '=', appointment_type.consign_program_id.id),
+                        ('partner_id', '=', partner.id),
+                        ('is_consign', '=', True),
+                        ('active', '=', True),
+                    ], limit=1)"/>
+                    <t t-if="consign_card">
+                        <t t-set="consign_line" t-value="consign_card.consign_line_ids.filtered(
+                            lambda l: l.product_id.id == appointment_type.consign_product_id.id and l.state == 'active'
+                        )[:1]"/>
+                        <div class="alert alert-info">
+                            <i class="fa fa-ticket me-2"/>
+                            <strong>寄品卡扣點</strong>
+                            <div class="mt-2">
+                                <div>品項：<strong><t t-out="appointment_type.consign_product_id.display_name"/></strong></div>
+                                <div>每次扣除：<strong><t t-out="appointment_type.consign_qty"/> 堂</strong></div>
+                                <t t-if="consign_line">
+                                    <div>目前可用：<strong class="text-success"><t t-out="consign_line.qty_available"/> 堂</strong></div>
+                                </t>
+                                <t t-else="">
+                                    <div class="text-danger">⚠ 寄品卡中沒有此品項</div>
+                                </t>
+                            </div>
+                            <small class="text-muted mt-1 d-block">確認預約後將自動從寄品卡扣除</small>
+                        </div>
+                    </t>
+                    <t t-if="not consign_card">
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            <strong>尚無寄品卡</strong>
+                            <div class="mt-1 small">此預約需要寄品卡扣點，但您尚未擁有相關寄品卡。請先購買課程。</div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- 2. 預約確認頁：Email 通知前加入寄品扣點結果                     -->
+    <!-- ============================================================ -->
+    <template id="appointment_confirm_consign_info"
+              inherit_id="reservation_module.appointment_confirm_page">
+        <xpath expr="//div[hasclass('alert-info')]" position="before">
+            <!-- 已扣點（confirmed 狀態） -->
+            <t t-if="booking.consign_redemption_id and booking.consign_redemption_id.state == 'done'">
+                <div class="alert alert-success text-start my-3">
+                    <i class="fa fa-check-circle me-2"/>
+                    <strong>寄品扣點完成</strong>
+                    <div class="mt-2 small">
+                        <div>品項：<t t-out="booking.consign_line_id.product_id.display_name"/></div>
+                        <div>已扣除：<t t-out="booking.consign_redemption_id.line_ids[:1].qty_redeemed"/> 堂</div>
+                        <div>剩餘：<t t-out="booking.consign_line_id.qty_remaining"/> 堂</div>
+                        <div class="text-muted">核銷單：<t t-out="booking.consign_redemption_id.name"/></div>
+                    </div>
+                </div>
+            </t>
+            <!-- 預留中（draft 狀態，尚未確認） -->
+            <t t-if="booking.consign_reserved_qty > 0 and not booking.consign_redemption_id">
+                <div class="alert alert-warning text-start my-3">
+                    <i class="fa fa-clock-o me-2"/>
+                    <strong>寄品預留中</strong>
+                    <div class="mt-2 small">
+                        <div>品項：<t t-out="booking.consign_line_id.product_id.display_name"/></div>
+                        <div>預留：<t t-out="booking.consign_reserved_qty"/> 堂（確認後正式扣除）</div>
+                        <div>可用餘額：<t t-out="booking.consign_line_id.qty_available"/> 堂</div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- 3. 預約詳情頁 Sidebar：加入寄品扣點資訊                        -->
+    <!-- ============================================================ -->
+    <template id="portal_booking_consign_sidebar"
+              inherit_id="reservation_module.portal_my_booking_detail">
+        <!-- Sidebar: 在取消按鈕前加寄品扣點區塊 -->
+        <xpath expr="//form[contains(@t-attf-action, 'cancel')]/.." position="before">
+            <div t-if="booking.consign_line_id"
+                 class="d-flex flex-column gap-2">
+                <h6><small class="text-muted">寄品扣點</small></h6>
+                <div class="small">
+                    <div><strong><t t-out="booking.consign_line_id.product_id.display_name"/></strong></div>
+                    <t t-if="booking.consign_redemption_id and booking.consign_redemption_id.state == 'done'">
+                        <span class="badge text-bg-success">
+                            <i class="fa fa-check me-1"/>已扣 <t t-out="booking.consign_redemption_id.line_ids[:1].qty_redeemed"/> 堂
+                        </span>
+                    </t>
+                    <t t-if="booking.consign_reserved_qty > 0 and not booking.consign_redemption_id">
+                        <span class="badge text-bg-warning">
+                            <i class="fa fa-clock-o me-1"/>預留 <t t-out="booking.consign_reserved_qty"/> 堂
+                        </span>
+                    </t>
+                    <div class="mt-1 text-muted">
+                        剩餘：<t t-out="booking.consign_line_id.qty_remaining"/> 堂
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Content: 在 card_body 尾部加寄品扣點詳情區塊（類似線上會議格式） -->
+        <xpath expr="//div[@id='card_body']" position="inside">
+            <div t-if="booking.consign_line_id" class="mb-4">
+                <h5 class="mb-1">寄品扣點資訊</h5>
+                <hr class="mt-1 mb-2"/>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div><strong>品項：</strong> <t t-out="booking.consign_line_id.product_id.display_name"/></div>
+                        <div t-if="booking.consign_redemption_id">
+                            <strong>核銷單：</strong>
+                            <t t-out="booking.consign_redemption_id.name"/>
+                            <span t-if="booking.consign_redemption_id.state == 'done'" class="badge text-bg-success ms-1">已完成</span>
+                            <span t-if="booking.consign_redemption_id.state == 'draft'" class="badge text-bg-warning ms-1">草稿</span>
+                        </div>
+                        <div t-if="booking.consign_reserved_qty > 0 and not booking.consign_redemption_id">
+                            <strong>狀態：</strong> 預留 <t t-out="booking.consign_reserved_qty"/> 堂
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div><strong>寄品卡：</strong> <t t-out="booking.consign_card_id.display_name"/></div>
+                        <div><strong>剩餘數量：</strong> <t t-out="booking.consign_line_id.qty_remaining"/> 堂</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 銷售訂單資訊 -->
+            <div t-if="booking.sale_order_id" class="mb-4">
+                <h5 class="mb-1">銷售訂單</h5>
+                <hr class="mt-1 mb-2"/>
+                <div>
+                    <strong>訂單編號：</strong>
+                    <a t-attf-href="/my/orders/#{booking.sale_order_id.id}?access_token=#{booking.sale_order_id.access_token}">
+                        <t t-out="booking.sale_order_id.name"/>
+                    </a>
+                    <span t-if="booking.sale_order_id.state == 'sale'" class="badge text-bg-success ms-1">已確認</span>
+                    <span t-if="booking.sale_order_id.state == 'draft'" class="badge text-bg-secondary ms-1">草稿</span>
+                </div>
+                <div>
+                    <strong>金額：</strong>
+                    <t t-out="'%.2f' % booking.sale_order_id.amount_total"/>
+                    <t t-out="booking.sale_order_id.currency_id.symbol"/>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

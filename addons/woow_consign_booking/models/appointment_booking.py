@@ -128,6 +128,7 @@ class AppointmentBooking(models.Model):
 
         redemption = self.env['loyalty.consign.redemption'].create({
             'card_id': card.id,
+            'booking_id': self.id,
             'staff_user_id': self.env.user.id,
             'service_note': f'預約扣點: {self.name}',
             'line_ids': [(0, 0, {
