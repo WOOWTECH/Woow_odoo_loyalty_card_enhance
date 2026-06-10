@@ -13,6 +13,7 @@
     'data': [
         'views/appointment_type_views.xml',
         'views/appointment_booking_views.xml',
+        'views/portal_templates.xml',
     ],
     'installable': True,
     'application': False,
