@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 預約類型表單：在 Options 頁的 Payment group 後加「寄品扣點」 -->
+    <record id="appointment_type_consign_form" model="ir.ui.view">
+        <field name="name">appointment.type.form.consign</field>
+        <field name="model">appointment.type</field>
+        <field name="inherit_id" ref="reservation_module.appointment_type_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@string='Payment']" position="after">
+                <group string="寄品扣點">
+                    <field name="consign_enabled"/>
+                    <field name="consign_program_id"
+                           invisible="not consign_enabled"/>
+                    <field name="consign_product_id"
+                           invisible="not consign_enabled"/>
+                    <field name="consign_qty"
+                           invisible="not consign_enabled"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
