@@ -241,6 +241,33 @@ class LoyaltyConsignMovement(models.Model):
                     'Legacy redemption value cannot be reconciled to exact FIFO issues.'
                 )
 
+        # Adjustments do not identify an issue row. Attribute their net
+        # outgoing quantity to FIFO issues, while adjustment-in first restores
+        # prior adjustment-out capacity. An unmatched positive adjustment-in
+        # remains in the aggregate projection but cannot fabricate an issue row
+        # for an exact Hold allocation.
+        adjusted_out = sum(movements.filtered(
+            lambda movement: movement.movement_type == 'adjustment_out'
+        ).mapped('quantity'))
+        adjusted_in = sum(movements.filtered(
+            lambda movement: movement.movement_type == 'adjustment_in'
+        ).mapped('quantity'))
+        adjustment_consumption = max(0.0, adjusted_out - adjusted_in)
+        for state in states:
+            consumed = min(adjustment_consumption, state['available'])
+            state['available'] -= consumed
+            adjustment_consumption -= consumed
+            if float_compare(
+                adjustment_consumption, 0.0, precision_rounding=rounding,
+            ) <= 0:
+                break
+        if float_compare(
+            adjustment_consumption, 0.0, precision_rounding=rounding,
+        ) > 0:
+            raise ValidationError(
+                'Adjustment consumption exceeds exact FIFO issue capacity.'
+            )
+
         if include_active_holds:
             for state in states:
                 held = sum(state['issue'].sudo().hold_allocation_ids.filtered(
