@@ -5,7 +5,8 @@
     <!-- 1. 預約表單頁：付款資訊區塊前加入寄品扣點資訊                    -->
     <!-- ============================================================ -->
     <template id="appointment_book_consign_info"
-              inherit_id="reservation_module.appointment_book_page">
+              inherit_id="reservation_module.appointment_book_page"
+              active="False">
         <xpath expr="//t[@t-if='appointment_type.require_payment']" position="before">
             <t t-if="appointment_type.consign_enabled">
                 <t t-set="_cpartner" t-value="request.env.user.sudo().partner_id"/>
@@ -49,7 +50,8 @@
     <!-- 2. 預約確認頁：Email 通知前加入寄品扣點結果                     -->
     <!-- ============================================================ -->
     <template id="appointment_confirm_consign_info"
-              inherit_id="reservation_module.appointment_confirm_page">
+              inherit_id="reservation_module.appointment_confirm_page"
+              active="False">
         <xpath expr="//div[hasclass('alert-info')]" position="before">
             <!-- 已扣點（confirmed 狀態） -->
             <t t-if="booking.consign_redemption_id and booking.consign_redemption_id.state == 'done'">
@@ -83,7 +85,8 @@
     <!-- 3. 預約詳情頁 Sidebar：加入寄品扣點資訊                        -->
     <!-- ============================================================ -->
     <template id="portal_booking_consign_sidebar"
-              inherit_id="reservation_module.portal_my_booking_detail">
+              inherit_id="reservation_module.portal_my_booking_detail"
+              active="False">
         <!-- Sidebar: 在取消按鈕前加寄品扣點區塊 -->
         <xpath expr="//form[contains(@t-attf-action, 'cancel')]/.." position="before">
             <div t-if="booking.consign_line_id"

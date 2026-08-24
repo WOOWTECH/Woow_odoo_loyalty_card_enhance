@@ -6,6 +6,7 @@
         <field name="name">appointment.booking.form.consign</field>
         <field name="model">appointment.booking</field>
         <field name="inherit_id" ref="reservation_module.appointment_booking_view_form"/>
+        <field name="active" eval="False"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_status']" position="after">
                 <field name="consign_enabled" invisible="1"/>
@@ -30,6 +31,7 @@
         <field name="name">loyalty.card.form.consign.reserved</field>
         <field name="model">loyalty.card</field>
         <field name="inherit_id" ref="woow_loyalty_consign.loyalty_card_consign_view_form"/>
+        <field name="active" eval="False"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='consign_line_ids']//field[@name='qty_remaining']"
                    position="after">
@@ -44,6 +46,7 @@
         <field name="name">loyalty.consign.redemption.form.booking</field>
         <field name="model">loyalty.consign.redemption</field>
         <field name="inherit_id" ref="woow_loyalty_consign.loyalty_consign_redemption_view_form"/>
+        <field name="active" eval="False"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='staff_user_id']" position="after">
                 <field name="booking_id" readonly="1" string="關聯預約"/>
