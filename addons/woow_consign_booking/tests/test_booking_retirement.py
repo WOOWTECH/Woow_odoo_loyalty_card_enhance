@@ -15,6 +15,12 @@ class TestBookingConsignmentRetirement(TransactionCase):
         cls.partner = cls.env['res.partner'].create({
             'name': 'Consignment Retirement Customer',
             'email': 'retirement@example.com',
+            'phone': '0912345678',
+        })
+        cls.payment_product = cls.env['product.product'].create({
+            'name': 'Retirement Test Service',
+            'type': 'service',
+            'list_price': 100.0,
         })
         cls.appointment_type = cls.env['appointment.type'].create({
             'name': 'Legacy Consignment Appointment',
@@ -33,6 +39,7 @@ class TestBookingConsignmentRetirement(TransactionCase):
             'partner_id': self.partner.id,
             'guest_name': self.partner.name,
             'guest_email': self.partner.email,
+            'guest_phone': self.partner.phone,
             'guest_count': 1,
             'start_datetime': start,
             'end_datetime': start + timedelta(hours=1),
@@ -59,6 +66,7 @@ class TestBookingConsignmentRetirement(TransactionCase):
     def test_legacy_consign_flag_no_longer_blocks_payment_configuration(self):
         self.appointment_type.write({
             'require_payment': True,
+            'payment_product_ids': [(6, 0, [self.payment_product.id])],
             'consign_enabled': True,
         })
 
