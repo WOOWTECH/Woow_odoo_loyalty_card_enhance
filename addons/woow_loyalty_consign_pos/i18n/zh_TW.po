@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: woow_loyalty_consign_pos
-#: model:product.product,name:woow_loyalty_consign_pos.consign_pos_redemption_product
+#: model:product.product,name:woow_loyalty_consign.consign_redemption_product
 msgid "Consignment Redemption"
 msgstr "寄品核銷"
 

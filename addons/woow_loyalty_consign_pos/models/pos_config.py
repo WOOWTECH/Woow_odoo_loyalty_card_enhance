@@ -7,7 +7,7 @@ class PosConfig(models.Model):
     def _get_consign_redemption_product_id(self):
         """Return the consign redemption service product ID."""
         product = self.env.ref(
-            'woow_loyalty_consign_pos.consign_pos_redemption_product',
+            'woow_loyalty_consign.consign_redemption_product',
             raise_if_not_found=False,
         )
         return product.id if product else False
