@@ -45,6 +45,9 @@
             </t>
         </xpath>
     </template>
+    <record id="appointment_book_consign_info" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
 
     <!-- ============================================================ -->
     <!-- 2. 預約確認頁：Email 通知前加入寄品扣點結果                     -->
@@ -80,6 +83,9 @@
             </t>
         </xpath>
     </template>
+    <record id="appointment_confirm_consign_info" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
 
     <!-- ============================================================ -->
     <!-- 3. 預約詳情頁 Sidebar：加入寄品扣點資訊                        -->
@@ -156,5 +162,8 @@
             </div>
         </xpath>
     </template>
+    <record id="portal_booking_consign_sidebar" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
 
 </odoo>
