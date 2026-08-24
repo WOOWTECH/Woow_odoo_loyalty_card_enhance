@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <!-- Service product used as POS order line for consignment redemptions ($0) -->
-    <record id="consign_pos_redemption_product" model="product.product">
+    <!-- Reuse the legacy XML ID so upgrades keep historical product references. -->
+    <record id="woow_loyalty_consign.consign_redemption_product" model="product.product">
         <field name="name">Consignment Redemption</field>
         <field name="type">service</field>
         <field name="list_price">0</field>

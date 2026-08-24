@@ -73,6 +73,13 @@ Confirmed defects:
 
 A clean DB with only `--init=woow_loyalty_consign` exits 255. Core ACL CSV references `point_of_sale.group_pos_user` but the manifest does not depend on POS. POS-specific ACL/data must move to the POS bridge, or core must explicitly depend on POS.
 
+Dependency and generic-product assertions run in `standard`; the Task 1 core-only gate runs only the environment-specific module-state assertion explicitly on a clean database:
+
+```bash
+odoo-bin --init=woow_loyalty_consign --test-enable \
+  --test-tags=consign_clean_install --stop-after-init
+```
+
 ### Concurrency
 
 Two independent transactions each attempted to redeem 6 from 10:

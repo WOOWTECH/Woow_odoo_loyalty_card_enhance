@@ -1,6 +1,6 @@
 {
     'name': '寄品卡 (Consignment Card)',
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.2.1',
     'category': 'Sales/Loyalty',
     'summary': '延伸忠誠度模組，新增寄品卡功能：酒窖寄存、醫美療程預購等',
     'description': """
@@ -30,7 +30,6 @@
     'depends': [
         'loyalty',
         'sale_loyalty',
-        'website_sale_loyalty',
         'stock',
         'mail',
     ],

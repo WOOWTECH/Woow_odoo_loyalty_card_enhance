@@ -13,15 +13,4 @@
               groups="sales_team.group_sale_salesman"
               sequence="55"/>
 
-    <!-- ============================================================ -->
-    <!-- Website eCommerce > Loyalty > 寄品方案                         -->
-    <!-- 與 Discount & Loyalty、Gift cards & eWallet 並列               -->
-    <!-- ============================================================ -->
-
-    <menuitem id="menu_consign_website"
-              name="寄品方案"
-              parent="website_sale_loyalty.menu_loyalty"
-              action="loyalty_program_consign_action"
-              sequence="30"/>
-
 </odoo>
