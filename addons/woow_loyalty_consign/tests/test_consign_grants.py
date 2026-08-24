@@ -93,7 +93,10 @@ class TestConsignGrants(TransactionCase):
                 cards.env.context.get('loyalty_no_mail')
                 or cards.env.context.get('action_no_send_mail')
             ):
-                contexts.append(dict(cards.env.context))
+                contexts.append({
+                    **dict(cards.env.context),
+                    '_captured_force_send': force_send,
+                })
 
         return contexts, patch.object(
             type(self.env['loyalty.card']),
@@ -107,9 +110,7 @@ class TestConsignGrants(TransactionCase):
             ('partner_id', '=', self.partner.id),
         ])
         self.assertEqual(len(card), 1)
-        return card.consign_line_ids.filtered(
-            lambda line: line.sale_order_id == order
-        )
+        return order.consign_line_ids.filtered(lambda line: line.card_id == card)
 
     def test_one_trigger_grants_multiple_entitlement_products(self):
         program = self._program('Multi-grant Program', self.trigger, [
@@ -176,6 +177,7 @@ class TestConsignGrants(TransactionCase):
         self.assertEqual(len(notification_contexts), 1)
         self.assertFalse(notification_contexts[0].get('loyalty_no_mail'))
         self.assertFalse(notification_contexts[0].get('action_no_send_mail'))
+        self.assertFalse(notification_contexts[0]['_captured_force_send'])
 
     def test_larger_non_base_trigger_and_entitlement_uoms_are_converted(self):
         trigger_dozen = self._non_base_uom(
@@ -265,7 +267,7 @@ class TestConsignGrants(TransactionCase):
         self.assertEqual(order.consign_line_count, 1)
         self.assertEqual(len(issued.movement_ids), 2)
         self.assertEqual(sum(issued.movement_ids.mapped('quantity')), 3.0)
-        self.assertEqual(len(issued.movement_ids.mapped('operation_id')), 2)
+        self.assertEqual(len(issued.movement_ids.mapped('operation_id')), 1)
 
     def test_second_order_reuses_card_accumulates_and_does_not_renotify(self):
         program = self._program('Card Reuse Program', self.trigger, [
@@ -286,12 +288,9 @@ class TestConsignGrants(TransactionCase):
             ('partner_id', '=', self.partner.id),
         ])
         self.assertEqual(len(cards), 1)
-        self.assertEqual(len(cards.consign_line_ids), 2)
-        self.assertEqual(sum(cards.consign_line_ids.mapped('qty_deposited')), 6.0)
-        self.assertEqual(
-            set(cards.consign_line_ids.mapped('sale_order_id').ids),
-            {first_order.id, second_order.id},
-        )
+        self.assertEqual(len(cards.consign_line_ids), 1)
+        self.assertEqual(cards.consign_line_ids.qty_deposited, 6.0)
+        self.assertFalse(cards.consign_line_ids.sale_order_id)
         self.assertEqual(first_order.consign_line_count, 1)
         self.assertEqual(second_order.consign_line_count, 1)
         self.assertEqual(

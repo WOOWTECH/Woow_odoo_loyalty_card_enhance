@@ -13,6 +13,10 @@
                             confirm="確定要取消此品項嗎？取消後無法恢復。"
                             groups="sales_team.group_sale_manager"
                             class="btn-secondary"/>
+                    <button name="action_repair_projection" type="object"
+                            string="依動帳修復投影"
+                            groups="sales_team.group_sale_manager"
+                            class="btn-secondary"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="active,depleted"/>
                 </header>

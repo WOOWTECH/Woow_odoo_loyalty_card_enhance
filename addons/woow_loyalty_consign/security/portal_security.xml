@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Core grants card read ACL for portal, so ownership must be enforced
+         here even when no member-center bridge is installed. -->
+    <record id="loyalty_card_consign_portal_owner_rule" model="ir.rule">
+        <field name="name">Portal: own loyalty cards</field>
+        <field name="model_id" ref="loyalty.model_loyalty_card"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- Portal: 只能看到自己卡片的寄品明細 -->
     <record id="consign_line_portal_rule" model="ir.rule">
         <field name="name">Portal: own consign lines</field>

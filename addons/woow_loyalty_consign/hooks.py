@@ -54,11 +54,14 @@ def backfill_consign_movements(env):
     """Idempotently shadow all accepted facts from the legacy projection."""
     movement_model = env['loyalty.consign.movement'].sudo()
     lines = env['loyalty.consign.line'].sudo().with_context(active_test=False).search([], order='id')
+    # Task 4 reconciliation derives cancellation from reversal facts, so retain
+    # the legacy marker before issue backfill rewrites the projection.
+    cancelled_line_ids = lines.filtered('is_cancelled').ids
     for line in lines:
         if not line.product_uom_id:
-            # Upgrade pre-migration normally handles this; retain a safe ORM
-            # fallback for databases created by unusual manual procedures.
-            line._write_schema_backfill({'product_uom_id': line.product_id.uom_id.id})
+            raise RuntimeError(
+                'Consignment projection UoM must be repaired by the versioned migration.'
+            )
         if line.sale_line_id:
             source_model = 'sale.order.line'
             source_res_id = line.sale_line_id.id
@@ -93,22 +96,28 @@ def backfill_consign_movements(env):
     ], order='id')
     for redemption_line in done_redemption_lines:
         line = redemption_line.consign_line_id
-        movement_model._append_movement(
-            aggregate_line=line,
-            movement_type='redeem',
-            quantity=redemption_line.qty_redeemed,
-            source_channel='manual',
-            source_model='loyalty.consign.redemption.line',
-            source_res_id=redemption_line.id,
-            source_name=redemption_line.redemption_id.display_name,
-            idempotency_key=f'consign:legacy-redemption:v1:{redemption_line.id}',
-            occurred_at=redemption_line.redemption_id.date_redemption,
-            unit_value=redemption_line.unit_price,
-            allow_inactive_card=True,
-        )
+        existing = line.movement_ids.filtered(lambda movement: (
+            movement.movement_type == 'redeem'
+            and movement.source_model == 'loyalty.consign.redemption.line'
+            and movement.source_res_id == redemption_line.id
+        ))
+        if not existing:
+            movement_model._append_movement(
+                aggregate_line=line,
+                movement_type='redeem',
+                quantity=redemption_line.qty_redeemed,
+                source_channel='migration',
+                source_model='loyalty.consign.redemption.line',
+                source_res_id=redemption_line.id,
+                source_name=redemption_line.redemption_id.display_name,
+                idempotency_key=f'consign:legacy-redemption:v1:{redemption_line.id}',
+                occurred_at=redemption_line.redemption_id.date_redemption,
+                unit_value=redemption_line.unit_price,
+                allow_inactive_card=True,
+            )
 
     lines.invalidate_recordset(['movement_ids'])
-    for line in lines.filtered('is_cancelled'):
+    for line in lines.browse(cancelled_line_ids):
         line._append_issue_reversal_for_remaining(
             source_channel='migration',
             key_prefix=f'consign:legacy-cancellation:v1:{line.id}',

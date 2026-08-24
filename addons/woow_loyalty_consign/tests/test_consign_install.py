@@ -11,6 +11,9 @@ class TestConsignInstall(TransactionCase):
             'loyalty.consign.grant.rule',
             'loyalty.consign.grant.line',
             'loyalty.consign.operation',
+            'loyalty.consign.operation.token',
+            'loyalty.consign.card.token',
+            'loyalty.consign.engine',
             'loyalty.consign.movement',
             'loyalty.consign.hold',
             'loyalty.consign.hold.allocation',
@@ -37,6 +40,16 @@ class TestConsignInstall(TransactionCase):
         self.assertTrue(button_boxes[0].xpath(
             ".//button[@name='action_view_consign_movements']",
         ))
+
+    def test_internal_serialization_tokens_have_no_generic_acl(self):
+        for model_name in (
+            'loyalty.consign.operation.token',
+            'loyalty.consign.card.token',
+        ):
+            model = self.env['ir.model']._get(model_name)
+            self.assertFalse(self.env['ir.model.access'].sudo().search([
+                ('model_id', '=', model.id),
+            ]), model_name)
 
     def test_core_does_not_depend_on_point_of_sale(self):
         consign_module = self.env['ir.module.module'].search([

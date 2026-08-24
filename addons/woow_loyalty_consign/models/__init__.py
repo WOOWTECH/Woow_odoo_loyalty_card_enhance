@@ -2,6 +2,7 @@ from . import loyalty_program
 from . import loyalty_consign_grant_rule
 from . import loyalty_consign_grant_line
 from . import loyalty_consign_operation
+from . import loyalty_consign_engine
 from . import loyalty_consign_movement
 from . import loyalty_consign_hold
 from . import loyalty_consign_refund_saga
