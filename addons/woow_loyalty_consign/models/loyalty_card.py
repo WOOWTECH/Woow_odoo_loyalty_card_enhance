@@ -1,5 +1,4 @@
 from odoo import api, fields, models
-from odoo.tools import float_compare
 
 
 class LoyaltyCard(models.Model):
@@ -46,7 +45,8 @@ class LoyaltyCard(models.Model):
 
     @api.depends(
         'consign_line_ids.qty_available',
-        'consign_line_ids.unit_price',
+        'consign_line_ids.qty_remaining',
+        'consign_line_ids.amount_remaining',
         'consign_line_ids.state',
     )
     def _compute_consign_totals(self):
@@ -55,8 +55,12 @@ class LoyaltyCard(models.Model):
                 lambda line: line.state == 'active' and line.qty_available > 0
             )
             card.consign_total_remaining_qty = sum(active_lines.mapped('qty_available'))
+            # Historical issue unit_price is audit-only. Derive the available
+            # compatibility value from the ledger's net remaining value so a
+            # value-preserving reversal cannot leave card totals inconsistent.
             card.consign_total_remaining_value = sum(
-                line.qty_available * line.unit_price for line in active_lines
+                line.amount_remaining * line.qty_available / line.qty_remaining
+                for line in active_lines if line.qty_remaining
             )
             card.consign_active_lines = len(active_lines)
 
@@ -83,31 +87,8 @@ class LoyaltyCard(models.Model):
             sale_line.id if hasattr(sale_line, 'id') else sale_line
         ) if sale_line else False
 
-        # A sale line is the business idempotency key for accumulation. Manual
-        # calls have no such key, so each call must retain its own line and issue
-        # fact instead of silently coalescing unrelated grants.
-        existing = self.env['loyalty.consign.line']
-        if sale_line_id:
-            existing = self.consign_line_ids.filtered(
-                lambda line: (
-                    line.product_id == product
-                    and line.state == 'active'
-                    and line.sale_line_id.id == sale_line_id
-                    and float_compare(
-                        line.unit_price,
-                        unit_price,
-                        precision_digits=2,
-                    ) == 0
-                )
-            )[:1]
-
-        if existing:
-            # M1 fix: 用內部方法取代可被外部注入的 context flag
-            existing._write_accumulate({
-                'qty_deposited': existing.qty_deposited + qty,
-            })
-            return existing
-
+        # Task 4 has exactly one projection per card/product/UoM. Source and
+        # grant provenance live on independent immutable issue movements.
         vals = {
             'card_id': self.id,
             'product_id': product.id,

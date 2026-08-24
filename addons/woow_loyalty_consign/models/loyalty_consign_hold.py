@@ -1,6 +1,6 @@
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, float_round
 
 
 _HOLD_MUTATION_CONTEXT_KEY = '_woow_consign_hold_mutation_token'
@@ -78,9 +78,12 @@ class LoyaltyConsignHold(models.Model):
         return self.browse(hold.ids)
 
     def _write_from_engine(self, vals):
-        return self.with_context(**{
+        affected = self.sudo().allocation_line_ids.mapped('aggregate_line_id')
+        result = self.with_context(**{
             _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
         }).sudo().write(vals)
+        affected._reconcile_projection()
+        return result
 
     @api.constrains(
         'operation_id', 'company_id', 'partner_id', 'source_model', 'source_res_id',
@@ -154,16 +157,142 @@ class LoyaltyConsignHoldAllocation(models.Model):
         return super().write(vals)
 
     @api.model
+    def _lock_allocation_dimensions(self, issue_movements, aggregate_lines):
+        """Lock original operation tuples before deterministic projections."""
+        movement_model = self.env['loyalty.consign.movement']
+        seen_operations = set()
+        for issue in issue_movements.sorted(
+            lambda movement: (movement.operation_id.id, movement.id)
+        ):
+            if issue.operation_id.id not in seen_operations:
+                movement_model._lock_original_operation_token(issue)
+                seen_operations.add(issue.operation_id.id)
+        for line in aggregate_lines.sorted('id'):
+            self.env.cr.execute(
+                '''UPDATE loyalty_consign_line SET write_date = write_date
+                    WHERE id = %s RETURNING id''',
+                (line.id,),
+            )
+            if not self.env.cr.fetchone():
+                raise ValidationError('The allocation projection no longer exists.')
+        aggregate_lines.invalidate_recordset()
+        aggregate_lines._reconcile_projection()
+
+    @api.model
+    def _validate_active_capacity(
+        self, *, hold, line, issue, quantity, exclude_allocation=None,
+    ):
+        if hold.state != 'active':
+            raise ValidationError('Only an active Hold may receive an allocation.')
+        if issue.movement_type != 'issue':
+            raise ValidationError('A Hold allocation must reference an issue movement.')
+        if (
+            issue.company_id != hold.company_id
+            or issue.partner_id != hold.partner_id
+            or issue.aggregate_line_id != line
+            or issue.card_id != line.card_id
+            or issue.product_id != line.product_id
+            or issue.product_uom_id != line.product_uom_id
+        ):
+            raise ValidationError('Hold allocation dimensions must match the issue movement.')
+        rounded = float_round(
+            quantity, precision_rounding=line.product_uom_id.rounding,
+        )
+        if float_compare(
+            rounded, 0.0, precision_rounding=line.product_uom_id.rounding,
+        ) <= 0:
+            raise ValidationError('Hold allocation quantity must be positive after rounding.')
+        domain = [
+            ('issue_movement_id', '=', issue.id),
+            ('hold_id.state', '=', 'active'),
+        ]
+        if exclude_allocation:
+            domain.append(('id', '!=', exclude_allocation.id))
+        allocated = sum(self.sudo().search(domain).mapped('quantity'))
+        issue_states = self.env[
+            'loyalty.consign.movement'
+        ]._fifo_issue_availability(line, include_active_holds=False)
+        issue_capacity = next(
+            (state['available'] for state in issue_states
+             if state['issue'] == issue),
+            0.0,
+        )
+        if float_compare(
+            allocated + rounded, issue_capacity,
+            precision_rounding=line.product_uom_id.rounding,
+        ) > 0:
+            raise ValidationError(
+                'Active Hold allocations cannot exceed the unused issue quantity.'
+            )
+        available = line.qty_available
+        if exclude_allocation and exclude_allocation.hold_id.state == 'active':
+            available += exclude_allocation.quantity
+        if float_compare(
+            rounded, available,
+            precision_rounding=line.product_uom_id.rounding,
+        ) > 0:
+            raise ValidationError(
+                'A Hold allocation cannot exceed authoritative available quantity.'
+            )
+        return rounded
+
+    @api.model
     def _create_from_engine(self, vals):
+        vals = dict(vals)
+        hold = self.env['loyalty.consign.hold'].sudo().browse(vals.get('hold_id')).exists()
+        line = self.env['loyalty.consign.line'].sudo().browse(
+            vals.get('aggregate_line_id')
+        ).exists()
+        issue = self.env['loyalty.consign.movement'].sudo().browse(
+            vals.get('issue_movement_id')
+        ).exists()
+        if not hold or not line or not issue:
+            raise ValidationError('Hold, projection, and issue movement are required.')
+        hold.ensure_one()
+        line.ensure_one()
+        issue.ensure_one()
+        self._lock_allocation_dimensions(issue, line)
+        vals['quantity'] = self._validate_active_capacity(
+            hold=hold, line=line, issue=issue,
+            quantity=vals.get('quantity', 0.0),
+        )
         allocation = self.with_context(**{
             _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
         }).sudo().create(vals)
-        return self.browse(allocation.ids)
+        clean_allocation = self.browse(allocation.ids)
+        line._reconcile_projection()
+        return clean_allocation
 
     def _write_from_engine(self, vals):
-        return self.with_context(**{
-            _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
-        }).sudo().write(vals)
+        if set(vals) - {'quantity'}:
+            raise ValidationError(
+                'Task 4 only permits private Hold allocation quantity repair.'
+            )
+        allocations = self.sudo().sorted(
+            lambda allocation: (
+                allocation.issue_movement_id.operation_id.id,
+                allocation.aggregate_line_id.id,
+                allocation.id,
+            )
+        )
+        self._lock_allocation_dimensions(
+            allocations.mapped('issue_movement_id'),
+            allocations.mapped('aggregate_line_id'),
+        )
+        for allocation in allocations:
+            quantity = self._validate_active_capacity(
+                hold=allocation.hold_id,
+                line=allocation.aggregate_line_id,
+                issue=allocation.issue_movement_id,
+                quantity=vals.get('quantity', allocation.quantity),
+                exclude_allocation=allocation,
+            )
+            allocation.with_context(**{
+                _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
+            }).sudo().write({'quantity': quantity})
+            allocation.aggregate_line_id._reconcile_projection()
+        allocations.mapped('aggregate_line_id')._reconcile_projection()
+        return True
 
     @api.constrains('hold_id', 'aggregate_line_id', 'issue_movement_id', 'quantity')
     def _check_allocation_dimensions(self):

@@ -36,13 +36,36 @@ class TestConsignMovements(TransactionCase):
         })
 
     def _line(self, quantity=5, **extra):
-        return self.env['loyalty.consign.line'].create({
+        vals = {
             'card_id': self.card.id,
             'product_id': self.product.id,
             'qty_deposited': quantity,
             'unit_price': self.product.list_price,
-            **extra,
+        }
+        vals.update(extra)
+        return self.env['loyalty.consign.line'].create(vals)
+
+    def _mixed_price_line(self):
+        self.product.list_price = 100
+        line = self._line(quantity=1)
+        self.product.list_price = 200
+        self._line(quantity=1)
+        issues = line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'issue'
+        ).sorted(lambda movement: (movement.occurred_at, movement.id))
+        self.assertEqual(issues.mapped('unit_value'), [100, 200])
+        return line, issues
+
+    def _redeem(self, line, quantity):
+        redemption = self.env['loyalty.consign.redemption'].create({
+            'card_id': self.card.id,
+            'line_ids': [(0, 0, {
+                'consign_line_id': line.id,
+                'qty_redeemed': quantity,
+            })],
         })
+        redemption.action_done()
+        return redemption
 
     def test_direct_line_appends_one_snapshot_issue(self):
         line = self._line(product_desc=False)
@@ -63,18 +86,17 @@ class TestConsignMovements(TransactionCase):
         self.assertEqual(line.qty_issued, 5)
         self.assertEqual(line.qty_available, line.qty_remaining)
 
-    def test_manual_additions_keep_independent_lines_and_issue_facts(self):
+    def test_manual_additions_share_projection_and_keep_independent_issue_facts(self):
         self.assertFalse(hasattr(self.card, 'consign_add_line'))
         first = self.card._consign_add_line(self.product, 2, 120)
         second = self.card._consign_add_line(self.product, 3, 120)
 
-        self.assertNotEqual(first, second)
-        lines = first | second
-        movements = lines.mapped('movement_ids')
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(first, second)
+        movements = first.movement_ids
+        self.assertEqual(len(self.card.consign_line_ids), 1)
         self.assertEqual(len(movements), 2)
         self.assertEqual(set(movements.mapped('movement_type')), {'issue'})
-        self.assertEqual(sum(lines.mapped('qty_deposited')), 5)
+        self.assertEqual(first.qty_deposited, 5)
         self.assertEqual(sum(movements.mapped('quantity')), 5)
         self.assertEqual(self.card.consign_total_remaining_qty, 5)
         self.assertEqual(self.card.consign_total_remaining_value, 600)
@@ -90,7 +112,7 @@ class TestConsignMovements(TransactionCase):
             source_model='loyalty.consign.line',
             source_res_id=line.id,
             source_name=line.display_name,
-            idempotency_key=f'consign:legacy-line:v1:{line.id}:issue',
+            idempotency_key=original.idempotency_key,
         )
         self.assertEqual(replay, original)
         self.assertEqual(len(line.movement_ids), 1)
@@ -104,7 +126,7 @@ class TestConsignMovements(TransactionCase):
                 source_model='loyalty.consign.line',
                 source_res_id=line.id,
                 source_name=line.display_name,
-                idempotency_key=f'consign:legacy-line:v1:{line.id}:issue',
+                idempotency_key=original.idempotency_key,
             )
 
     def test_redemption_and_partial_cancellation_append_shadow_facts(self):
@@ -130,6 +152,365 @@ class TestConsignMovements(TransactionCase):
         self.assertEqual(reversal.original_movement_id.movement_type, 'issue')
         self.assertEqual(line.state, 'cancelled')
         self.assertEqual(line.qty_available, 0)
+
+    def test_mixed_price_redemption_and_cancellation_preserve_exact_value(self):
+        line, issues = self._mixed_price_line()
+
+        redemption = self._redeem(line, 1)
+        redeem = line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'redeem'
+        )
+        self.assertEqual(redeem.original_movement_id, issues[0])
+        self.assertEqual(redeem.value_delta, 100)
+        self.assertEqual(line.qty_remaining, 1)
+        self.assertEqual(line.amount_remaining, 200)
+        self.assertEqual(redemption.line_ids.subtotal, 100)
+
+        line.action_cancel()
+        reversal = line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'issue_reversal'
+        )
+        self.assertEqual(reversal.original_movement_id, issues[1])
+        self.assertEqual(reversal.value_delta, 200)
+        self.assertEqual(line.qty_remaining, 0)
+        self.assertEqual(line.amount_remaining, 0)
+        self.assertGreaterEqual(line.amount_remaining, 0)
+
+    def test_multi_issue_redemption_chunks_have_exact_value_and_replay(self):
+        line, issues = self._mixed_price_line()
+
+        redemption = self._redeem(line, 2)
+        redeems = line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'redeem'
+        ).sorted('id')
+        self.assertEqual(len(redeems), 2)
+        self.assertEqual(redeems.original_movement_id, issues)
+        self.assertEqual(redeems.mapped('value_delta'), [100, 200])
+        self.assertEqual(len(set(redeems.mapped('idempotency_key'))), 2)
+        self.assertEqual(redemption.line_ids.qty_redeemed, 2)
+        self.assertEqual(redemption.line_ids.unit_price, 150)
+        self.assertEqual(redemption.line_ids.subtotal, 300)
+
+        for movement in redeems:
+            replay = self.env['loyalty.consign.movement']._append_movement(
+                aggregate_line=line,
+                movement_type='redeem',
+                quantity=movement.quantity,
+                source_channel='manual',
+                source_model='loyalty.consign.redemption.line',
+                source_res_id=redemption.line_ids.id,
+                source_name=redemption.display_name,
+                idempotency_key=movement.idempotency_key,
+                occurred_at=redemption.date_redemption,
+                original_movement=movement.original_movement_id,
+            )
+            self.assertEqual(replay, movement)
+        self.assertEqual(len(line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'redeem'
+        )), 2)
+
+    def test_unlinked_legacy_redemption_consumes_fifo_before_new_chunks(self):
+        line, issues = self._mixed_price_line()
+        self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=line,
+            movement_type='redeem',
+            quantity=1,
+            source_channel='migration',
+            source_model='loyalty.consign.line',
+            source_res_id=line.id,
+            source_name=line.display_name,
+            idempotency_key=f'test:unlinked-legacy-redeem:{line.id}',
+            unit_value=100,
+        )
+
+        redemption = self._redeem(line, 1)
+        movement = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+            and item.source_model == 'loyalty.consign.redemption.line'
+            and item.source_res_id == redemption.line_ids.id
+        )
+        self.assertEqual(movement.original_movement_id, issues[1])
+        self.assertEqual(movement.value_delta, 200)
+
+    def test_redeem_reversal_restores_exact_issue_capacity(self):
+        line, issues = self._mixed_price_line()
+        first = self._redeem(line, 1)
+        original_redeem = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+            and item.source_model == 'loyalty.consign.redemption.line'
+            and item.source_res_id == first.line_ids.id
+        )
+        self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=line,
+            movement_type='redeem_reversal',
+            quantity=1,
+            source_channel='manual',
+            source_model='loyalty.consign.redemption.line',
+            source_res_id=first.line_ids.id,
+            source_name=first.display_name,
+            idempotency_key=f'test:restore-redeem:{original_redeem.id}',
+            original_movement=original_redeem,
+        )
+
+        second = self._redeem(line, 1)
+        restored_redeem = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+            and item.source_model == 'loyalty.consign.redemption.line'
+            and item.source_res_id == second.line_ids.id
+        )
+        self.assertEqual(restored_redeem.original_movement_id, issues[0])
+        self.assertEqual(restored_redeem.value_delta, 100)
+
+    def test_issue_reversal_is_excluded_from_fifo_redemption_capacity(self):
+        line, issues = self._mixed_price_line()
+        self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=line,
+            movement_type='issue_reversal',
+            quantity=1,
+            source_channel='manual',
+            source_model='loyalty.consign.line',
+            source_res_id=line.id,
+            source_name=line.display_name,
+            idempotency_key=f'test:revoke-first-issue:{line.id}',
+            original_movement=issues[0],
+        )
+
+        redemption = self._redeem(line, 1)
+        movement = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+            and item.source_model == 'loyalty.consign.redemption.line'
+            and item.source_res_id == redemption.line_ids.id
+        )
+        self.assertEqual(movement.original_movement_id, issues[1])
+        self.assertEqual(movement.value_delta, 200)
+
+    def test_active_hold_is_excluded_from_fifo_redemption_capacity(self):
+        line, issues = self._mixed_price_line()
+        first_issue = issues[0]
+        hold = self.env['loyalty.consign.hold']._create_from_engine({
+            'operation_id': first_issue.operation_id.id,
+            'company_id': self.env.company.id,
+            'partner_id': self.partner.id,
+            'expires_at': fields.Datetime.add(fields.Datetime.now(), hours=1),
+            'source_model': 'loyalty.consign.line',
+            'source_res_id': line.id,
+            'source_name': line.display_name,
+        })
+        self.env['loyalty.consign.hold.allocation']._create_from_engine({
+            'hold_id': hold.id,
+            'aggregate_line_id': line.id,
+            'issue_movement_id': first_issue.id,
+            'quantity': 1,
+        })
+
+        redemption = self._redeem(line, 1)
+        movement = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+            and item.source_model == 'loyalty.consign.redemption.line'
+            and item.source_res_id == redemption.line_ids.id
+        )
+        self.assertEqual(movement.original_movement_id, issues[1])
+        self.assertEqual(movement.value_delta, 200)
+
+    def test_duplicate_redemption_lines_are_aggregated_before_posting(self):
+        line = self._line(quantity=10)
+        redemption = self.env['loyalty.consign.redemption'].create({
+            'card_id': self.card.id,
+            'line_ids': [
+                (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 6}),
+                (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 6}),
+            ],
+        })
+        movement_count = self.env['loyalty.consign.movement'].search_count([])
+        with self.assertRaisesRegex(ValidationError, '核銷總數量'):
+            redemption.action_done()
+        self.assertEqual(redemption.state, 'draft')
+        self.assertEqual(
+            self.env['loyalty.consign.movement'].search_count([]), movement_count,
+        )
+        self.assertEqual(line.qty_redeemed, 0)
+        self.assertEqual(line.qty_available, 10)
+
+    def test_duplicate_redemption_rounds_each_fact_before_aggregate_cap(self):
+        self.product.uom_id.sudo().write({'rounding': 1.0})
+        line = self._line(quantity=1)
+        self.assertEqual(line.product_uom_id.rounding, 1.0)
+        redemption = self.env['loyalty.consign.redemption'].create({
+            'card_id': self.card.id,
+            'line_ids': [
+                (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 0.6}),
+                (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 0.6}),
+            ],
+        })
+        movement_count = self.env['loyalty.consign.movement'].search_count([])
+        with self.assertRaisesRegex(ValidationError, '核銷總數量'):
+            redemption.action_done()
+        self.assertEqual(redemption.state, 'draft')
+        self.assertEqual(
+            self.env['loyalty.consign.movement'].search_count([]), movement_count,
+        )
+        self.assertEqual(line.qty_redeemed, 0)
+        self.assertEqual(line.qty_available, 1)
+
+    def test_redemption_rounding_is_persisted_with_exact_audit_value(self):
+        self.product.uom_id.sudo().write({'rounding': 1.0})
+        line = self._line(quantity=1)
+
+        redemption = self._redeem(line, 0.6)
+        audit_line = redemption.line_ids
+        movement = line.movement_ids.filtered(
+            lambda item: item.movement_type == 'redeem'
+        )
+        self.assertEqual(audit_line.qty_redeemed, 1)
+        self.assertEqual(movement.quantity, 1)
+        self.assertEqual(audit_line.unit_price, movement.value_delta)
+        self.assertEqual(audit_line.subtotal, movement.value_delta)
+
+    def test_completed_audit_value_does_not_follow_later_issue_average(self):
+        self.product.list_price = 100
+        line = self._line(quantity=2)
+        redemption = self._redeem(line, 1)
+        audit_line = redemption.line_ids
+        snapshot = (audit_line.unit_price, audit_line.subtotal)
+
+        self.product.list_price = 250
+        self._line(quantity=1)
+
+        self.assertNotEqual(line.unit_price, snapshot[0])
+        self.assertEqual(
+            (audit_line.unit_price, audit_line.subtotal), snapshot,
+        )
+
+    def test_completed_redemption_header_and_lines_are_immutable(self):
+        line = self._line(quantity=2)
+        redemption = self._redeem(line, 1)
+        audit_line = redemption.line_ids
+
+        with self.assertRaisesRegex(ValidationError, 'immutable'):
+            redemption.write({'service_note': 'changed'})
+        with self.assertRaisesRegex(ValidationError, 'cannot be deleted'):
+            redemption.unlink()
+        with self.assertRaisesRegex(ValidationError, 'immutable'):
+            audit_line.write({'note': 'changed'})
+        with self.assertRaisesRegex(ValidationError, 'cannot be deleted'):
+            audit_line.unlink()
+        with self.assertRaisesRegex(ValidationError, 'cannot be added'):
+            self.env['loyalty.consign.redemption.line'].create({
+                'redemption_id': redemption.id,
+                'consign_line_id': line.id,
+                'qty_redeemed': 1,
+            })
+
+    def test_outgoing_movement_cannot_overdraw_exact_issue_or_projection(self):
+        line = self._line(quantity=1)
+        issue = line.movement_ids
+        redemption = self._redeem(line, 1)
+        redeem = redemption.line_ids and line.movement_ids.filtered(
+            lambda movement: movement.movement_type == 'redeem'
+        )
+        with self.assertRaisesRegex(
+            ValidationError, 'projection availability|unused issue capacity',
+        ):
+            self.env['loyalty.consign.movement']._append_movement(
+                aggregate_line=line,
+                movement_type='issue_reversal',
+                quantity=1,
+                source_channel='manual',
+                source_model='loyalty.consign.line',
+                source_res_id=line.id,
+                source_name=line.display_name,
+                idempotency_key=f'test:overdraw:revoke:{line.id}',
+                original_movement=issue,
+            )
+        self.assertEqual(line.qty_remaining, 0)
+        self.assertEqual(line.amount_remaining, 0)
+        self.assertTrue(redeem)
+
+        second_product = self.env['product.product'].create({
+            'name': 'Revoked capacity product', 'type': 'service',
+        })
+        revoked = self._line(
+            quantity=1, product_id=second_product.id, unit_price=10,
+        )
+        revoked_issue = revoked.movement_ids
+        self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=revoked,
+            movement_type='issue_reversal',
+            quantity=1,
+            source_channel='manual',
+            source_model='loyalty.consign.line',
+            source_res_id=revoked.id,
+            source_name=revoked.display_name,
+            idempotency_key=f'test:overdraw:first-revoke:{revoked.id}',
+            original_movement=revoked_issue,
+        )
+        with self.assertRaisesRegex(
+            ValidationError, 'projection availability|unused issue capacity',
+        ):
+            self.env['loyalty.consign.movement']._append_movement(
+                aggregate_line=revoked,
+                movement_type='redeem',
+                quantity=1,
+                source_channel='manual',
+                source_model='loyalty.consign.redemption.line',
+                source_res_id=redemption.line_ids.id,
+                source_name=redemption.display_name,
+                idempotency_key=f'test:overdraw:redeem:{revoked.id}',
+                original_movement=revoked_issue,
+            )
+        self.assertEqual(revoked.qty_remaining, 0)
+        self.assertGreaterEqual(revoked.amount_remaining, 0)
+
+        adjusted_product = self.env['product.product'].create({
+            'name': 'Adjusted capacity product', 'type': 'service',
+            'list_price': 100,
+        })
+        adjusted = self._line(quantity=2, product_id=adjusted_product.id)
+        adjusted_issue = adjusted.movement_ids
+        self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=adjusted,
+            movement_type='adjustment_out',
+            quantity=1,
+            unit_value=200,
+            source_channel='manual',
+            source_model='loyalty.consign.line',
+            source_res_id=adjusted.id,
+            source_name=adjusted.display_name,
+            idempotency_key=f'test:overdraw:adjustment:{adjusted.id}',
+        )
+        with self.assertRaisesRegex(ValidationError, 'projection availability'):
+            self.env['loyalty.consign.movement']._append_movement(
+                aggregate_line=adjusted,
+                movement_type='issue_reversal',
+                quantity=2,
+                source_channel='manual',
+                source_model='loyalty.consign.line',
+                source_res_id=adjusted.id,
+                source_name=adjusted.display_name,
+                idempotency_key=f'test:overdraw:adjusted-reversal:{adjusted.id}',
+                original_movement=adjusted_issue,
+            )
+        self.assertEqual(adjusted.qty_remaining, 1)
+        self.assertEqual(adjusted.amount_remaining, 0)
+        self.assertGreaterEqual(adjusted.qty_remaining, 0)
+        self.assertGreaterEqual(adjusted.amount_remaining, 0)
+
+    def test_ambiguous_unlinked_legacy_value_is_blocked(self):
+        line, _issues = self._mixed_price_line()
+        with self.assertRaisesRegex(ValidationError, 'matched to unused issue value'):
+            self.env['loyalty.consign.movement']._append_movement(
+                aggregate_line=line,
+                movement_type='redeem',
+                quantity=1,
+                source_channel='migration',
+                source_model='loyalty.consign.line',
+                source_res_id=line.id,
+                source_name=line.display_name,
+                idempotency_key=f'test:ambiguous-unlinked:{line.id}',
+                unit_value=150,
+            )
+        self.assertEqual(line.qty_remaining, 2)
+        self.assertEqual(line.amount_remaining, 300)
 
     def test_posted_line_snapshot_writes_are_rejected_and_cancel_still_succeeds(self):
         line = self._line(quantity=2)
@@ -267,7 +648,7 @@ class TestConsignMovements(TransactionCase):
 
         rejected_key = f'{key}:distinct'
         with self.assertRaisesRegex(
-            ValidationError, 'cannot exceed its original movement'
+            ValidationError, 'projection availability|unused issue capacity'
         ):
             with self.env.cr.savepoint():
                 movement_model._append_movement(**{
@@ -281,20 +662,20 @@ class TestConsignMovements(TransactionCase):
         ]))
 
     def test_durable_token_sql_and_lock_order_are_explicit(self):
-        company_token_source = inspect.getsource(
-            LoyaltyConsignOperation._touch_company_serialization_token
+        key_token_source = inspect.getsource(
+            LoyaltyConsignOperation._touch_idempotency_serialization_token
         )
-        self.assertIn('UPDATE res_company', company_token_source)
-        self.assertIn('SET write_date = write_date', company_token_source)
-        self.assertIn('RETURNING id', company_token_source)
-        self.assertIn('fetchone()', company_token_source)
+        self.assertIn('INSERT INTO loyalty_consign_operation_token', key_token_source)
+        self.assertIn('ON CONFLICT (company_id, idempotency_key)', key_token_source)
+        self.assertIn('RETURNING id', key_token_source)
+        self.assertNotIn('UPDATE res_company', key_token_source)
 
         open_source = inspect.getsource(LoyaltyConsignOperation._open_command)
         advisory_index = open_source.index('_lock_idempotency_key')
-        company_token_index = open_source.index('_touch_company_serialization_token')
+        key_token_index = open_source.index('_touch_idempotency_serialization_token')
         operation_search_index = open_source.index('operation = self.sudo().search')
-        self.assertLess(advisory_index, company_token_index)
-        self.assertLess(company_token_index, operation_search_index)
+        self.assertLess(advisory_index, key_token_index)
+        self.assertLess(key_token_index, operation_search_index)
 
         original_token_source = inspect.getsource(
             LoyaltyConsignMovement._lock_original_operation_token
@@ -368,12 +749,6 @@ class TestConsignMovements(TransactionCase):
             hold.sudo().copy()
         with self.assertRaises(ValidationError):
             hold.sudo().create(hold_vals)
-        hold._write_from_engine({
-            'state': 'released',
-            'released_at': fields.Datetime.now(),
-        })
-        self.assertEqual(hold.state, 'released')
-
         allocation_vals = {
             'hold_id': hold.id,
             'aggregate_line_id': line.id,
@@ -392,6 +767,11 @@ class TestConsignMovements(TransactionCase):
         with self.assertRaises(ValidationError):
             allocation.sudo().create(allocation_vals)
         allocation._write_from_engine({'quantity': 1})
+        hold._write_from_engine({
+            'state': 'released',
+            'released_at': fields.Datetime.now(),
+        })
+        self.assertEqual(hold.state, 'released')
         with self.assertRaises(ValidationError):
             allocation.sudo().unlink()
         with self.assertRaises(ValidationError):
@@ -416,11 +796,16 @@ class TestConsignMovements(TransactionCase):
                 'idempotency_key': f'test:movement-copy:{movement.id}',
             })
 
+        specific_product = self.env['product.product'].create({
+            'name': 'Specific movement product',
+            'type': 'service',
+            'list_price': 80,
+        })
         line_vals = {
             'card_id': self.card.id,
-            'product_id': self.product.id,
+            'product_id': specific_product.id,
             'qty_deposited': 1,
-            'unit_price': self.product.list_price,
+            'unit_price': specific_product.list_price,
             'product_desc': 'Specific movement source',
         }
         specific_line = self.env[
@@ -435,10 +820,10 @@ class TestConsignMovements(TransactionCase):
             **line_vals,
             'product_desc': 'Created from returned recordset',
         })
-        self.assertEqual(len(copied_line.movement_ids), 1)
-        self.assertEqual(copied_line.movement_ids.movement_type, 'issue')
-        self.assertEqual(len(created_line.movement_ids), 1)
-        self.assertEqual(created_line.movement_ids.movement_type, 'issue')
+        self.assertEqual(copied_line, specific_line)
+        self.assertEqual(created_line, specific_line)
+        self.assertEqual(len(specific_line.movement_ids), 2)
+        self.assertEqual(set(specific_line.movement_ids.mapped('movement_type')), {'issue'})
 
     def test_hold_allocation_rejects_same_company_different_owner_issue(self):
         held_line = self._line(quantity=2)
@@ -563,9 +948,14 @@ class TestConsignMovements(TransactionCase):
             login='consign-cancel-manager',
             groups='sales_team.group_sale_manager',
         )
-        denied_line = self._line(quantity=1)
-        manager_line = self._line(quantity=1)
-        superuser_line = self._line(quantity=1)
+        products = self.env['product.product'].create([
+            {'name': 'Denied cancellation product', 'type': 'service'},
+            {'name': 'Manager cancellation product', 'type': 'service'},
+            {'name': 'Superuser cancellation product', 'type': 'service'},
+        ])
+        denied_line = self._line(quantity=1, product_id=products[0].id)
+        manager_line = self._line(quantity=1, product_id=products[1].id)
+        superuser_line = self._line(quantity=1, product_id=products[2].id)
         before_count = self.env['loyalty.consign.movement'].sudo().search_count([])
 
         with self.assertRaisesRegex(AccessError, 'Only Sales managers'):

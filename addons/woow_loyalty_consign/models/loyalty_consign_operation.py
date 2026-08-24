@@ -5,6 +5,31 @@ from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
 
+_OPERATION_CONTEXT_KEY = '_woow_consign_operation_mutation_token'
+_OPERATION_TOKEN = object()
+
+
+class LoyaltyConsignOperationToken(models.Model):
+    """Durable stale-snapshot fence scoped to one command key."""
+
+    _name = 'loyalty.consign.operation.token'
+    _description = 'Consignment Operation Idempotency Token'
+    _check_company_auto = True
+
+    company_id = fields.Many2one(
+        'res.company', required=True, index=True, ondelete='cascade',
+    )
+    idempotency_key = fields.Char(required=True, index=True, copy=False)
+
+    _sql_constraints = [
+        (
+            'company_idempotency_key_unique',
+            'unique(company_id, idempotency_key)',
+            'Only one durable token is allowed per company and command key.',
+        ),
+    ]
+
+
 class LoyaltyConsignOperation(models.Model):
     """Durable command journal used by the future authoritative engine."""
 
@@ -87,30 +112,47 @@ class LoyaltyConsignOperation(models.Model):
         )
 
     @api.model
-    def _touch_company_serialization_token(self, company_id):
-        """Fence stale REPEATABLE READ snapshots after the per-key lock.
-
-        Task 3 deliberately uses the durable company tuple, which serializes
-        command opening per company. Task 4 can replace it with a per-key
-        durable token without changing the advisory-lock or unique-constraint
-        guards.
-        """
+    def _touch_idempotency_serialization_token(
+        self, company_id, idempotency_key,
+    ):
+        """Fence stale snapshots without serializing distinct command keys."""
         self.env.cr.execute(
             '''
-                UPDATE res_company
-                   SET write_date = write_date
-                 WHERE id = %s
-             RETURNING id
+                INSERT INTO loyalty_consign_operation_token
+                            (company_id, idempotency_key, create_uid, write_uid,
+                             create_date, write_date)
+                     VALUES (%s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (company_id, idempotency_key)
+                DO UPDATE SET write_date = loyalty_consign_operation_token.write_date
+                RETURNING id
             ''',
-            (company_id,),
+            (
+                company_id, idempotency_key, self.env.uid, self.env.uid,
+            ),
         )
         if not self.env.cr.fetchone():
-            raise ValidationError('The operation company no longer exists.')
+            raise ValidationError('The operation idempotency token is unavailable.')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if self.env.context.get(_OPERATION_CONTEXT_KEY) is not _OPERATION_TOKEN:
+            raise ValidationError(
+                'Consignment operations can only be created by the private engine.'
+            )
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if self.env.context.get(_OPERATION_CONTEXT_KEY) is not _OPERATION_TOKEN:
+            raise ValidationError(
+                'Consignment operations can only be completed by the private engine.'
+            )
+        return super().write(vals)
 
     @api.model
     def _open_command(
         self, *, operation_type, company, partner, source_model,
         source_res_id, source_name, idempotency_key, payload,
+        identity_payload=None,
     ):
         """Serialize and journal a command, returning ``(record, replay)``."""
         if not (idempotency_key or '').strip():
@@ -129,13 +171,21 @@ class LoyaltyConsignOperation(models.Model):
             'source_name': source_name,
             'payload': payload,
         }
-        _canonical, payload_hash = self._canonical_payload(envelope)
+        identity_envelope = {
+            'operation_type': operation_type,
+            'partner_id': partner.id,
+            'source_model': source_model,
+            'source_res_id': source_res_id,
+            'payload': payload if identity_payload is None else identity_payload,
+        }
+        _canonical, payload_hash = self._canonical_payload(identity_envelope)
         self._lock_idempotency_key(company.id, idempotency_key)
-        # The tuple update must follow the advisory lock and precede the
-        # journal search. If a winner committed after this transaction's
-        # snapshot, PostgreSQL raises SerializationFailure here; Odoo retries
-        # the request with a fresh snapshot. Never catch it in this method.
-        self._touch_company_serialization_token(company.id)
+        # The durable per-key upsert follows the matching advisory lock and
+        # precedes journal search. A stale same-key waiter receives
+        # SerializationFailure; distinct keys never touch the same tuple.
+        self._touch_idempotency_serialization_token(
+            company.id, idempotency_key,
+        )
         operation = self.sudo().search([
             ('company_id', '=', company.id),
             ('idempotency_key', '=', idempotency_key),
@@ -145,8 +195,10 @@ class LoyaltyConsignOperation(models.Model):
                 raise ValidationError(
                     'The idempotency key was already used with a different payload.'
                 )
-            return operation, True
-        operation = self.sudo().create({
+            return self.browse(operation.ids), True
+        operation = self.with_context(**{
+            _OPERATION_CONTEXT_KEY: _OPERATION_TOKEN,
+        }).sudo().create({
             'company_id': company.id,
             'partner_id': partner.id,
             'operation_type': operation_type,
@@ -157,7 +209,20 @@ class LoyaltyConsignOperation(models.Model):
             'payload_hash': payload_hash,
             'payload_json': envelope,
         })
-        return operation, False
+        return self.browse(operation.ids), False
+
+    def _complete_from_engine(self, result):
+        self.ensure_one()
+        if self.state != 'pending':
+            raise ValidationError('Only a pending consignment command can be completed.')
+        self.with_context(**{
+            _OPERATION_CONTEXT_KEY: _OPERATION_TOKEN,
+        }).sudo().write({
+            'state': 'done',
+            'completed_at': fields.Datetime.now(),
+            'result_json': result,
+        })
+        return self.browse(self.ids)
 
     @api.constrains('idempotency_key', 'payload_hash')
     def _check_canonical_metadata(self):

@@ -12,8 +12,8 @@ _APPEND_TOKEN = object()
 class LoyaltyConsignMovement(models.Model):
     """Immutable consignment fact.
 
-    Task 3 shadows legacy facts. Projection authority remains with the legacy
-    line until the engine cut-over in Task 4.
+    Task 4 makes these facts authoritative and deterministically reconciles
+    the aggregate line projection after every posted change.
     """
 
     _name = 'loyalty.consign.movement'
@@ -146,24 +146,129 @@ class LoyaltyConsignMovement(models.Model):
             raise ValidationError('The original movement operation no longer exists.')
 
     @api.model
+    def _lock_projection_token(self, aggregate_line):
+        """Durably serialize all outgoing balance decisions per projection."""
+        self.env.cr.execute(
+            '''UPDATE loyalty_consign_line
+                  SET write_date = write_date
+                WHERE id = %s
+            RETURNING id''',
+            (aggregate_line.id,),
+        )
+        if not self.env.cr.fetchone():
+            raise ValidationError('The consignment projection no longer exists.')
+        aggregate_line.invalidate_recordset([
+            'qty_remaining', 'qty_available', 'amount_remaining', 'movement_ids',
+        ])
+
+    @api.model
+    def _fifo_issue_availability(self, aggregate_line, include_active_holds=True):
+        """Return exact FIFO issue capacity after posted consumption."""
+        aggregate_line.ensure_one()
+        movements = aggregate_line.sudo().movement_ids
+        issues = movements.filtered(
+            lambda movement: movement.movement_type == 'issue'
+        ).sorted(lambda movement: (movement.occurred_at, movement.id))
+        rounding = aggregate_line.product_uom_id.rounding
+        states = []
+        for issue in issues:
+            revoked = sum(movements.filtered(
+                lambda movement: movement.movement_type == 'issue_reversal'
+                and movement.original_movement_id == issue
+            ).mapped('quantity'))
+            linked_redeems = movements.filtered(
+                lambda movement: movement.movement_type == 'redeem'
+                and movement.original_movement_id == issue
+            )
+            restored = sum(movements.filtered(
+                lambda movement: movement.movement_type == 'redeem_reversal'
+                and movement.original_movement_id in linked_redeems
+            ).mapped('quantity'))
+            remaining = (
+                issue.quantity - revoked
+                - sum(linked_redeems.mapped('quantity')) + restored
+            )
+            if float_compare(
+                remaining, 0.0, precision_rounding=rounding,
+            ) < 0:
+                raise ValidationError(
+                    'Linked issue consumption exceeds the unreversed issue quantity.'
+                )
+            states.append({'issue': issue, 'available': max(0.0, remaining)})
+
+        # Pre-Task 4 redemption facts did not identify an issue. Attribute
+        # each net legacy fact to FIFO issues with the same value snapshot.
+        # Guessing by quantity alone can make a later cancellation reverse a
+        # different-value issue and produce a negative ledger value. Ambiguous
+        # historical facts are therefore blocked for controlled repair instead
+        # of silently corrupting the projection.
+        unlinked_redeems = movements.filtered(
+            lambda movement: movement.movement_type == 'redeem'
+            and not movement.original_movement_id
+        ).sorted(lambda movement: (movement.occurred_at, movement.id))
+        currency_rounding = aggregate_line.currency_id.rounding
+        for redeem in unlinked_redeems:
+            restored = sum(movements.filtered(
+                lambda movement: movement.movement_type == 'redeem_reversal'
+                and movement.original_movement_id == redeem
+            ).mapped('quantity'))
+            unlinked_remaining = redeem.quantity - restored
+            if float_compare(
+                unlinked_remaining, 0.0, precision_rounding=rounding,
+            ) < 0:
+                raise ValidationError(
+                    'Legacy redemption reversal exceeds its original quantity.'
+                )
+            matching_states = [
+                state for state in states
+                if float_compare(
+                    state['issue'].unit_value, redeem.unit_value,
+                    precision_rounding=currency_rounding,
+                ) == 0
+            ]
+            for state in matching_states:
+                consumed = min(unlinked_remaining, state['available'])
+                state['available'] -= consumed
+                unlinked_remaining -= consumed
+                if float_compare(
+                    unlinked_remaining, 0.0, precision_rounding=rounding,
+                ) <= 0:
+                    break
+            if float_compare(
+                unlinked_remaining, 0.0, precision_rounding=rounding,
+            ) > 0:
+                raise ValidationError(
+                    'Legacy redemption value cannot be reconciled to exact FIFO issues.'
+                )
+
+        if include_active_holds:
+            for state in states:
+                held = sum(state['issue'].sudo().hold_allocation_ids.filtered(
+                    lambda allocation: allocation.hold_id.state == 'active'
+                ).mapped('quantity'))
+                state['available'] = max(0.0, state['available'] - held)
+        return states
+
+    @api.model
     def _append_movement(
         self, *, aggregate_line, movement_type, quantity, source_channel,
         source_model, source_res_id, source_name, idempotency_key,
         occurred_at=None, unit_value=None, original_movement=None,
         product_desc_snapshot=None, lot_snapshot=None, storage_snapshot=None,
-        allow_inactive_card=False,
+        allow_inactive_card=False, operation=None, reconcile=True,
     ):
-        """Append one immutable fact or replay the exact prior command."""
+        """Append a fact, optionally to a caller-owned pending operation."""
         aggregate_line = (
             aggregate_line if hasattr(aggregate_line, 'id')
             else self.env['loyalty.consign.line'].browse(aggregate_line)
         )
         aggregate_line.ensure_one()
         card = aggregate_line.card_id
-        company = (
-            card.company_id or card.program_id.company_id
-            or aggregate_line.sale_order_id.company_id or self.env.company
-        )
+        company = card.company_id
+        if not company or card.program_id.company_id != company:
+            raise ValidationError(
+                'Movements require a card and program in one explicit company.'
+            )
         partner = card.partner_id
         product = aggregate_line.product_id
         source_name = (
@@ -219,7 +324,16 @@ class LoyaltyConsignMovement(models.Model):
             if any(getattr(original_movement, field) != value for field, value in dimensions):
                 raise ValidationError('Linked movements must preserve all original dimensions.')
 
-        if unit_value is None:
+        if original_movement:
+            if unit_value is not None and float_compare(
+                unit_value, original_movement.unit_value,
+                precision_rounding=currency.rounding,
+            ) != 0:
+                raise ValidationError(
+                    'A linked movement must preserve its original unit value.'
+                )
+            unit_value = original_movement.unit_value
+        elif unit_value is None:
             unit_value = aggregate_line.unit_price
         value_delta = currency.round(rounded_quantity * unit_value)
         payload = {
@@ -247,30 +361,58 @@ class LoyaltyConsignMovement(models.Model):
                 else aggregate_line.storage_note
             ),
         }
-        operation, replay = self.env['loyalty.consign.operation']._open_command(
-            operation_type=self._operation_type_for_movement(movement_type),
-            company=company,
-            partner=partner,
-            source_model=source_model,
-            source_res_id=source_res_id,
-            source_name=source_name,
-            idempotency_key=idempotency_key,
-            payload=payload,
-        )
-        existing = self.sudo().search([
-            ('operation_id', '=', operation.id),
-        ], limit=1)
-        if replay and existing:
-            return self.browse(existing.ids)
-        if replay and operation.state == 'done':
-            raise ValidationError('The replayed command has no movement result.')
+        owns_operation = not operation
+        if owns_operation:
+            operation, replay = self.env['loyalty.consign.operation']._open_command(
+                operation_type=self._operation_type_for_movement(movement_type),
+                company=company,
+                partner=partner,
+                source_model=source_model,
+                source_res_id=source_res_id,
+                source_name=source_name,
+                idempotency_key=idempotency_key,
+                payload=payload,
+            )
+            existing = self.sudo().search([
+                ('operation_id', '=', operation.id),
+            ], limit=1)
+            if replay and existing:
+                return self.browse(existing.ids)
+            if replay and operation.state == 'done':
+                raise ValidationError('The replayed command has no movement result.')
+        else:
+            operation = operation.sudo()
+            operation.ensure_one()
+            if (
+                operation.state != 'pending'
+                or operation.company_id != company
+                or operation.partner_id != partner
+                or operation.operation_type != self._operation_type_for_movement(movement_type)
+            ):
+                raise ValidationError(
+                    'The movement dimensions do not match the pending operation.'
+                )
+
+        outgoing_types = {'redeem', 'issue_reversal', 'adjustment_out'}
+        if original_movement:
+            # Lock order is command advisory/per-key token, original operation
+            # token, then aggregate projection token. Hold allocation follows
+            # the same order. Durable no-op updates fence stale snapshots.
+            self._lock_original_operation_token(original_movement)
+        if movement_type in outgoing_types:
+            self._lock_projection_token(aggregate_line)
+            if float_compare(
+                rounded_quantity, aggregate_line.qty_available,
+                precision_rounding=uom.rounding,
+            ) > 0 or float_compare(
+                value_delta, aggregate_line.amount_remaining,
+                precision_rounding=currency.rounding,
+            ) > 0:
+                raise ValidationError(
+                    'An outgoing movement cannot exceed projection availability.'
+                )
 
         if original_movement:
-            # Lock order is command advisory/company token, then the original
-            # operation token, then linked search/create. The durable no-op
-            # update turns a stale distinct-key snapshot into PostgreSQL's
-            # SerializationFailure; the outer Odoo request retry must handle it.
-            self._lock_original_operation_token(original_movement)
             if (
                 movement_type == 'issue_reversal'
                 and original_movement.sudo().hold_allocation_ids.filtered(
@@ -280,18 +422,56 @@ class LoyaltyConsignMovement(models.Model):
                 raise ValidationError(
                     'An issue with an active Consignment Hold allocation cannot be reversed.'
                 )
-            linked_quantity = sum(self.sudo().search([
-                ('original_movement_id', '=', original_movement.id),
-                ('movement_type', '=', movement_type),
-            ]).mapped('quantity'))
+            if movement_type in ('redeem', 'issue_reversal'):
+                states = self._fifo_issue_availability(
+                    aggregate_line,
+                    include_active_holds=movement_type == 'redeem',
+                )
+                capacity = next(
+                    (state['available'] for state in states
+                     if state['issue'] == original_movement),
+                    0.0,
+                )
+                if float_compare(
+                    rounded_quantity, capacity,
+                    precision_rounding=uom.rounding,
+                ) > 0:
+                    raise ValidationError(
+                        'A linked outgoing movement exceeds unused issue capacity.'
+                    )
+            else:
+                linked_quantity = sum(self.sudo().search([
+                    ('original_movement_id', '=', original_movement.id),
+                    ('movement_type', '=', movement_type),
+                ]).mapped('quantity'))
+                if float_compare(
+                    linked_quantity + rounded_quantity,
+                    original_movement.quantity,
+                    precision_rounding=uom.rounding,
+                ) > 0:
+                    raise ValidationError(
+                        'A linked movement cannot exceed its original movement.'
+                    )
+        elif movement_type == 'redeem':
+            if source_channel != 'migration':
+                raise ValidationError(
+                    'New redemption movements must reference an exact issue movement.'
+                )
+            states = self._fifo_issue_availability(aggregate_line)
+            matching_capacity = sum(
+                state['available'] for state in states
+                if float_compare(
+                    state['issue'].unit_value, unit_value,
+                    precision_rounding=currency.rounding,
+                ) == 0
+            )
             if float_compare(
-                linked_quantity + rounded_quantity,
-                original_movement.quantity,
+                rounded_quantity, matching_capacity,
                 precision_rounding=uom.rounding,
             ) > 0:
-                # This exception intentionally rolls back a newly-created
-                # pending operation together with the failed request.
-                raise ValidationError('A linked movement cannot exceed its original movement.')
+                raise ValidationError(
+                    'A legacy redemption cannot be matched to unused issue value.'
+                )
 
         movement = self.with_context(**{
             _APPEND_CONTEXT_KEY: _APPEND_TOKEN,
@@ -306,12 +486,17 @@ class LoyaltyConsignMovement(models.Model):
             'source_res_id': source_res_id,
             'source_name': source_name,
         })
-        operation.sudo().write({
-            'state': 'done',
-            'completed_at': fields.Datetime.now(),
-            'result_json': {'movement_ids': movement.ids},
-        })
-        return self.browse(movement.ids)
+        clean_movement = self.browse(movement.ids)
+        if reconcile:
+            aggregate_line._reconcile_projection()
+        if owns_operation:
+            operation._complete_from_engine({'movement_ids': movement.ids})
+        return clean_movement
+
+    @api.model
+    def _append_to_operation(self, *, operation, **values):
+        """Append under one already-open operation without completing it."""
+        return self._append_movement(operation=operation, **values)
 
     def _safe_source_unavailable_action(self):
         return {
