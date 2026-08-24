@@ -72,3 +72,18 @@ class TestBookingConsignmentRetirement(TransactionCase):
 
         self.assertTrue(self.appointment_type.require_payment)
         self.assertTrue(self.appointment_type.consign_enabled)
+
+    def test_all_legacy_booking_consign_views_are_inactive(self):
+        view_xmlids = (
+            'woow_consign_booking.appointment_book_consign_info',
+            'woow_consign_booking.appointment_booking_consign_form',
+            'woow_consign_booking.appointment_confirm_consign_info',
+            'woow_consign_booking.appointment_type_consign_form',
+            'woow_consign_booking.loyalty_card_consign_add_reserved',
+            'woow_consign_booking.loyalty_consign_redemption_add_booking',
+            'woow_consign_booking.portal_booking_consign_sidebar',
+        )
+
+        for xmlid in view_xmlids:
+            with self.subTest(xmlid=xmlid):
+                self.assertFalse(self.env.ref(xmlid).active)
