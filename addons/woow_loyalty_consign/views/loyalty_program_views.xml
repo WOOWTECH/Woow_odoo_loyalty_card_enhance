@@ -61,16 +61,41 @@
             <!-- 新增寄品卡說明文字 -->
             <xpath expr="//field[@name='program_type']/parent::div/p[last()]" position="after">
                 <p class="text-muted" invisible="program_type != 'consign'" colspan="2">
-                    寄品卡在客戶購買「觸發產品」後自動建立。非觸發品項存入卡片，供日後分次取用核銷。
+                    每個觸發產品使用一條授權規則；購買數量會倍增規則內的所有授權品項。
                 </p>
             </xpath>
 
-            <!-- 新增 consign 觸發產品欄位（放在 mail_template_id 前） -->
+            <!-- Explicit consign trigger headers and entitlement children. -->
             <field name="mail_template_id" position="before">
-                <field name="trigger_product_ids" string="觸發產品"
-                       widget="many2many_tags"
-                       invisible="program_type != 'consign'"
-                       placeholder="選擇觸發寄品卡建立的產品"/>
+                <group string="寄品授權規則" invisible="program_type != 'consign'" colspan="2">
+                    <field name="consign_trigger_product_ids"
+                           string="觸發產品摘要"
+                           widget="many2many_tags"
+                           readonly="1"/>
+                    <field name="consign_grant_rule_ids"
+                           string="授權規則"
+                           nolabel="1"
+                           colspan="2">
+                        <list string="授權規則">
+                            <field name="trigger_product_id"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                        <form string="寄品授權規則">
+                            <group>
+                                <field name="trigger_product_id"/>
+                                <field name="company_id" readonly="1"/>
+                            </group>
+                            <field name="grant_line_ids" nolabel="1">
+                                <list editable="bottom" string="授權品項">
+                                    <field name="entitlement_product_id"/>
+                                    <field name="entitlement_uom_category_id" column_invisible="True"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="quantity"/>
+                                </list>
+                            </field>
+                        </form>
+                    </field>
+                </group>
             </field>
 
             <!-- 顯示通知模板（加入 consign） -->
@@ -131,7 +156,7 @@
             <list string="寄品方案">
                 <field name="name" string="計劃名稱"/>
                 <field name="program_type" string="計劃類型"/>
-                <field name="trigger_product_ids" string="觸發產品" widget="many2many_tags"/>
+                <field name="consign_trigger_product_ids" string="觸發產品" widget="many2many_tags"/>
                 <field name="consign_card_count" string="寄品卡數"/>
                 <field name="active" column_invisible="True"/>
             </list>

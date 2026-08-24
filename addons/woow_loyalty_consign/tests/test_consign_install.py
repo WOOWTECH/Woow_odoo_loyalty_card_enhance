@@ -6,6 +6,8 @@ class TestConsignInstall(TransactionCase):
 
     def test_core_models_are_registered(self):
         for model_name in (
+            'loyalty.consign.grant.rule',
+            'loyalty.consign.grant.line',
             'loyalty.consign.line',
             'loyalty.consign.redemption',
             'loyalty.consign.redemption.line',

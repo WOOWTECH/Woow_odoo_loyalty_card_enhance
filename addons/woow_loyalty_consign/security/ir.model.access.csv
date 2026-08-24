@@ -1,4 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_loyalty_consign_grant_rule_salesman,loyalty.consign.grant.rule.salesman,model_loyalty_consign_grant_rule,sales_team.group_sale_salesman,1,0,0,0
+access_loyalty_consign_grant_rule_manager,loyalty.consign.grant.rule.manager,model_loyalty_consign_grant_rule,sales_team.group_sale_manager,1,1,1,1
+access_loyalty_consign_grant_line_salesman,loyalty.consign.grant.line.salesman,model_loyalty_consign_grant_line,sales_team.group_sale_salesman,1,0,0,0
+access_loyalty_consign_grant_line_manager,loyalty.consign.grant.line.manager,model_loyalty_consign_grant_line,sales_team.group_sale_manager,1,1,1,1
 access_loyalty_consign_line_salesman,loyalty.consign.line.salesman,model_loyalty_consign_line,sales_team.group_sale_salesman,1,1,1,0
 access_loyalty_consign_line_manager,loyalty.consign.line.manager,model_loyalty_consign_line,sales_team.group_sale_manager,1,1,1,1
 access_loyalty_consign_redemption_salesman,loyalty.consign.redemption.salesman,model_loyalty_consign_redemption,sales_team.group_sale_salesman,1,1,1,0
