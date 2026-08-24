@@ -1,6 +1,6 @@
 {
     'name': '寄品卡預約扣點 (Consign Booking Bridge)',
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.0.1',
     'category': 'Sales/Loyalty',
     'summary': '舊版預約寄品扣點相容層；新核銷改由電商購物車處理',
     'author': 'Woow Tech',

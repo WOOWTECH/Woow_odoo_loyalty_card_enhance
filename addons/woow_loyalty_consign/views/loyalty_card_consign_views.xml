@@ -21,6 +21,19 @@
                 </header>
             </xpath>
 
+            <!-- Odoo 18's loyalty card form has no button_box, so add our own. -->
+            <xpath expr="//sheet" position="inside">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_consign_movements"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-exchange"
+                            invisible="not is_consign or consign_movement_count == 0">
+                        <field name="consign_movement_count" widget="statinfo" string="Movements"/>
+                    </button>
+                </div>
+            </xpath>
+
             <!-- 原生 loyalty.card form 已有 <chatter/>，不需重複加入 -->
 
             <!-- 隱藏原生「Balance」標籤和點數欄位（寄品卡不用點數） -->
@@ -68,12 +81,12 @@
                               decoration-muted="state == 'depleted'"
                               decoration-danger="state == 'cancelled'">
                             <field name="product_id" readonly="id"/>
+                            <field name="product_uom_id" readonly="id"/>
                             <field name="product_desc" readonly="id"/>
                             <field name="qty_deposited" readonly="id"/>
                             <field name="unit_price" readonly="id"/>
                             <field name="qty_redeemed" readonly="1"/>
-                            <field name="qty_remaining" readonly="1"/>
-                            <field name="amount_remaining" readonly="1"/>
+                            <field name="qty_available" readonly="1"/>
                             <field name="lot_id" optional="hide"/>
                             <field name="storage_note" optional="hide"/>
                             <field name="date_deposited" readonly="id"/>

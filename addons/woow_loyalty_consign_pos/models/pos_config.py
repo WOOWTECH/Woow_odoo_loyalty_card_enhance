@@ -59,13 +59,15 @@ class PosConfig(models.Model):
         result = []
         for card in cards:
             active_lines = card.consign_line_ids.filtered(
-                lambda l: l.state == 'active' and l.qty_remaining > 0
+                lambda line: line.state == 'active' and line.qty_available > 0
             )
             if not active_lines:
                 continue
             payload = self._prepare_consign_card_payload(card, active_lines)
             payload['active_items'] = len(active_lines)
-            payload['total_remaining_qty'] = sum(l.qty_remaining for l in active_lines)
+            payload['total_available_qty'] = sum(
+                line.qty_available for line in active_lines
+            )
             result.append(payload)
 
         return {'successful': True, 'payload': {'cards': result}}
@@ -74,7 +76,7 @@ class PosConfig(models.Model):
         """Build the standard card payload dict sent to the POS frontend."""
         if active_lines is None:
             active_lines = card.consign_line_ids.filtered(
-                lambda l: l.state == 'active' and l.qty_remaining > 0
+                lambda line: line.state == 'active' and line.qty_available > 0
             )
         return {
             'card_id': card.id,
@@ -87,7 +89,7 @@ class PosConfig(models.Model):
                 'id': line.id,
                 'product_id': line.product_id.id,
                 'product_name': line.product_desc or line.product_id.display_name,
-                'qty_remaining': line.qty_remaining,
+                'qty_available': line.qty_available,
                 'unit_price': line.unit_price,
             } for line in active_lines],
         }

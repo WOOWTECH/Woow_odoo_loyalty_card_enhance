@@ -64,7 +64,7 @@
                     <div class="mt-2 small">
                         <div>品項：<t t-out="booking.consign_line_id.product_id.display_name"/></div>
                         <div>已扣除：<t t-out="booking.consign_redemption_id.line_ids[:1].qty_redeemed"/> 堂</div>
-                        <div>剩餘：<t t-out="booking.consign_line_id.qty_remaining"/> 堂</div>
+                        <div>剩餘：<t t-out="booking.consign_line_id.qty_available"/> 堂</div>
                         <div class="text-muted">核銷單：<t t-out="booking.consign_redemption_id.name"/></div>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
                         </span>
                     </t>
                     <div class="mt-1 text-muted">
-                        剩餘：<t t-out="booking.consign_line_id.qty_remaining"/> 堂
+                        剩餘：<t t-out="booking.consign_line_id.qty_available"/> 堂
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                     </div>
                     <div class="col-md-6">
                         <div><strong>寄品卡：</strong> <t t-out="booking.consign_card_id.display_name"/></div>
-                        <div><strong>剩餘數量：</strong> <t t-out="booking.consign_line_id.qty_remaining"/> 堂</div>
+                        <div><strong>剩餘數量：</strong> <t t-out="booking.consign_line_id.qty_available"/> 堂</div>
                     </div>
                 </div>
             </div>

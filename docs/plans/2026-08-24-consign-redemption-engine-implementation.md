@@ -223,7 +223,7 @@ Test unique operation keys, exact product/UoM projection uniqueness, positive mo
 
 **Step 2: Implement the operation journal**
 
-Use a unique SQL constraint on `(company_id, idempotency_key)` as a final guard, but acquire a transaction advisory lock derived from company/key before select-or-create. Store a canonical payload SHA-256. A repeated key with a different payload must raise `ValidationError`; simultaneous identical retries must block then return the same operation instead of surfacing `UniqueViolation`. Pure validation errors occur before journal insertion. Provider/payment failures that must survive are recorded by a non-raising outer saga/job so their rows are not rolled back with the request.
+Use a unique SQL constraint on `(company_id, idempotency_key)` as a final guard, but acquire a transaction advisory lock derived from company/key before select-or-create. Under PostgreSQL/Odoo `REPEATABLE READ`, the advisory lock alone does not refresh a stale snapshot, so Task 3 follows it with a durable no-op tuple update on the company before searching the journal. A stale waiter then receives `SerializationFailure` for the outer Odoo request retry rather than reaching `UniqueViolation`; do not catch that error inside the failed transaction. This intentionally serializes journal opening per company in Task 3, and multi-command callers must keep their existing deterministic business-key order to avoid advisory/token lock inversion. Task 4 should replace the company tuple with durable per-key tokens while preserving the advisory lock and unique constraint. Reversals additionally update the original movement's operation tuple before their linked-total search, with lock order idempotency advisory/company token → original operation token → linked search/create. Store a canonical payload SHA-256. A repeated key with a different payload must raise `ValidationError`; simultaneous identical retries must block then return the same operation. Exact replay is resolved before dynamic reversal-cap checks. Pure validation errors occur before journal insertion; concurrency-dependent failures raised after opening a pending journal roll back that journal with the request. Provider/payment failures that must survive are recorded by a non-raising outer saga/job so their rows are not rolled back with the request.
 
 **Step 3: Implement aggregate lines**
 
@@ -278,6 +278,33 @@ git commit -m "feat: add append-only consign ledger schema"
 - Modify: `addons/woow_loyalty_consign/models/__init__.py`
 - Modify: `addons/woow_loyalty_consign/models/loyalty_card.py`
 - Modify: `addons/woow_loyalty_consign/tests/test_consign_issue.py`
+
+**Pre-rollout migration gate: consolidate legacy projections before deployment**
+
+Task 3 movements intentionally reference the unconsolidated legacy lines, so the
+projection unique constraint must not be activated in-place without a controlled
+migration. Before any Task 4 rollout, run one migration transaction that:
+
+1. acquires exclusive locks on the legacy line, movement, Hold/allocation,
+   redemption-line, booking-reference, and projection tables (including every
+   foreign-key reference discovered from the PostgreSQL catalog);
+2. records an auditable old-line-to-survivor mapping and captures pre-migration
+   row counts and quantity/value sums by company/card/program/product/UoM;
+3. drops the movement immutability trigger **only inside that transaction**,
+   creates or chooses one aggregate survivor for each exact projection dimension,
+   and repoints all movement, Hold/allocation, redemption, and booking references
+   to those survivors;
+4. asserts dimension equality for every repointed reference, unchanged reference
+   counts, no dangling foreign keys, and unchanged movement/allocation/redemption
+   quantity and value sums before consolidating duplicate legacy rows;
+5. consolidates the duplicates, activates the exact projection unique constraint,
+   restores the immutability trigger, and verifies both the trigger and constraint
+   reject invalid writes before commit; and
+6. persists the audit mapping and before/after assertions for operator review.
+
+Any failed assertion rolls back the whole transaction. No deployment is permitted
+before this migration has been rehearsed on a production-shaped disposable copy
+and the Task 4 migration gate has passed.
 
 **Step 1: Write failing interface tests**
 

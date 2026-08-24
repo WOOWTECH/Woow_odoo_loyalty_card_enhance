@@ -15,4 +15,46 @@
         <field name="groups" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
+    <record id="loyalty_consign_line_company_rule" model="ir.rule">
+        <field name="name">Consign lines: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_line"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_operation_company_rule" model="ir.rule">
+        <field name="name">Consign operations: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_operation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_movement_company_rule" model="ir.rule">
+        <field name="name">Consign movements: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_movement"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_hold_company_rule" model="ir.rule">
+        <field name="name">Consign Holds: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_hold"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_hold_allocation_company_rule" model="ir.rule">
+        <field name="name">Consign Hold allocations: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_hold_allocation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_refund_saga_company_rule" model="ir.rule">
+        <field name="name">Consign refund sagas: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_refund_saga"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
 </odoo>

@@ -13,6 +13,18 @@
         <field name="perm_unlink" eval="False"/>
     </record>
 
+    <!-- Portal: movements are read-only and restricted to the exact owner. -->
+    <record id="consign_movement_portal_rule" model="ir.rule">
+        <field name="name">Portal: own consign movements</field>
+        <field name="model_id" ref="model_loyalty_consign_movement"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- Portal: 只能看到自己卡片的核銷紀錄 -->
     <record id="consign_redemption_portal_rule" model="ir.rule">
         <field name="name">Portal: own consign redemptions</field>

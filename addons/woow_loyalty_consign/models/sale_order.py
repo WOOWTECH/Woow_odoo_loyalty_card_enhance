@@ -13,11 +13,29 @@ class SaleOrder(models.Model):
     consign_line_count = fields.Integer(
         string='寄品筆數', compute='_compute_consign_line_count',
     )
+    consign_source_movement_ids = fields.Many2many(
+        'loyalty.consign.movement', compute='_compute_consign_source_movements',
+        string='Source Movements',
+    )
+    consign_source_movement_count = fields.Integer(
+        compute='_compute_consign_source_movements', string='Movement Count',
+    )
 
     @api.depends('consign_line_ids')
     def _compute_consign_line_count(self):
         for order in self:
             order.consign_line_count = len(order.consign_line_ids)
+
+    @api.depends('order_line')
+    def _compute_consign_source_movements(self):
+        movement_model = self.env['loyalty.consign.movement']
+        for order in self:
+            movements = movement_model.search([
+                ('source_model', '=', 'sale.order.line'),
+                ('source_res_id', 'in', order.order_line.ids),
+            ]) if order.order_line else movement_model.browse()
+            order.consign_source_movement_ids = movements
+            order.consign_source_movement_count = len(movements)
 
     def _get_program_domain(self):
         """Exclude consign programs from sale_loyalty's automatic program
@@ -140,12 +158,26 @@ class SaleOrder(models.Model):
 
             for sale_line, grant_line, quantity in grants:
                 product = grant_line.entitlement_product_id
-                card.consign_add_line(
+                aggregate_line = card._consign_add_line(
                     product=product,
                     qty=quantity,
                     unit_price=product.list_price,
                     product_desc=product.display_name,
                     sale_line=sale_line,
+                )
+                self.env['loyalty.consign.movement']._append_movement(
+                    aggregate_line=aggregate_line,
+                    movement_type='issue',
+                    quantity=quantity,
+                    source_channel='sale',
+                    source_model='sale.order.line',
+                    source_res_id=sale_line.id,
+                    source_name=sale_line.order_id.display_name,
+                    idempotency_key=(
+                        f'consign:sale-grant:v1:{sale_line.id}:{grant_line.id}'
+                    ),
+                    unit_value=product.list_price,
+                    product_desc_snapshot=product.display_name,
                 )
             trigger_lines.write({'is_consigned': True})
 
@@ -167,6 +199,17 @@ class SaleOrder(models.Model):
             'view_mode': 'list,form',
             'domain': [('id', 'in', lines.ids)],
             'context': {'create': False},
+        }
+
+    def action_view_consign_movements(self):
+        self.ensure_one()
+        return {
+            'name': 'Consignment Movements',
+            'type': 'ir.actions.act_window',
+            'res_model': 'loyalty.consign.movement',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', self.consign_source_movement_ids.ids)],
+            'context': {'create': False, 'delete': False},
         }
 
 

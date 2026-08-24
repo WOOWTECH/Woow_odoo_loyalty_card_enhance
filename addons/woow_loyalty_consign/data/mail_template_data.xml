@@ -28,8 +28,7 @@
                 <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">品項</th>
                 <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">存入數量</th>
                 <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">已核銷</th>
-                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">剩餘數量</th>
-                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">到期日</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">可用數量</th>
             </tr>
         </thead>
         <tbody>
@@ -45,13 +44,7 @@
                         <t t-out="line.qty_redeemed">0</t>
                     </td>
                     <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                        <strong><t t-out="line.qty_remaining">0</t></strong>
-                    </td>
-                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                        <t t-if="line.date_expiry">
-                            <t t-out="line.date_expiry">-</t>
-                        </t>
-                        <t t-else="">無期限</t>
+                        <strong><t t-out="line.qty_available">0</t></strong>
                     </td>
                 </tr>
             </t>

@@ -24,7 +24,7 @@
                                     <span class="badge bg-secondary" t-esc="card.active_items"/>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-info" t-esc="card.total_remaining_qty"/>
+                                    <span class="badge bg-info" t-esc="card.total_available_qty"/>
                                 </td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-primary">

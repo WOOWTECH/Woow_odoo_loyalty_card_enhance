@@ -95,12 +95,6 @@ msgstr "核銷數量"
 #. module: woow_loyalty_consign_pos
 #. odoo-javascript
 #: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
-msgid "Expiry"
-msgstr "到期日"
-
-#. module: woow_loyalty_consign_pos
-#. odoo-javascript
-#: code:addons/woow_loyalty_consign_pos/static/src/overrides/components/consign_card_popup/consign_card_popup.xml:0
 msgid "Confirm Redemption"
 msgstr "確認核銷"
 

@@ -50,7 +50,7 @@ class ConsignRedeemWizard(models.TransientModel):
         for wl in selected_lines:
             cl = wl.consign_line_id
             desc = cl.product_desc or cl.product_id.name
-            available = cl.qty_remaining
+            available = cl.qty_available
             if wl.qty_to_redeem <= 0:
                 raise ValidationError(
                     f'品項「{desc}」的核銷數量必須大於 0。'
@@ -101,7 +101,7 @@ class ConsignRedeemWizardLine(models.TransientModel):
         related='consign_line_id.product_desc', string='品項說明',
     )
     qty_available = fields.Float(
-        related='consign_line_id.qty_remaining', string='可用數量',
+        related='consign_line_id.qty_available', string='可用數量',
     )
     selected = fields.Boolean(
         string='勾選', default=False,

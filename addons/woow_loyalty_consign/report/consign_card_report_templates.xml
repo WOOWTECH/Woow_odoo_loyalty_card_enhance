@@ -60,11 +60,10 @@
                                     <th>品項</th>
                                     <th class="text-center">存入數量</th>
                                     <th class="text-center">已核銷</th>
-                                    <th class="text-center">剩餘數量</th>
+                                    <th class="text-center">可用數量</th>
                                     <th class="text-end">單價</th>
-                                    <th class="text-end">剩餘金額</th>
+                                    <th class="text-end">可用金額</th>
                                     <th class="text-center">存入日期</th>
-                                    <th class="text-center">到期日</th>
                                     <th class="text-center">狀態</th>
                                 </tr>
                             </thead>
@@ -78,29 +77,22 @@
                                         <td class="text-center" t-out="line.qty_deposited"/>
                                         <td class="text-center" t-out="line.qty_redeemed"/>
                                         <td class="text-center">
-                                            <strong t-out="line.qty_remaining"/>
+                                            <strong t-out="line.qty_available"/>
                                         </td>
                                         <td class="text-end">
                                             <t t-out="line.unit_price"
                                                t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
                                         </td>
                                         <td class="text-end">
-                                            <t t-out="line.amount_remaining"
+                                            <t t-out="line.qty_available * line.unit_price"
                                                t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
                                         </td>
                                         <td class="text-center">
                                             <span t-field="line.date_deposited"/>
                                         </td>
                                         <td class="text-center">
-                                            <t t-if="line.date_expiry">
-                                                <span t-field="line.date_expiry"/>
-                                            </t>
-                                            <t t-else="">—</t>
-                                        </td>
-                                        <td class="text-center">
                                             <span t-if="line.state == 'active'">有效</span>
                                             <span t-if="line.state == 'depleted'">已用完</span>
-                                            <span t-if="line.state == 'expired'">已過期</span>
                                         </td>
                                     </tr>
                                 </t>
