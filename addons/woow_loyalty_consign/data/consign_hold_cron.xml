@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ir_cron_expire_consign_holds" model="ir.cron">
+        <field name="name">Consignment: Expire authorization Holds</field>
+        <field name="model_id" ref="model_loyalty_consign_hold"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_expire_holds()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

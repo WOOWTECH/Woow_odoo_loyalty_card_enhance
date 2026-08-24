@@ -1,3 +1,4 @@
+from datetime import timedelta
 import hashlib
 import json
 
@@ -333,4 +334,305 @@ class LoyaltyConsignEngine(models.AbstractModel):
             self.env['loyalty.card'].browse(card.ids)._send_creation_communication(
                 force_send=False,
             )
+        return operation
+
+    @api.model
+    def _authorization_company(self, source, partner):
+        company = source.company_id if 'company_id' in source._fields else False
+        if not company:
+            raise ValidationError(
+                'The authorization source must belong to an explicit company.'
+            )
+        if partner.company_id and partner.company_id != company:
+            raise ValidationError('The customer belongs to another company.')
+        source_partner = False
+        if source._name == 'res.partner':
+            source_partner = source
+        elif 'partner_id' in source._fields:
+            source_partner = source.partner_id
+        elif 'order_id' in source._fields and 'partner_id' in source.order_id._fields:
+            source_partner = source.order_id.partner_id
+        if source_partner and source_partner != partner:
+            raise ValidationError(
+                'The authorization source customer does not match the exact customer.'
+            )
+        return company
+
+    @api.model
+    def _normalize_authorization_requests(self, requests, company, partner):
+        if not isinstance(requests, (list, tuple)) or not requests:
+            raise ValidationError('At least one positive authorization request is required.')
+        forbidden = {
+            'price', 'price_unit', 'unit_price', 'unit_value', 'amount',
+            'value', 'value_delta', 'issue', 'issue_id', 'issue_movement',
+            'issue_movement_id', 'movement', 'movement_id',
+            'original_movement', 'original_movement_id',
+        }
+        aggregated = {}
+        for request in requests:
+            if not isinstance(request, dict):
+                raise ValidationError(
+                    'Every authorization request must be a normalized mapping.'
+                )
+            if forbidden & set(request):
+                raise ValidationError(
+                    'Authorization requests cannot provide price or issue movement data.'
+                )
+            card = self._coerce_record(
+                'loyalty.card',
+                request.get('card') or request.get('card_id')
+                or request.get('loyalty_card') or request.get('loyalty_card_id'),
+                'consignment card',
+            )
+            product = self._coerce_record(
+                'product.product',
+                request.get('product') or request.get('product_id'),
+                'authorization product variant',
+            )
+            request_uom = self._coerce_record(
+                'uom.uom',
+                request.get('product_uom') or request.get('product_uom_id')
+                or request.get('uom') or request.get('uom_id') or product.uom_id,
+                'authorization UoM',
+            )
+            card.check_access('read')
+            product.check_access('read')
+            request_uom.check_access('read')
+            if not card.active or not card.is_consign:
+                raise ValidationError('Authorization requires an active consignment card.')
+            if not card.partner_id or card.partner_id != partner:
+                raise ValidationError(
+                    'The consignment card owner must match the exact customer.'
+                )
+            if (
+                not card.company_id or not card.program_id.company_id
+                or card.company_id != company or card.program_id.company_id != company
+            ):
+                raise ValidationError(
+                    'The card and program must belong to the exact authorization company.'
+                )
+            if not card.program_id.active or card.program_id.program_type != 'consign':
+                raise ValidationError(
+                    'Authorization requires an active consignment program.'
+                )
+            if product.company_id and product.company_id != company:
+                raise ValidationError('The authorization product belongs to another company.')
+            if product.uom_id.category_id != request_uom.category_id:
+                raise ValidationError(
+                    'The authorization product and UoM must have the same category.'
+                )
+            raw_quantity = request.get(
+                'quantity', request.get('qty', request.get('requested_quantity', 0.0)),
+            )
+            quantity = request_uom._compute_quantity(
+                raw_quantity, product.uom_id, round=False,
+            )
+            quantity = float_round(
+                quantity, precision_rounding=product.uom_id.rounding,
+            )
+            if float_compare(
+                quantity, 0.0, precision_rounding=product.uom_id.rounding,
+            ) <= 0:
+                raise ValidationError(
+                    'Authorization quantity must be positive after UoM rounding.'
+                )
+            projection = self.env['loyalty.consign.line'].sudo().search([
+                ('card_id', '=', card.id),
+                ('product_id', '=', product.id),
+                ('product_uom_id', '=', product.uom_id.id),
+            ], limit=1)
+            if not projection:
+                raise ValidationError(
+                    'The exact card, product variant, and base UoM projection is missing.'
+                )
+            key = (card.id, product.id, product.uom_id.id)
+            if key not in aggregated:
+                aggregated[key] = {
+                    'card_id': card.id,
+                    'product_id': product.id,
+                    'product_uom_id': product.uom_id.id,
+                    'projection_id': projection.id,
+                    'quantity': 0.0,
+                }
+            aggregated[key]['quantity'] = float_round(
+                aggregated[key]['quantity'] + quantity,
+                precision_rounding=product.uom_id.rounding,
+            )
+        return [aggregated[key] for key in sorted(aggregated)]
+
+    @api.model
+    def _lock_authorization_dimensions(self, normalized):
+        card_ids = sorted({item['card_id'] for item in normalized})
+        projection_ids = sorted({item['projection_id'] for item in normalized})
+        for card_id in card_ids:
+            self.env.cr.execute(
+                '''UPDATE loyalty_card SET write_date = write_date
+                    WHERE id = %s RETURNING id''',
+                (card_id,),
+            )
+            if not self.env.cr.fetchone():
+                raise ValidationError('The authorization card no longer exists.')
+        for projection_id in projection_ids:
+            self.env.cr.execute(
+                '''UPDATE loyalty_consign_line SET write_date = write_date
+                    WHERE id = %s RETURNING id''',
+                (projection_id,),
+            )
+            if not self.env.cr.fetchone():
+                raise ValidationError('The authorization projection no longer exists.')
+        cards = self.env['loyalty.card'].sudo().browse(card_ids)
+        projections = self.env['loyalty.consign.line'].sudo().browse(projection_ids)
+        cards.invalidate_recordset()
+        projections.invalidate_recordset()
+        for item in normalized:
+            card = cards.browse(item['card_id'])
+            line = projections.browse(item['projection_id'])
+            if (
+                not card.active or not card.is_consign
+                or line.card_id != card or line.partner_id != card.partner_id
+                or line.product_id.id != item['product_id']
+                or line.product_uom_id.id != item['product_uom_id']
+            ):
+                raise ValidationError(
+                    'An authorization dimension changed while the command was locking.'
+                )
+        projections._reconcile_projection()
+
+        # Existing Holds precede issue rows in the global hierarchy. A new Hold
+        # is not inserted until the complete capacity plan has passed.
+        self.env.cr.execute(
+            '''SELECT id
+                 FROM loyalty_consign_hold
+                WHERE state = 'active'
+                  AND id IN (
+                      SELECT hold_id FROM loyalty_consign_hold_allocation
+                       WHERE aggregate_line_id = ANY(%s)
+                  )
+             ORDER BY id
+                  FOR UPDATE''',
+            (projection_ids,),
+        )
+        self.env.cr.fetchall()
+        self.env.cr.execute(
+            '''SELECT id
+                 FROM loyalty_consign_movement
+                WHERE aggregate_line_id = ANY(%s)
+             ORDER BY occurred_at, id
+                  FOR UPDATE''',
+            (projection_ids,),
+        )
+        self.env.cr.fetchall()
+        self.env.cr.execute(
+            '''SELECT id
+                 FROM loyalty_consign_hold_allocation
+                WHERE aggregate_line_id = ANY(%s)
+             ORDER BY id
+                  FOR UPDATE''',
+            (projection_ids,),
+        )
+        self.env.cr.fetchall()
+        projections.invalidate_recordset()
+        return cards, projections
+
+    @api.model
+    def _authorization_allocation_plan(self, normalized, projections):
+        movement_model = self.env['loyalty.consign.movement']
+        plan = []
+        for item in normalized:
+            line = projections.browse(item['projection_id'])
+            rounding = line.product_uom_id.rounding
+            remaining = item['quantity']
+            if float_compare(
+                remaining, line.qty_available, precision_rounding=rounding,
+            ) > 0:
+                raise ValidationError(
+                    'The authorization request exceeds authoritative available quantity.'
+                )
+            states = movement_model._fifo_issue_availability(
+                line, include_active_holds=True,
+            )
+            for state in states:
+                allocated = min(remaining, state['available'])
+                allocated = float_round(allocated, precision_rounding=rounding)
+                if float_compare(
+                    allocated, 0.0, precision_rounding=rounding,
+                ) <= 0:
+                    continue
+                plan.append({
+                    'aggregate_line_id': line.id,
+                    'issue_movement_id': state['issue'].id,
+                    'quantity': allocated,
+                })
+                remaining = float_round(
+                    remaining - allocated, precision_rounding=rounding,
+                )
+                if float_compare(
+                    remaining, 0.0, precision_rounding=rounding,
+                ) <= 0:
+                    break
+            if float_compare(
+                remaining, 0.0, precision_rounding=rounding,
+            ) > 0:
+                raise ValidationError(
+                    'The authorization request cannot be allocated to exact FIFO issues.'
+                )
+        return plan
+
+    @api.model
+    def _authorize(self, source, partner, requests, idempotency_key):
+        """Atomically authorize exact card/product quantities for 30 minutes."""
+        source_snapshot = self._source_snapshot(source)
+        partner = self._coerce_record('res.partner', partner, 'customer')
+        company = self._authorization_company(source_snapshot['record'], partner)
+        normalized = self._normalize_authorization_requests(
+            requests, company, partner,
+        )
+        identity_requests = [{
+            'card_id': item['card_id'],
+            'product_id': item['product_id'],
+            'product_uom_id': item['product_uom_id'],
+            'quantity': item['quantity'],
+        } for item in normalized]
+
+        # All source, owner, company, card, product, UoM, projection, and
+        # quantity checks above are pure and precede operation/Hold insertion.
+        operation, replay = self.env['loyalty.consign.operation']._open_command(
+            operation_type='authorize',
+            company=company,
+            partner=partner,
+            source_model=source_snapshot['model'],
+            source_res_id=source_snapshot['res_id'],
+            source_name=source_snapshot['name'],
+            idempotency_key=idempotency_key,
+            payload={'requests': identity_requests},
+            identity_payload={'requests': identity_requests},
+        )
+        if replay:
+            if operation.state != 'done' or len(operation.hold_ids) != 1:
+                raise ValidationError('The replayed authorization command is not complete.')
+            return operation
+
+        cards, projections = self._lock_authorization_dimensions(normalized)
+        plan = self._authorization_allocation_plan(normalized, projections)
+        now = fields.Datetime.now()
+        hold = self.env['loyalty.consign.hold']._create_from_engine({
+            'operation_id': operation.id,
+            'company_id': company.id,
+            'partner_id': partner.id,
+            'state': 'active',
+            'expires_at': now + timedelta(minutes=30),
+            'source_model': source_snapshot['model'],
+            'source_res_id': source_snapshot['res_id'],
+            'source_name': source_snapshot['name'],
+        })
+        allocations = self.env[
+            'loyalty.consign.hold.allocation'
+        ]._create_planned_from_engine(hold, plan)
+        projections._reconcile_projection()
+        operation._complete_from_engine({
+            'hold_id': hold.id,
+            'allocation_ids': sorted(allocations.ids),
+            'projection_ids': sorted(projections.ids),
+            'card_ids': sorted(cards.ids),
+        })
         return operation
