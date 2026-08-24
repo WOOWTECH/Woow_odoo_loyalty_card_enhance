@@ -38,8 +38,13 @@ class TestConsignRedemptionAudit(TransactionCase):
             'name': 'Audit Consign Program',
             'program_type': 'consign',
             'active': True,
-            'rule_ids': [(0, 0, {
-                'product_ids': [(6, 0, [cls.trigger_product.id])],
+            'consign_grant_rule_ids': [(0, 0, {
+                'trigger_product_id': cls.trigger_product.id,
+                'grant_line_ids': [(0, 0, {
+                    'entitlement_product_id': cls.product.id,
+                    'product_uom_id': cls.product.uom_id.id,
+                    'quantity': 2.0,
+                })],
             })],
         })
         cls.card = cls.env['loyalty.card'].with_context(
@@ -247,17 +252,24 @@ class TestConsignRedemptionAudit(TransactionCase):
 
     def test_invariant_consign_program_can_persist_trigger_products(self):
         trigger = self.env['product.product'].create({
-            'name': 'Direct Trigger Field Audit',
+            'name': 'Explicit Trigger Rule Audit',
             'type': 'service',
         })
         program = self.env['loyalty.program'].create({
-            'name': 'Direct Trigger Field Program',
+            'name': 'Explicit Trigger Rule Program',
             'program_type': 'consign',
             'active': True,
-            'trigger_product_ids': [(6, 0, [trigger.id])],
+            'consign_grant_rule_ids': [(0, 0, {
+                'trigger_product_id': trigger.id,
+                'grant_line_ids': [(0, 0, {
+                    'entitlement_product_id': self.product.id,
+                    'product_uom_id': self.product.uom_id.id,
+                    'quantity': 1.0,
+                })],
+            })],
         })
 
-        self.assertIn(trigger, program.trigger_product_ids)
+        self.assertIn(trigger, program.consign_trigger_product_ids)
 
     def test_control_sale_confirmation_issues_one_card_and_deposit(self):
         sale_partner = self.env['res.partner'].create({
@@ -277,7 +289,7 @@ class TestConsignRedemptionAudit(TransactionCase):
             lambda line: line.sale_order_id == order
         )
         self.assertEqual(len(cards), 1)
-        self.assertEqual(sum(issued_lines.mapped('qty_deposited')), 5.0)
+        self.assertEqual(sum(issued_lines.mapped('qty_deposited')), 2.0)
         self.assertNotIn(self.trigger_product, issued_lines.product_id)
 
     def test_observation_cancelled_sale_leaves_issued_balance_active(self):
@@ -316,12 +328,21 @@ class TestConsignRedemptionAudit(TransactionCase):
             'name': 'Second Audit Trigger',
             'type': 'service',
         })
+        second_entitlement = self.env['product.product'].create({
+            'name': 'Second Audit Entitlement',
+            'type': 'service',
+        })
         second_program = self.env['loyalty.program'].create({
             'name': 'Second Audit Consign Program',
             'program_type': 'consign',
             'active': True,
-            'rule_ids': [(0, 0, {
-                'product_ids': [(6, 0, [second_trigger.id])],
+            'consign_grant_rule_ids': [(0, 0, {
+                'trigger_product_id': second_trigger.id,
+                'grant_line_ids': [(0, 0, {
+                    'entitlement_product_id': second_entitlement.id,
+                    'product_uom_id': second_entitlement.uom_id.id,
+                    'quantity': 3.0,
+                })],
             })],
         })
         order = self._sale_order([
@@ -339,5 +360,10 @@ class TestConsignRedemptionAudit(TransactionCase):
             ('program_id', '=', second_program.id),
             ('partner_id', '=', self.partner.id),
         ], limit=1)
-        self.assertTrue(first_card.consign_line_ids)
-        self.assertTrue(second_card.consign_line_ids)
+        self.assertEqual(first_card.consign_line_ids.product_id, self.product)
+        self.assertEqual(second_card.consign_line_ids.product_id, second_entitlement)
+        issued_products = (
+            first_card.consign_line_ids.product_id
+            | second_card.consign_line_ids.product_id
+        )
+        self.assertFalse(issued_products & (self.trigger_product | second_trigger))

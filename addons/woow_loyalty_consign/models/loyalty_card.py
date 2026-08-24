@@ -55,7 +55,8 @@ class LoyaltyCard(models.Model):
     def consign_add_line(self, product, qty, unit_price, product_desc=None, sale_line=None):
         """新增或累加寄品明細至此卡片。
 
-        一客一卡制：同品項同價格的 active line 直接累加數量，否則建立新行。
+        一客一卡制：同來源訂單行、同品項同價格的 active line 才累加，
+        不同來源必須保留各自的寄品明細。
 
         Args:
             product: product.product recordset 或 ID (int)
@@ -64,11 +65,23 @@ class LoyaltyCard(models.Model):
         if isinstance(product, int):
             product = self.env['product.product'].browse(product)
 
-        # H3 fix: 用 float_compare 取代 == 比對浮點單價
+        sale_line_id = (
+            sale_line.id if hasattr(sale_line, 'id') else sale_line
+        ) if sale_line else False
+
+        # Never merge different source sale lines: each source must remain
+        # independently traceable for later paid-event issuance and reversal.
         existing = self.consign_line_ids.filtered(
-            lambda l: l.product_id == product
-            and l.state == 'active'
-            and float_compare(l.unit_price, unit_price, precision_digits=2) == 0
+            lambda line: (
+                line.product_id == product
+                and line.state == 'active'
+                and line.sale_line_id.id == sale_line_id
+                and float_compare(
+                    line.unit_price,
+                    unit_price,
+                    precision_digits=2,
+                ) == 0
+            )
         )[:1]
 
         if existing:
@@ -85,8 +98,8 @@ class LoyaltyCard(models.Model):
                 'unit_price': unit_price,
                 'date_deposited': fields.Date.context_today(self),
             }
-            if sale_line:
-                vals['sale_line_id'] = sale_line.id if hasattr(sale_line, 'id') else sale_line
+            if sale_line_id:
+                vals['sale_line_id'] = sale_line_id
             self.env['loyalty.consign.line'].create(vals)
 
     def action_send_consign_card(self):

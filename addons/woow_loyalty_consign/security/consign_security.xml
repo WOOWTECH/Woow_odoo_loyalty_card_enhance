@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="loyalty_consign_grant_rule_company_rule" model="ir.rule">
+        <field name="name">Consign grant rules: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_grant_rule"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="loyalty_consign_grant_line_company_rule" model="ir.rule">
+        <field name="name">Consign grant lines: allowed companies</field>
+        <field name="model_id" ref="model_loyalty_consign_grant_line"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+</odoo>

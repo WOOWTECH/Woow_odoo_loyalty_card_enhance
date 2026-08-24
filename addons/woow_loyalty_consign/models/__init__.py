@@ -1,4 +1,6 @@
 from . import loyalty_program
+from . import loyalty_consign_grant_rule
+from . import loyalty_consign_grant_line
 from . import loyalty_consign_line
 from . import loyalty_consign_redemption
 from . import loyalty_card
