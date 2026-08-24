@@ -17,6 +17,12 @@ class LoyaltyCard(models.Model):
     consign_redemption_ids = fields.One2many(
         'loyalty.consign.redemption', 'card_id', string='核銷紀錄', copy=False,
     )
+    consign_movement_ids = fields.One2many(
+        'loyalty.consign.movement', 'card_id', string='Ledger Movements', copy=False,
+    )
+    consign_movement_count = fields.Integer(
+        string='Movement Count', compute='_compute_consign_movement_count',
+    )
     consign_total_remaining_qty = fields.Float(
         string='剩餘總數量', compute='_compute_consign_totals', store=True,
     )
@@ -27,23 +33,31 @@ class LoyaltyCard(models.Model):
     consign_active_lines = fields.Integer(
         string='有效品項數', compute='_compute_consign_totals', store=True,
     )
+
+    @api.depends('consign_movement_ids')
+    def _compute_consign_movement_count(self):
+        for card in self:
+            card.consign_movement_count = len(card.consign_movement_ids)
+
     @api.depends('program_id.program_type')
     def _compute_is_consign(self):
         for card in self:
             card.is_consign = card.program_id.program_type == 'consign'
 
     @api.depends(
-        'consign_line_ids.qty_remaining',
-        'consign_line_ids.amount_remaining',
+        'consign_line_ids.qty_available',
+        'consign_line_ids.unit_price',
         'consign_line_ids.state',
     )
     def _compute_consign_totals(self):
         for card in self:
             active_lines = card.consign_line_ids.filtered(
-                lambda l: l.state == 'active'
+                lambda line: line.state == 'active' and line.qty_available > 0
             )
-            card.consign_total_remaining_qty = sum(active_lines.mapped('qty_remaining'))
-            card.consign_total_remaining_value = sum(active_lines.mapped('amount_remaining'))
+            card.consign_total_remaining_qty = sum(active_lines.mapped('qty_available'))
+            card.consign_total_remaining_value = sum(
+                line.qty_available * line.unit_price for line in active_lines
+            )
             card.consign_active_lines = len(active_lines)
 
     def _compute_access_url(self):
@@ -52,7 +66,7 @@ class LoyaltyCard(models.Model):
             if card.is_consign:
                 card.access_url = f'/my/consign-cards/{card.id}'
 
-    def consign_add_line(self, product, qty, unit_price, product_desc=None, sale_line=None):
+    def _consign_add_line(self, product, qty, unit_price, product_desc=None, sale_line=None):
         """新增或累加寄品明細至此卡片。
 
         一客一卡制：同來源訂單行、同品項同價格的 active line 才累加，
@@ -69,38 +83,58 @@ class LoyaltyCard(models.Model):
             sale_line.id if hasattr(sale_line, 'id') else sale_line
         ) if sale_line else False
 
-        # Never merge different source sale lines: each source must remain
-        # independently traceable for later paid-event issuance and reversal.
-        existing = self.consign_line_ids.filtered(
-            lambda line: (
-                line.product_id == product
-                and line.state == 'active'
-                and line.sale_line_id.id == sale_line_id
-                and float_compare(
-                    line.unit_price,
-                    unit_price,
-                    precision_digits=2,
-                ) == 0
-            )
-        )[:1]
+        # A sale line is the business idempotency key for accumulation. Manual
+        # calls have no such key, so each call must retain its own line and issue
+        # fact instead of silently coalescing unrelated grants.
+        existing = self.env['loyalty.consign.line']
+        if sale_line_id:
+            existing = self.consign_line_ids.filtered(
+                lambda line: (
+                    line.product_id == product
+                    and line.state == 'active'
+                    and line.sale_line_id.id == sale_line_id
+                    and float_compare(
+                        line.unit_price,
+                        unit_price,
+                        precision_digits=2,
+                    ) == 0
+                )
+            )[:1]
 
         if existing:
             # M1 fix: 用內部方法取代可被外部注入的 context flag
             existing._write_accumulate({
                 'qty_deposited': existing.qty_deposited + qty,
             })
-        else:
-            vals = {
-                'card_id': self.id,
-                'product_id': product.id,
-                'product_desc': product_desc or product.display_name,
-                'qty_deposited': qty,
-                'unit_price': unit_price,
-                'date_deposited': fields.Date.context_today(self),
-            }
-            if sale_line_id:
-                vals['sale_line_id'] = sale_line_id
-            self.env['loyalty.consign.line'].create(vals)
+            return existing
+
+        vals = {
+            'card_id': self.id,
+            'product_id': product.id,
+            'product_uom_id': product.uom_id.id,
+            'product_desc': product_desc or product.display_name,
+            'qty_deposited': qty,
+            'unit_price': unit_price,
+            'date_deposited': fields.Date.context_today(self),
+        }
+        if sale_line_id:
+            vals['sale_line_id'] = sale_line_id
+        if sale_line_id:
+            # The sale adapter appends one richer issue movement per resolved
+            # grant row immediately after preserving this legacy projection.
+            return self.env['loyalty.consign.line']._create_for_specific_movement(vals)
+        return self.env['loyalty.consign.line'].create(vals)
+
+    def action_view_consign_movements(self):
+        self.ensure_one()
+        return {
+            'name': 'Consignment Movements',
+            'type': 'ir.actions.act_window',
+            'res_model': 'loyalty.consign.movement',
+            'view_mode': 'list,form',
+            'domain': [('card_id', '=', self.id)],
+            'context': {'create': False, 'delete': False},
+        }
 
     def action_send_consign_card(self):
         """手動重寄寄品卡通知。"""

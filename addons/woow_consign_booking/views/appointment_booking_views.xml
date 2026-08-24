@@ -33,10 +33,9 @@
         <field name="inherit_id" ref="woow_loyalty_consign.loyalty_card_consign_view_form"/>
         <field name="active" eval="False"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='consign_line_ids']//field[@name='qty_remaining']"
+            <xpath expr="//field[@name='consign_line_ids']//field[@name='qty_available']"
                    position="after">
                 <field name="reserved_qty" readonly="1"/>
-                <field name="qty_available" readonly="1"/>
             </xpath>
         </field>
     </record>

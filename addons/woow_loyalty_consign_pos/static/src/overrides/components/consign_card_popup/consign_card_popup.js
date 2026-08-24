@@ -36,7 +36,7 @@ export class ConsignCardPopup extends Component {
     }
 
     increment(line) {
-        if (line.qty_to_redeem < line.qty_remaining) {
+        if (line.qty_to_redeem < line.qty_available) {
             line.qty_to_redeem++;
         }
     }
@@ -49,7 +49,7 @@ export class ConsignCardPopup extends Component {
 
     setQty(line, ev) {
         const val = parseInt(ev.target.value) || 0;
-        line.qty_to_redeem = Math.max(0, Math.min(val, line.qty_remaining));
+        line.qty_to_redeem = Math.max(0, Math.min(val, line.qty_available));
     }
 
     confirm() {

@@ -1,6 +1,6 @@
 {
     'name': '會員中心 - 寄品卡',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',
     'category': 'Sales/Loyalty',
     'summary': '會員中心寄品卡功能模組',
     'author': 'WoowTech',

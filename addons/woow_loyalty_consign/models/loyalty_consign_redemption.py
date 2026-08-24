@@ -79,17 +79,12 @@ class LoyaltyConsignRedemption(models.Model):
             consign_line_ids = consign_lines.ids
             if consign_line_ids:
                 self.env.cr.execute(
-                    "SELECT id, qty_deposited, qty_redeemed "
-                    "FROM loyalty_consign_line WHERE id IN %s FOR UPDATE",
+                    "SELECT id FROM loyalty_consign_line WHERE id IN %s FOR UPDATE",
                     [tuple(consign_line_ids)],
                 )
-                db_data = {
-                    r[0]: {'qty_deposited': r[1], 'qty_redeemed': r[2]}
-                    for r in self.env.cr.fetchall()
-                }
                 # 重新整理 ORM 快取
                 consign_lines.invalidate_recordset(
-                    ['qty_remaining', 'qty_redeemed', 'qty_deposited'],
+                    ['qty_available', 'qty_redeemed', 'qty_deposited'],
                 )
 
             for line in rec.line_ids:
@@ -106,17 +101,27 @@ class LoyaltyConsignRedemption(models.Model):
                     raise ValidationError(
                         f'品項「{desc}」的核銷數量必須大於 0。'
                     )
-                # H2 fix: 用 DB 直接讀取的值驗證餘額
-                cl_id = line.consign_line_id.id
-                if cl_id in db_data:
-                    db_remaining = db_data[cl_id]['qty_deposited'] - db_data[cl_id]['qty_redeemed']
-                else:
-                    db_remaining = line.consign_line_id.qty_remaining
-                if line.qty_redeemed > db_remaining:
+                # The ledger projection is the active availability authority;
+                # historical booking reservations are intentionally excluded.
+                available = line.consign_line_id.qty_available
+                if line.qty_redeemed > available:
                     raise ValidationError(
                         f'品項「{desc}」核銷數量 ({line.qty_redeemed}) '
-                        f'超過剩餘數量 ({db_remaining})。'
+                        f'超過可用數量 ({available})。'
                     )
+            for line in rec.line_ids:
+                self.env['loyalty.consign.movement']._append_movement(
+                    aggregate_line=line.consign_line_id,
+                    movement_type='redeem',
+                    quantity=line.qty_redeemed,
+                    source_channel='manual',
+                    source_model='loyalty.consign.redemption.line',
+                    source_res_id=line.id,
+                    source_name=rec.display_name,
+                    idempotency_key=f'consign:legacy-redemption:v1:{line.id}',
+                    occurred_at=rec.date_redemption,
+                    unit_value=line.unit_price,
+                )
             rec.write({'state': 'done'})
             rec.card_id.message_post(
                 body=f'核銷單 {rec.name} 已完成，共核銷 {len(rec.line_ids)} 筆品項。',
@@ -138,11 +143,14 @@ class LoyaltyConsignRedemptionLine(models.Model):
     product_id = fields.Many2one(
         related='consign_line_id.product_id', store=True, string='品項',
     )
+    product_uom_id = fields.Many2one(
+        related='consign_line_id.product_uom_id', store=True, string='計量單位',
+    )
     product_desc = fields.Char(
         related='consign_line_id.product_desc', store=True, string='品項說明',
     )
     qty_available = fields.Float(
-        related='consign_line_id.qty_remaining', string='可用數量',
+        related='consign_line_id.qty_available', string='可用數量',
     )
     qty_redeemed = fields.Float(
         string='本次核銷數量',

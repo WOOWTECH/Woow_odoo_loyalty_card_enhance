@@ -12,7 +12,6 @@
                             <th>Item</th>
                             <th class="text-center">Available</th>
                             <th class="text-center">Redeem Qty</th>
-                            <th class="text-end">Expiry</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -22,7 +21,7 @@
                                     <span t-esc="line.product_name"/>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-info" t-esc="line.qty_remaining"/>
+                                    <span class="badge bg-info" t-esc="line.qty_available"/>
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center">
@@ -34,7 +33,7 @@
                                                class="form-control form-control-sm text-center mx-1"
                                                style="width: 60px;"
                                                t-att-value="line.qty_to_redeem"
-                                               t-att-max="line.qty_remaining"
+                                               t-att-max="line.qty_available"
                                                min="0"
                                                t-on-change="(ev) => this.setQty(line, ev)"/>
                                         <button class="btn btn-sm btn-outline-secondary"
@@ -42,10 +41,6 @@
                                             <i class="fa fa-plus"/>
                                         </button>
                                     </div>
-                                </td>
-                                <td class="text-end">
-                                    <span t-if="line.date_expiry" t-esc="line.date_expiry"/>
-                                    <span t-else="" class="text-muted">--</span>
                                 </td>
                             </tr>
                         </t>

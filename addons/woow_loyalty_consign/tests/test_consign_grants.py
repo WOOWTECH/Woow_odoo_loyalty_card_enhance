@@ -139,6 +139,16 @@ class TestConsignGrants(TransactionCase):
             set(order.action_view_consign_lines()['domain'][0][2]),
             set(issued.ids),
         )
+        movements = issued.mapped('movement_ids')
+        self.assertEqual(len(movements), 2)
+        self.assertEqual(set(movements.mapped('movement_type')), {'issue'})
+        self.assertEqual(
+            set(movements.mapped('product_uom_id').ids),
+            {self.treatment.uom_id.id, self.aftercare.uom_id.id},
+        )
+        source_action = movements[:1].action_open_source()
+        self.assertEqual(source_action['res_model'], 'sale.order')
+        self.assertEqual(source_action['res_id'], order.id)
 
     def test_trigger_quantity_multiplies_configured_grants(self):
         program = self._program('Quantity Program', self.trigger, [
@@ -253,6 +263,9 @@ class TestConsignGrants(TransactionCase):
         self.assertEqual(issued.qty_deposited, 3.0)
         self.assertEqual(issued.sale_line_id, order.order_line)
         self.assertEqual(order.consign_line_count, 1)
+        self.assertEqual(len(issued.movement_ids), 2)
+        self.assertEqual(sum(issued.movement_ids.mapped('quantity')), 3.0)
+        self.assertEqual(len(issued.movement_ids.mapped('operation_id')), 2)
 
     def test_second_order_reuses_card_accumulates_and_does_not_renotify(self):
         program = self._program('Card Reuse Program', self.trigger, [
@@ -291,6 +304,32 @@ class TestConsignGrants(TransactionCase):
         )
         self.assertEqual(len(notification_contexts), 1)
         self.assertFalse(notification_contexts[0].get('loyalty_no_mail'))
+        movements = cards.consign_movement_ids
+        self.assertEqual(len(movements), 2)
+        self.assertEqual(
+            set(movements.mapped('source_res_id')),
+            {first_order.order_line.id, second_order.order_line.id},
+        )
+        self.assertEqual(first_order.consign_source_movement_count, 1)
+        self.assertEqual(second_order.consign_source_movement_count, 1)
+
+    def test_grant_adapter_reinvocation_does_not_duplicate_movement(self):
+        program = self._program('Replay Grant Program', self.trigger, [
+            (self.treatment, self.treatment.uom_id, 2.0),
+        ])
+        order = self._order([(self.trigger, 1.0)])
+        order.action_confirm()
+        movement = self._issued_lines(program, order).movement_ids
+
+        order._action_create_consign_card()
+
+        self.assertEqual(
+            self.env['loyalty.consign.movement'].search_count([
+                ('id', '=', movement.id),
+            ]),
+            1,
+        )
+        self.assertEqual(len(order.consign_source_movement_ids), 1)
 
     def test_two_programs_each_receive_only_their_own_grants(self):
         second_trigger = self._product('Aftercare Package', 500.0)
@@ -314,6 +353,9 @@ class TestConsignGrants(TransactionCase):
         self.assertEqual(first_lines.qty_deposited, 5.0)
         self.assertEqual(second_lines.product_id, self.aftercare)
         self.assertEqual(second_lines.qty_deposited, 6.0)
+        self.assertEqual(first_lines.movement_ids.card_id, first_lines.card_id)
+        self.assertEqual(second_lines.movement_ids.card_id, second_lines.card_id)
+        self.assertNotEqual(first_lines.movement_ids.card_id, second_lines.movement_ids.card_id)
 
     def test_direct_empty_grant_header_is_rejected(self):
         program = self.env['loyalty.program'].create({

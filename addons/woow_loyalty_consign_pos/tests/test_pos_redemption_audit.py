@@ -72,7 +72,7 @@ class TestPosConsignRedemptionAudit(TransactionCase):
 
         self.assertTrue(result['successful'])
         self.assertEqual(result['payload']['card_id'], self.card.id)
-        self.assertEqual(result['payload']['lines'][0]['qty_remaining'], 10.0)
+        self.assertEqual(result['payload']['lines'][0]['qty_available'], 10.0)
 
     def test_control_wrong_customer_card_lookup_is_rejected(self):
         result = self.pos_config.use_consign_card_code(

@@ -211,7 +211,7 @@
                                                 <t t-out="line.qty_redeemed"/>
                                             </td>
                                             <td class="text-center">
-                                                <strong><t t-out="line.qty_remaining"/></strong>
+                                                <strong><t t-out="line.qty_available"/></strong>
                                             </td>
                                             <td class="text-center">
                                                 <span t-if="line.state == 'active'"

@@ -19,9 +19,10 @@
                 <sheet>
                     <group>
                         <group string="品項資訊">
-                            <field name="card_id"/>
+                            <field name="card_id" readonly="id"/>
                             <field name="partner_id"/>
                             <field name="product_id"/>
+                            <field name="product_uom_id"/>
                             <field name="product_desc"/>
                             <field name="lot_id"/>
                             <field name="storage_note"/>
@@ -29,11 +30,14 @@
                         <group string="數量與金額">
                             <field name="qty_deposited"/>
                             <field name="qty_redeemed"/>
-                            <field name="qty_remaining"/>
+                            <field name="qty_available" readonly="1"/>
+                            <field name="qty_issued" readonly="1"/>
+                            <field name="qty_reversed" readonly="1"/>
+                            <field name="qty_revoked" readonly="1"/>
+                            <field name="qty_on_hold" readonly="1"/>
                             <field name="unit_price"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="amount_deposited"/>
-                            <field name="amount_remaining"/>
                         </group>
                     </group>
                     <group>
@@ -69,17 +73,17 @@
         <field name="model">loyalty.consign.line</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'depleted'">
-                <field name="card_id"/>
+                <field name="card_id" readonly="1"/>
                 <field name="partner_id"/>
                 <field name="product_desc"/>
                 <field name="product_id"/>
+                <field name="product_uom_id"/>
                 <field name="lot_id" optional="hide"/>
                 <field name="storage_note" optional="hide"/>
                 <field name="qty_deposited"/>
                 <field name="qty_redeemed"/>
-                <field name="qty_remaining"/>
+                <field name="qty_available"/>
                 <field name="unit_price" optional="hide"/>
-                <field name="amount_remaining"/>
                 <field name="date_deposited"/>
                 <field name="sale_order_id" optional="hide"/>
                 <field name="state"/>

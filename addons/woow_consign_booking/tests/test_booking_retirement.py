@@ -73,6 +73,30 @@ class TestBookingConsignmentRetirement(TransactionCase):
         self.assertTrue(self.appointment_type.require_payment)
         self.assertTrue(self.appointment_type.consign_enabled)
 
+    def test_historical_reserved_quantity_never_reduces_core_availability(self):
+        program = self.env['loyalty.program'].create({
+            'name': 'Booking Retirement Program',
+            'program_type': 'consign',
+            'company_id': self.env.company.id,
+            'currency_id': self.env.company.currency_id.id,
+        })
+        card = self.env['loyalty.card'].create({
+            'program_id': program.id,
+            'partner_id': self.partner.id,
+            'points': 0,
+        })
+        line = self.env['loyalty.consign.line'].create({
+            'card_id': card.id,
+            'product_id': self.payment_product.id,
+            'qty_deposited': 5,
+            'unit_price': self.payment_product.list_price,
+        })
+
+        line.write({'reserved_qty': 4})
+
+        self.assertEqual(line.reserved_qty, 4)
+        self.assertEqual(line.qty_available, 5)
+
     def test_all_legacy_booking_consign_views_are_inactive(self):
         view_xmlids = (
             'woow_consign_booking.appointment_book_consign_info',
