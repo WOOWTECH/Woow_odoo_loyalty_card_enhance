@@ -246,8 +246,14 @@ with registry.cursor() as multi_setup_cr:
     )
     multi_hold_id = multi_operation.result_json['hold_id']
     independent_hold_id = independent_operation.result_json['hold_id']
-    multi_card_id = multi_one_issue.result_json['card_id']
-    multi_line_id = multi_one_issue.result_json['projection_ids'][0]
+    multi_card_ids = [
+        multi_one_issue.result_json['card_id'],
+        multi_two_issue.result_json['card_id'],
+    ]
+    multi_line_ids = [
+        multi_one_issue.result_json['projection_ids'][0],
+        multi_two_issue.result_json['projection_ids'][0],
+    ]
     multi_env['loyalty.consign.hold'].browse([
         multi_hold_id, independent_hold_id,
     ])._write_from_engine({
@@ -255,11 +261,14 @@ with registry.cursor() as multi_setup_cr:
     })
     multi_setup_cr.commit()
 
+# Block the final Hold lock. The cron probe has therefore acquired every
+# multi-card card/projection dimension before the rejected candidate rolls
+# its savepoint back. Keep both outer transactions open while a third cursor
+# proves those earlier dimensions are not retained by the cron worker.
 multi_blocker = registry.cursor()
-multi_blocker.execute('SELECT id FROM loyalty_card WHERE id = %s FOR UPDATE', (multi_card_id,))
-multi_blocker.fetchone()
 multi_blocker.execute(
-    'SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE', (multi_line_id,),
+    'SELECT id FROM loyalty_consign_hold WHERE id = %s FOR UPDATE',
+    (multi_hold_id,),
 )
 multi_blocker.fetchone()
 with registry.cursor() as multi_worker_cr:
@@ -267,20 +276,22 @@ with registry.cursor() as multi_worker_cr:
     assert multi_worker_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 1
     assert multi_worker_env['loyalty.consign.hold'].browse(multi_hold_id).state == 'active'
     assert multi_worker_env['loyalty.consign.hold'].browse(independent_hold_id).state == 'expired'
+    with registry.cursor() as released_check_cr:
+        for multi_card_id in multi_card_ids:
+            released_check_cr.execute(
+                'SELECT id FROM loyalty_card WHERE id = %s FOR UPDATE SKIP LOCKED',
+                (multi_card_id,),
+            )
+            assert released_check_cr.fetchone()
+        for multi_line_id in multi_line_ids:
+            released_check_cr.execute(
+                'SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE SKIP LOCKED',
+                (multi_line_id,),
+            )
+            assert released_check_cr.fetchone()
+        released_check_cr.rollback()
     multi_blocker.rollback()
     multi_blocker.close()
-    with registry.cursor() as released_check_cr:
-        released_check_cr.execute(
-            'SELECT id FROM loyalty_card WHERE id = %s FOR UPDATE SKIP LOCKED',
-            (multi_card_id,),
-        )
-        assert released_check_cr.fetchone()
-        released_check_cr.execute(
-            'SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE SKIP LOCKED',
-            (multi_line_id,),
-        )
-        assert released_check_cr.fetchone()
-        released_check_cr.rollback()
     multi_worker_cr.commit()
 
 # Authorize versus issue reversal: the stale authorization loses; after outer
