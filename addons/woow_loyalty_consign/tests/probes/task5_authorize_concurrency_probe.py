@@ -182,6 +182,107 @@ with registry.cursor() as expiry_cr:
     assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 0
     expiry_cr.commit()
 
+# A multi-card Hold is skipped as one unit when one of its card/projection
+# dimensions is locked. An unrelated candidate still expires, and after the
+# blocker releases the unselected multi-card dimensions are not retained by the
+# still-open cron transaction.
+with registry.cursor() as multi_setup_cr:
+    multi_env = api.Environment(multi_setup_cr, SUPERUSER_ID, {})
+    multi_program_one = multi_env['loyalty.program'].create({
+        'name': 'Task5 Probe Multi Program One', 'program_type': 'consign',
+        'active': True, 'company_id': company_id,
+        'currency_id': multi_env.company.currency_id.id,
+    })
+    multi_program_two = multi_env['loyalty.program'].create({
+        'name': 'Task5 Probe Multi Program Two', 'program_type': 'consign',
+        'active': True, 'company_id': company_id,
+        'currency_id': multi_env.company.currency_id.id,
+    })
+    independent_program = multi_env['loyalty.program'].create({
+        'name': 'Task5 Probe Independent Program', 'program_type': 'consign',
+        'active': True, 'company_id': company_id,
+        'currency_id': multi_env.company.currency_id.id,
+    })
+    multi_one_issue = multi_env['loyalty.consign.engine']._issue(
+        source=multi_env['res.partner'].browse(partner_id),
+        partner=multi_env['res.partner'].browse(partner_id), program=multi_program_one,
+        grants=[{'product': multi_env['product.product'].browse(product_id), 'quantity': 1}],
+        idempotency_key=f'task5:probe:multi:issue-one:{partner_id}',
+    )
+    multi_two_issue = multi_env['loyalty.consign.engine']._issue(
+        source=multi_env['res.partner'].browse(partner_id),
+        partner=multi_env['res.partner'].browse(partner_id), program=multi_program_two,
+        grants=[{'product': multi_env['product.product'].browse(product_id), 'quantity': 1}],
+        idempotency_key=f'task5:probe:multi:issue-two:{partner_id}',
+    )
+    independent_issue = multi_env['loyalty.consign.engine']._issue(
+        source=multi_env['res.partner'].browse(partner_id),
+        partner=multi_env['res.partner'].browse(partner_id), program=independent_program,
+        grants=[{'product': multi_env['product.product'].browse(product_id), 'quantity': 1}],
+        idempotency_key=f'task5:probe:independent:issue:{partner_id}',
+    )
+    multi_operation = multi_env['loyalty.consign.engine']._authorize(
+        source=multi_env['res.partner'].browse(partner_id),
+        partner=multi_env['res.partner'].browse(partner_id),
+        requests=[
+            {'card_id': multi_one_issue.result_json['card_id'], 'product_id': product_id,
+             'uom_id': multi_env['product.product'].browse(product_id).uom_id.id,
+             'quantity': 1},
+            {'card_id': multi_two_issue.result_json['card_id'], 'product_id': product_id,
+             'uom_id': multi_env['product.product'].browse(product_id).uom_id.id,
+             'quantity': 1},
+        ],
+        idempotency_key=f'task5:probe:multi:hold:{partner_id}',
+    )
+    independent_operation = multi_env['loyalty.consign.engine']._authorize(
+        source=multi_env['res.partner'].browse(partner_id),
+        partner=multi_env['res.partner'].browse(partner_id),
+        requests=[{
+            'card_id': independent_issue.result_json['card_id'], 'product_id': product_id,
+            'uom_id': multi_env['product.product'].browse(product_id).uom_id.id,
+            'quantity': 1,
+        }],
+        idempotency_key=f'task5:probe:independent:hold:{partner_id}',
+    )
+    multi_hold_id = multi_operation.result_json['hold_id']
+    independent_hold_id = independent_operation.result_json['hold_id']
+    multi_card_id = multi_one_issue.result_json['card_id']
+    multi_line_id = multi_one_issue.result_json['projection_ids'][0]
+    multi_env['loyalty.consign.hold'].browse([
+        multi_hold_id, independent_hold_id,
+    ])._write_from_engine({
+        'expires_at': fields.Datetime.now() - timedelta(seconds=1),
+    })
+    multi_setup_cr.commit()
+
+multi_blocker = registry.cursor()
+multi_blocker.execute('SELECT id FROM loyalty_card WHERE id = %s FOR UPDATE', (multi_card_id,))
+multi_blocker.fetchone()
+multi_blocker.execute(
+    'SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE', (multi_line_id,),
+)
+multi_blocker.fetchone()
+with registry.cursor() as multi_worker_cr:
+    multi_worker_env = api.Environment(multi_worker_cr, SUPERUSER_ID, {})
+    assert multi_worker_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 1
+    assert multi_worker_env['loyalty.consign.hold'].browse(multi_hold_id).state == 'active'
+    assert multi_worker_env['loyalty.consign.hold'].browse(independent_hold_id).state == 'expired'
+    multi_blocker.rollback()
+    multi_blocker.close()
+    with registry.cursor() as released_check_cr:
+        released_check_cr.execute(
+            'SELECT id FROM loyalty_card WHERE id = %s FOR UPDATE SKIP LOCKED',
+            (multi_card_id,),
+        )
+        assert released_check_cr.fetchone()
+        released_check_cr.execute(
+            'SELECT id FROM loyalty_consign_line WHERE id = %s FOR UPDATE SKIP LOCKED',
+            (multi_line_id,),
+        )
+        assert released_check_cr.fetchone()
+        released_check_cr.rollback()
+    multi_worker_cr.commit()
+
 # Authorize versus issue reversal: the stale authorization loses; after outer
 # retry, exact issue capacity is re-evaluated as a domain ValidationError.
 with registry.cursor() as expire_cr:
@@ -237,6 +338,8 @@ print('TASK5_ONE_HOLD_AVAILABLE_FOUR=PASS')
 print('TASK5_SAME_KEY_REPLAY=PASS')
 print('TASK5_AUTHORIZE_REVERSAL_RACE=PASS')
 print('TASK5_EXPIRY_BATCH_ONE_SKIPS_LOCKED=PASS')
+print('TASK5_EXPIRY_MULTI_CARD_DIMENSION_SKIP=PASS')
+print('TASK5_EXPIRY_UNSELECTED_DIMENSIONS_RELEASED=PASS')
 print('TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS')
 print('TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS')
 print('TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS')

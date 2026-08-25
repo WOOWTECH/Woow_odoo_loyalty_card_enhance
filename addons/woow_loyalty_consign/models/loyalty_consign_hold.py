@@ -12,6 +12,17 @@ _MAX_EXPIRY_CANDIDATE_SCAN = (
 )
 
 
+class _ReleaseExpiryProbe(Exception):
+    """Roll back a successful probe so it cannot retain row locks."""
+
+
+class _ExpiryCandidateUnavailable(Exception):
+    """Abort a probe/formal attempt and identify candidates to exclude."""
+
+    def __init__(self, candidate_ids):
+        self.candidate_ids = set(candidate_ids)
+
+
 def _expiry_candidate_scan_limit(batch_size):
     """Return a bounded candidate window larger than a permitted batch."""
     return min(
@@ -99,28 +110,12 @@ class LoyaltyConsignHold(models.Model):
         return result
 
     @api.model
-    def _cron_expire_holds(self, batch_size=100, now=None):
-        """Expire one bounded deterministic batch without contending workers."""
-        batch_size = max(1, min(int(batch_size or 100), _MAX_EXPIRY_BATCH_SIZE))
-        now = now or fields.Datetime.now()
-        # Scan a bounded window larger than the completion batch. This lets a
-        # locked earliest Hold be skipped without starving unrelated later Holds,
-        # while locking every acquired dimension in card -> line -> Hold order.
-        candidate_scan_limit = _expiry_candidate_scan_limit(batch_size)
-        self.env.cr.execute(
-            '''SELECT id
-                 FROM loyalty_consign_hold
-                WHERE state = 'active' AND expires_at <= %s
-             ORDER BY id
-                LIMIT %s''',
-            (now, candidate_scan_limit),
-        )
-        candidate_ids = [row[0] for row in self.env.cr.fetchall()]
-        if not candidate_ids:
-            return 0
-        # A failed SKIP LOCKED acquisition excludes only candidates using that
-        # dimension. Other independent candidates remain eligible in this bounded
-        # run, while every acquired dimension still follows card -> line -> Hold.
+    def _expiry_candidate_dimensions(self, candidate_ids):
+        """Return every card/projection dimension required by each candidate."""
+        dimensions = {
+            hold_id: {'cards': set(), 'lines': set()}
+            for hold_id in candidate_ids
+        }
         self.env.cr.execute(
             '''SELECT allocation.hold_id, allocation.aggregate_line_id, line.card_id
                  FROM loyalty_consign_hold_allocation allocation
@@ -130,44 +125,51 @@ class LoyaltyConsignHold(models.Model):
              ORDER BY allocation.hold_id, line.card_id, allocation.aggregate_line_id''',
             (candidate_ids,),
         )
-        dimensions = {}
         for hold_id, line_id, card_id in self.env.cr.fetchall():
-            dimensions.setdefault(hold_id, {'cards': set(), 'lines': set()})
             dimensions[hold_id]['cards'].add(card_id)
             dimensions[hold_id]['lines'].add(line_id)
-        skipped = set()
-        card_candidates = {}
-        for hold_id, dimension in dimensions.items():
-            for card_id in dimension['cards']:
-                card_candidates.setdefault(card_id, set()).add(hold_id)
-        for card_id in sorted(card_candidates):
+        return dimensions
+
+    @api.model
+    def _lock_expiry_candidates(self, candidate_ids, dimensions, now):
+        """Acquire exact candidate dimensions in the global card/line/Hold order."""
+        card_ids = sorted({
+            card_id for hold_id in candidate_ids
+            for card_id in dimensions[hold_id]['cards']
+        })
+        for card_id in card_ids:
             self.env.cr.execute(
                 '''SELECT id FROM loyalty_card WHERE id = %s
                     FOR UPDATE SKIP LOCKED''',
                 (card_id,),
             )
             if not self.env.cr.fetchone():
-                skipped.update(card_candidates[card_id])
-        line_candidates = {}
-        for hold_id, dimension in dimensions.items():
-            if hold_id in skipped:
-                continue
-            for line_id in dimension['lines']:
-                line_candidates.setdefault(line_id, set()).add(hold_id)
-        for line_id in sorted(line_candidates):
+                raise _ExpiryCandidateUnavailable([
+                    hold_id for hold_id in candidate_ids
+                    if card_id in dimensions[hold_id]['cards']
+                ])
+        line_ids = sorted({
+            line_id for hold_id in candidate_ids
+            for line_id in dimensions[hold_id]['lines']
+        })
+        for line_id in line_ids:
             self.env.cr.execute(
                 '''SELECT id FROM loyalty_consign_line WHERE id = %s
                     FOR UPDATE SKIP LOCKED''',
                 (line_id,),
             )
             if not self.env.cr.fetchone():
-                skipped.update(line_candidates[line_id])
-        hold_ids = []
-        for hold_id in candidate_ids:
-            if len(hold_ids) >= batch_size:
-                break
-            if hold_id in skipped:
-                continue
+                raise _ExpiryCandidateUnavailable([
+                    hold_id for hold_id in candidate_ids
+                    if line_id in dimensions[hold_id]['lines']
+                ])
+        # Allocations are append-only for an active Hold. Still re-read the
+        # dimensions under card/line locks to fence stale candidate snapshots.
+        if self._expiry_candidate_dimensions(candidate_ids) != {
+            hold_id: dimensions[hold_id] for hold_id in candidate_ids
+        }:
+            raise _ExpiryCandidateUnavailable(candidate_ids)
+        for hold_id in sorted(candidate_ids):
             self.env.cr.execute(
                 '''SELECT id
                      FROM loyalty_consign_hold
@@ -176,21 +178,69 @@ class LoyaltyConsignHold(models.Model):
                       FOR UPDATE SKIP LOCKED''',
                 (hold_id, now),
             )
-            if self.env.cr.fetchone():
-                hold_ids.append(hold_id)
-        if not hold_ids:
+            if not self.env.cr.fetchone():
+                raise _ExpiryCandidateUnavailable([hold_id])
+
+    @api.model
+    def _probe_expiry_candidate(self, hold_id, dimensions, now):
+        """Test a candidate without retaining any row lock after the probe."""
+        try:
+            with self.env.cr.savepoint():
+                self._lock_expiry_candidates([hold_id], dimensions, now)
+                raise _ReleaseExpiryProbe()
+        except _ReleaseExpiryProbe:
+            return True
+        except _ExpiryCandidateUnavailable:
+            return False
+
+    @api.model
+    def _cron_expire_holds(self, batch_size=100, now=None):
+        """Expire a bounded priority batch without retaining rejected candidate locks."""
+        batch_size = max(1, min(int(batch_size or 100), _MAX_EXPIRY_BATCH_SIZE))
+        now = now or fields.Datetime.now()
+        candidate_scan_limit = _expiry_candidate_scan_limit(batch_size)
+        self.env.cr.execute(
+            '''SELECT id
+                 FROM loyalty_consign_hold
+                WHERE state = 'active' AND expires_at <= %s
+             ORDER BY expires_at, id
+                LIMIT %s''',
+            (now, candidate_scan_limit),
+        )
+        candidate_ids = [row[0] for row in self.env.cr.fetchall()]
+        if not candidate_ids:
             return 0
-        holds = self.sudo().browse(hold_ids)
-        affected = holds.allocation_line_ids.mapped('aggregate_line_id')
-        holds.with_context(**{
-            _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
-        }).sudo().write({
-            'state': 'expired',
-            'expired_at': now,
-            'transition_user_id': self.env.uid,
-        })
-        affected._reconcile_projection()
-        return len(hold_ids)
+        dimensions = self._expiry_candidate_dimensions(candidate_ids)
+        remaining = list(candidate_ids)
+        while remaining:
+            selected = []
+            for hold_id in remaining:
+                if self._probe_expiry_candidate(hold_id, dimensions, now):
+                    selected.append(hold_id)
+                    if len(selected) == batch_size:
+                        break
+            if not selected:
+                return 0
+            try:
+                with self.env.cr.savepoint():
+                    self._lock_expiry_candidates(selected, dimensions, now)
+                    holds = self.sudo().browse(sorted(selected))
+                    affected = holds.allocation_line_ids.mapped('aggregate_line_id')
+                    holds.with_context(**{
+                        _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
+                    }).sudo().write({
+                        'state': 'expired',
+                        'expired_at': now,
+                        'transition_user_id': self.env.uid,
+                    })
+                    affected._reconcile_projection()
+                return len(selected)
+            except _ExpiryCandidateUnavailable as unavailable:
+                remaining = [
+                    hold_id for hold_id in remaining
+                    if hold_id not in unavailable.candidate_ids
+                ]
+        return 0
 
     @api.constrains(
         'operation_id', 'company_id', 'partner_id', 'source_model', 'source_res_id',
