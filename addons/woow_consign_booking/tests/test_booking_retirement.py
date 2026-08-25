@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import inspect
 from datetime import timedelta
 
 from odoo import fields
 from odoo.tests.common import TransactionCase
+
+from odoo.addons.woow_consign_booking.models.appointment_booking import AppointmentBooking
 
 
 class TestBookingConsignmentRetirement(TransactionCase):
@@ -96,6 +99,19 @@ class TestBookingConsignmentRetirement(TransactionCase):
 
         self.assertEqual(line.reserved_qty, 4)
         self.assertEqual(line.qty_available, 5)
+
+    def test_booking_install_keeps_task6_lifecycle_private_and_unwired(self):
+        engine = self.env['loyalty.consign.engine']
+        for method in ('_capture', '_release', '_reverse_redeem', '_clawback_issue'):
+            with self.subTest(method=method):
+                self.assertTrue(callable(getattr(engine, method, None)))
+        source = inspect.getsource(AppointmentBooking)
+        for private_lifecycle_call in (
+            '_authorize(', '_capture(', '_release(', '_reverse_redeem(',
+            '_clawback_issue(', '_append_movement(',
+        ):
+            with self.subTest(call=private_lifecycle_call):
+                self.assertNotIn(private_lifecycle_call, source)
 
     def test_all_legacy_booking_consign_views_are_inactive(self):
         view_xmlids = (

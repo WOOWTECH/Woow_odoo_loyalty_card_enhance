@@ -81,6 +81,14 @@ class TestConsignConcurrencyContract(TransactionCase):
                 'TASK6_SAME_KEY_CAPTURE_REPLAY=PASS',
                 'TASK6_CLAWBACK_AUTHORIZE_STALE_FENCE=PASS',
             ),
+            'task6_upgrade_lifecycle_probe.py': (
+                'TASK6_UPGRADE_PREPARE=PASS',
+                'TASK6_UPGRADE_ACTIVE_CAPTURED_RELEASED_EXPIRED=PASS',
+                'TASK6_UPGRADE_LEDGER_PROJECTION=PASS',
+                'TASK6_UPGRADE_DEACTIVATION_GUARD=PASS',
+                'TASK6_UPGRADE_CAPTURE_RELEASE_REPLAY=PASS',
+                'TASK6_UPGRADE_LIFECYCLE_PROBE=PASS',
+            ),
         }
         for filename, markers in requirements.items():
             with self.subTest(filename=filename):
@@ -88,8 +96,9 @@ class TestConsignConcurrencyContract(TransactionCase):
                 self.assertTrue(probe.exists())
                 self.assertTrue(os.access(probe, os.X_OK))
                 source = probe.read_text()
-                self.assertIn('SerializationFailure', source)
-                self.assertIn('ValidationError', source)
                 self.assertIn('refuses a non-test database', source)
                 for marker in markers:
                     self.assertIn(marker, source)
+                if filename.endswith('_concurrency_probe.py'):
+                    self.assertIn('SerializationFailure', source)
+                    self.assertIn('ValidationError', source)
