@@ -1,4 +1,8 @@
+import inspect
+
 from odoo.tests.common import TransactionCase
+
+from odoo.addons.woow_loyalty_consign_pos.models.pos_order import PosOrder
 
 
 class TestConsignPosInstall(TransactionCase):
@@ -60,6 +64,20 @@ class TestConsignPosInstall(TransactionCase):
                     ),
                     expected_permissions[access.model_id.model],
                 )
+
+    def test_pos_install_keeps_task6_lifecycle_private_and_unwired(self):
+        engine = self.env['loyalty.consign.engine']
+        for method in ('_capture', '_release', '_reverse_redeem', '_clawback_issue'):
+            with self.subTest(method=method):
+                self.assertTrue(callable(getattr(engine, method, None)))
+        source = inspect.getsource(PosOrder)
+        self.assertNotIn('loyalty.consign.engine', source)
+        for private_lifecycle_call in (
+            '_authorize(', '_capture(', '_release(', '_reverse_redeem(',
+            '_clawback_issue(', '_append_movement(',
+        ):
+            with self.subTest(call=private_lifecycle_call):
+                self.assertNotIn(private_lifecycle_call, source)
 
     def test_redemption_product_reuses_legacy_xmlid(self):
         redemption_product = self.env.ref(
