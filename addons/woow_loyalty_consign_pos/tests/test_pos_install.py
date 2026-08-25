@@ -67,19 +67,23 @@ class TestConsignPosInstall(TransactionCase):
                     expected_permissions[access.model_id.model],
                 )
 
-    def test_pos_install_keeps_task6_lifecycle_private_and_unwired(self):
+    def test_pos_install_routes_only_through_private_lifecycle_commands(self):
         engine = self.env['loyalty.consign.engine']
-        for method in ('_capture', '_release', '_reverse_redeem', '_clawback_issue'):
+        for method in ('_authorize', '_capture', '_release'):
             with self.subTest(method=method):
                 self.assertTrue(callable(getattr(engine, method, None)))
         source = inspect.getsource(PosOrder)
-        self.assertNotIn('loyalty.consign.engine', source)
-        for private_lifecycle_call in (
-            '_authorize(', '_capture(', '_release(', '_reverse_redeem(',
-            '_clawback_issue(', '_append_movement(',
-        ):
-            with self.subTest(call=private_lifecycle_call):
-                self.assertNotIn(private_lifecycle_call, source)
+        self.assertIn("self.env['loyalty.consign.engine']", source)
+        self.assertIn('_authorize(', source)
+        self.assertIn('_capture(', source)
+        self.assertIn('_release(', source)
+        self.assertNotIn('loyalty.consign.redemption', source)
+        self.assertNotIn('_append_movement(', source)
+
+    def test_pos_consign_feature_is_disabled_by_default(self):
+        self.assertFalse(
+            self.env['pos.config'].new({}).enable_consign_redemption
+        )
 
     def test_redemption_product_reuses_legacy_xmlid(self):
         redemption_product = self.env.ref(
