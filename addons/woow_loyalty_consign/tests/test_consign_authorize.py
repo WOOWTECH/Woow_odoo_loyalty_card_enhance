@@ -138,6 +138,17 @@ class TestConsignAuthorize(TransactionCase):
             ])
         self.assertEqual(self.env['loyalty.consign.operation'].search_count([]), before)
 
+    def test_duplicate_fractional_requests_round_once_after_aggregation(self):
+        issue = self._issue('test:authorize:fractional:issue', quantity=1)
+        card = issue.movement_ids.card_id
+        operation = self._authorize('test:authorize:fractional', [
+            self._request(card, quantity=0.006),
+            self._request(card, quantity=0.006),
+        ])
+        allocation = operation.hold_ids.allocation_line_ids
+        self.assertEqual(len(allocation), 1)
+        self.assertEqual(allocation.quantity, 0.01)
+
     def test_pure_validation_rejects_owner_company_state_uom_and_forged_authority(self):
         issue = self._issue('test:authorize:validation:issue')
         card = issue.movement_ids.card_id
@@ -230,6 +241,62 @@ class TestConsignAuthorize(TransactionCase):
                 'test:authorize:replay',
                 [self._request(issue.movement_ids.card_id, quantity=3)],
             )
+
+    def test_completed_replay_survives_later_card_or_program_deactivation(self):
+        card_issue = self._issue('test:authorize:replay:card:issue')
+        card = card_issue.movement_ids.card_id
+        card_operation = self._authorize(
+            'test:authorize:replay:card', [self._request(card, quantity=2)],
+        )
+        card.active = False
+        self.assertEqual(
+            self._authorize(
+                'test:authorize:replay:card', [self._request(card, quantity=2)],
+            ),
+            card_operation,
+        )
+        with self.assertRaisesRegex(ValidationError, 'different payload'):
+            self._authorize(
+                'test:authorize:replay:card', [self._request(card, quantity=3)],
+            )
+        card.active = True
+
+        program_issue = self._issue('test:authorize:replay:program:issue')
+        program_card = program_issue.movement_ids.card_id
+        program_operation = self._authorize(
+            'test:authorize:replay:program', [self._request(program_card, quantity=2)],
+        )
+        program_card.program_id.active = False
+        self.assertEqual(
+            self._authorize(
+                'test:authorize:replay:program',
+                [self._request(program_card, quantity=2)],
+            ),
+            program_operation,
+        )
+
+    def test_expiration_cron_processes_multiple_expired_holds_in_one_bounded_batch(self):
+        first = self._issue('test:authorize:cron:batch:first', quantity=2)
+        second = self._issue(
+            'test:authorize:cron:batch:second', quantity=2,
+            program=self.second_program,
+        )
+        first_hold = self._authorize(
+            'test:authorize:cron:batch:first:hold',
+            [self._request(first.movement_ids.card_id, quantity=1)],
+        ).hold_ids
+        second_hold = self._authorize(
+            'test:authorize:cron:batch:second:hold',
+            [self._request(second.movement_ids.card_id, quantity=1)],
+        ).hold_ids
+        now = fields.Datetime.now()
+        (first_hold | second_hold)._write_from_engine({
+            'expires_at': now - timedelta(seconds=1),
+        })
+        self.assertEqual(
+            self.env['loyalty.consign.hold']._cron_expire_holds(batch_size=2, now=now), 2,
+        )
+        self.assertEqual((first_hold | second_hold).mapped('state'), ['expired', 'expired'])
 
     def test_expiration_cron_is_bounded_idempotent_and_leaves_future_hold(self):
         cron = self.env.ref('woow_loyalty_consign.ir_cron_expire_consign_holds')

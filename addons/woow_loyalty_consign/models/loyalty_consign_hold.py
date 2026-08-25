@@ -103,49 +103,64 @@ class LoyaltyConsignHold(models.Model):
         candidate_ids = [row[0] for row in self.env.cr.fetchall()]
         if not candidate_ids:
             return 0
+        # A failed SKIP LOCKED acquisition excludes only candidates using that
+        # dimension. Other independent candidates remain eligible in this bounded
+        # run, while every acquired dimension still follows card -> line -> Hold.
         self.env.cr.execute(
-            '''SELECT DISTINCT allocation.aggregate_line_id
+            '''SELECT allocation.hold_id, allocation.aggregate_line_id, line.card_id
                  FROM loyalty_consign_hold_allocation allocation
+                 JOIN loyalty_consign_line line
+                   ON line.id = allocation.aggregate_line_id
                 WHERE allocation.hold_id = ANY(%s)
-             ORDER BY allocation.aggregate_line_id''',
+             ORDER BY allocation.hold_id, line.card_id, allocation.aggregate_line_id''',
             (candidate_ids,),
         )
-        line_ids = [row[0] for row in self.env.cr.fetchall()]
-        if line_ids:
+        dimensions = {}
+        for hold_id, line_id, card_id in self.env.cr.fetchall():
+            dimensions.setdefault(hold_id, {'cards': set(), 'lines': set()})
+            dimensions[hold_id]['cards'].add(card_id)
+            dimensions[hold_id]['lines'].add(line_id)
+        skipped = set()
+        card_candidates = {}
+        for hold_id, dimension in dimensions.items():
+            for card_id in dimension['cards']:
+                card_candidates.setdefault(card_id, set()).add(hold_id)
+        for card_id in sorted(card_candidates):
             self.env.cr.execute(
-                '''SELECT DISTINCT line.card_id
-                     FROM loyalty_consign_line line
-                    WHERE line.id = ANY(%s)
-                 ORDER BY line.card_id''',
-                (line_ids,),
+                '''SELECT id FROM loyalty_card WHERE id = %s
+                    FOR UPDATE SKIP LOCKED''',
+                (card_id,),
             )
-            card_ids = [row[0] for row in self.env.cr.fetchall()]
-            for card_id in card_ids:
-                self.env.cr.execute(
-                    '''SELECT id FROM loyalty_card WHERE id = %s
-                        FOR UPDATE SKIP LOCKED''',
-                    (card_id,),
-                )
-                if not self.env.cr.fetchone():
-                    return 0
-            for line_id in sorted(line_ids):
-                self.env.cr.execute(
-                    '''SELECT id FROM loyalty_consign_line WHERE id = %s
-                        FOR UPDATE SKIP LOCKED''',
-                    (line_id,),
-                )
-                if not self.env.cr.fetchone():
-                    return 0
-        self.env.cr.execute(
-            '''SELECT id
-                 FROM loyalty_consign_hold
-                WHERE id = ANY(%s)
-                  AND state = 'active' AND expires_at <= %s
-             ORDER BY id
-                  FOR UPDATE SKIP LOCKED''',
-            (candidate_ids, now),
-        )
-        hold_ids = [row[0] for row in self.env.cr.fetchall()]
+            if not self.env.cr.fetchone():
+                skipped.update(card_candidates[card_id])
+        line_candidates = {}
+        for hold_id, dimension in dimensions.items():
+            if hold_id in skipped:
+                continue
+            for line_id in dimension['lines']:
+                line_candidates.setdefault(line_id, set()).add(hold_id)
+        for line_id in sorted(line_candidates):
+            self.env.cr.execute(
+                '''SELECT id FROM loyalty_consign_line WHERE id = %s
+                    FOR UPDATE SKIP LOCKED''',
+                (line_id,),
+            )
+            if not self.env.cr.fetchone():
+                skipped.update(line_candidates[line_id])
+        hold_ids = []
+        for hold_id in candidate_ids:
+            if hold_id in skipped:
+                continue
+            self.env.cr.execute(
+                '''SELECT id
+                     FROM loyalty_consign_hold
+                    WHERE id = %s
+                      AND state = 'active' AND expires_at <= %s
+                      FOR UPDATE SKIP LOCKED''',
+                (hold_id, now),
+            )
+            if self.env.cr.fetchone():
+                hold_ids.append(hold_id)
         if not hold_ids:
             return 0
         holds = self.sudo().browse(hold_ids)

@@ -360,6 +360,7 @@ class LoyaltyConsignEngine(models.AbstractModel):
 
     @api.model
     def _normalize_authorization_requests(self, requests, company, partner):
+        """Canonicalize request facts without consulting mutable card state."""
         if not isinstance(requests, (list, tuple)) or not requests:
             raise ValidationError('At least one positive authorization request is required.')
         forbidden = {
@@ -398,6 +399,49 @@ class LoyaltyConsignEngine(models.AbstractModel):
             card.check_access('read')
             product.check_access('read')
             request_uom.check_access('read')
+            raw_quantity = request.get(
+                'quantity', request.get('qty', request.get('requested_quantity', 0.0)),
+            )
+            quantity = request_uom._compute_quantity(
+                raw_quantity, product.uom_id, round=False,
+            )
+            key = (card.id, product.id, product.uom_id.id)
+            if key not in aggregated:
+                aggregated[key] = {
+                    'card_id': card.id,
+                    'product_id': product.id,
+                    'product_uom_id': product.uom_id.id,
+                    'request_uom_ids': set(),
+                    'quantity': 0.0,
+                }
+            aggregated[key]['request_uom_ids'].add(request_uom.id)
+            aggregated[key]['quantity'] += quantity
+        normalized = []
+        for key in sorted(aggregated):
+            item = aggregated[key]
+            product = self.env['product.product'].browse(item['product_id'])
+            item['quantity'] = float_round(
+                item['quantity'], precision_rounding=product.uom_id.rounding,
+            )
+            if float_compare(
+                item['quantity'], 0.0,
+                precision_rounding=product.uom_id.rounding,
+            ) <= 0:
+                raise ValidationError(
+                    'Authorization quantity must be positive after UoM rounding.'
+                )
+            item['request_uom_ids'] = sorted(item['request_uom_ids'])
+            normalized.append(item)
+        return normalized
+
+    @api.model
+    def _validate_authorization_dimensions(self, normalized, company, partner):
+        """Validate mutable command dimensions before opening a new journal row."""
+        for item in normalized:
+            card = self.env['loyalty.card'].sudo().browse(item['card_id']).exists()
+            product = self.env['product.product'].sudo().browse(item['product_id']).exists()
+            if not card or not product:
+                raise ValidationError('The authorization card or product no longer exists.')
             if not card.active or not card.is_consign:
                 raise ValidationError('Authorization requires an active consignment card.')
             if not card.partner_id or card.partner_id != partner:
@@ -417,24 +461,13 @@ class LoyaltyConsignEngine(models.AbstractModel):
                 )
             if product.company_id and product.company_id != company:
                 raise ValidationError('The authorization product belongs to another company.')
-            if product.uom_id.category_id != request_uom.category_id:
+            request_uoms = self.env['uom.uom'].sudo().browse(item['request_uom_ids'])
+            if len(request_uoms) != len(item['request_uom_ids']) or any(
+                request_uom.category_id != product.uom_id.category_id
+                for request_uom in request_uoms
+            ):
                 raise ValidationError(
                     'The authorization product and UoM must have the same category.'
-                )
-            raw_quantity = request.get(
-                'quantity', request.get('qty', request.get('requested_quantity', 0.0)),
-            )
-            quantity = request_uom._compute_quantity(
-                raw_quantity, product.uom_id, round=False,
-            )
-            quantity = float_round(
-                quantity, precision_rounding=product.uom_id.rounding,
-            )
-            if float_compare(
-                quantity, 0.0, precision_rounding=product.uom_id.rounding,
-            ) <= 0:
-                raise ValidationError(
-                    'Authorization quantity must be positive after UoM rounding.'
                 )
             projection = self.env['loyalty.consign.line'].sudo().search([
                 ('card_id', '=', card.id),
@@ -445,23 +478,37 @@ class LoyaltyConsignEngine(models.AbstractModel):
                 raise ValidationError(
                     'The exact card, product variant, and base UoM projection is missing.'
                 )
-            key = (card.id, product.id, product.uom_id.id)
-            if key not in aggregated:
-                aggregated[key] = {
-                    'card_id': card.id,
-                    'product_id': product.id,
-                    'product_uom_id': product.uom_id.id,
-                    'projection_id': projection.id,
-                    'quantity': 0.0,
-                }
-            aggregated[key]['quantity'] = float_round(
-                aggregated[key]['quantity'] + quantity,
-                precision_rounding=product.uom_id.rounding,
-            )
-        return [aggregated[key] for key in sorted(aggregated)]
+            item['projection_id'] = projection.id
 
     @api.model
-    def _lock_authorization_dimensions(self, normalized):
+    def _find_completed_authorization_replay(
+        self, company, partner, source_snapshot, idempotency_key, identity_requests,
+    ):
+        """Return an exact completed replay before mutable state validation."""
+        operation_model = self.env['loyalty.consign.operation']
+        _canonical, payload_hash = operation_model._canonical_payload({
+            'operation_type': 'authorize',
+            'partner_id': partner.id,
+            'source_model': source_snapshot['model'],
+            'source_res_id': source_snapshot['res_id'],
+            'payload': {'requests': identity_requests},
+        })
+        operation = operation_model.sudo().search([
+            ('company_id', '=', company.id),
+            ('idempotency_key', '=', idempotency_key),
+        ], limit=1)
+        if not operation:
+            return False
+        if operation.payload_hash != payload_hash:
+            raise ValidationError(
+                'The idempotency key was already used with a different payload.'
+            )
+        if operation.state == 'done' and len(operation.hold_ids) == 1:
+            return operation_model.browse(operation.ids)
+        return False
+
+    @api.model
+    def _lock_authorization_dimensions(self, normalized, company, partner):
         card_ids = sorted({item['card_id'] for item in normalized})
         projection_ids = sorted({item['projection_id'] for item in normalized})
         for card_id in card_ids:
@@ -489,6 +536,10 @@ class LoyaltyConsignEngine(models.AbstractModel):
             line = projections.browse(item['projection_id'])
             if (
                 not card.active or not card.is_consign
+                or not card.partner_id or card.partner_id != partner
+                or not card.company_id or not card.program_id.company_id
+                or card.company_id != company or card.program_id.company_id != company
+                or not card.program_id.active or card.program_id.program_type != 'consign'
                 or line.card_id != card or line.partner_id != card.partner_id
                 or line.product_id.id != item['product_id']
                 or line.product_uom_id.id != item['product_uom_id']
@@ -517,7 +568,7 @@ class LoyaltyConsignEngine(models.AbstractModel):
             '''SELECT id
                  FROM loyalty_consign_movement
                 WHERE aggregate_line_id = ANY(%s)
-             ORDER BY occurred_at, id
+             ORDER BY id
                   FOR UPDATE''',
             (projection_ids,),
         )
@@ -593,9 +644,16 @@ class LoyaltyConsignEngine(models.AbstractModel):
             'product_uom_id': item['product_uom_id'],
             'quantity': item['quantity'],
         } for item in normalized]
+        replay = self._find_completed_authorization_replay(
+            company, partner, source_snapshot, idempotency_key, identity_requests,
+        )
+        if replay:
+            return replay
 
-        # All source, owner, company, card, product, UoM, projection, and
-        # quantity checks above are pure and precede operation/Hold insertion.
+        # Canonicalization above is intentionally independent of later mutable
+        # card/program state so exact completed replays remain durable. Every
+        # new command validates all mutable dimensions before opening its journal.
+        self._validate_authorization_dimensions(normalized, company, partner)
         operation, replay = self.env['loyalty.consign.operation']._open_command(
             operation_type='authorize',
             company=company,
@@ -612,7 +670,9 @@ class LoyaltyConsignEngine(models.AbstractModel):
                 raise ValidationError('The replayed authorization command is not complete.')
             return operation
 
-        cards, projections = self._lock_authorization_dimensions(normalized)
+        cards, projections = self._lock_authorization_dimensions(
+            normalized, company, partner,
+        )
         plan = self._authorization_allocation_plan(normalized, projections)
         now = fields.Datetime.now()
         hold = self.env['loyalty.consign.hold']._create_from_engine({

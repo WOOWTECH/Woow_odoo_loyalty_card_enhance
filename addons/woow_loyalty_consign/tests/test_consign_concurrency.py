@@ -26,6 +26,9 @@ class TestConsignConcurrencyContract(TransactionCase):
         self.assertLess(projection, hold)
         self.assertLess(hold, issue)
         self.assertLess(issue, allocation)
+        movement_lock = engine[issue:allocation]
+        self.assertIn('ORDER BY id\n                  FOR UPDATE', movement_lock)
+        self.assertNotIn('ORDER BY occurred_at, id\n                  FOR UPDATE', movement_lock)
         self.assertIn('_open_command(', engine)
         self.assertIn('_authorization_allocation_plan', engine)
 
@@ -52,6 +55,7 @@ class TestConsignConcurrencyContract(TransactionCase):
             'TASK5_SAME_KEY_REPLAY=PASS',
             'TASK5_AUTHORIZE_REVERSAL_RACE=PASS',
             'TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS',
+            'TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS',
             'TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS',
             'refuses a non-test database',
         ):

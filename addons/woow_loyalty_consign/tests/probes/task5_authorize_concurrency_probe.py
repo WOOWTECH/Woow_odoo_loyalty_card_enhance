@@ -42,6 +42,16 @@ product_id = product.id
 card_id = issue.result_json['card_id']
 line_id = issue.result_json['projection_ids'][0]
 issue_id = issue.movement_ids.id
+second_program = env['loyalty.program'].create({
+    'name': 'Task5 Concurrent Second Program', 'program_type': 'consign', 'active': True,
+    'company_id': company_id, 'currency_id': env.company.currency_id.id,
+})
+second_issue = env['loyalty.consign.engine']._issue(
+    source=partner, partner=partner, program=second_program,
+    grants=[{'product': product, 'quantity': 1}],
+    idempotency_key=f'task5:probe:second-issue:{partner.id}',
+)
+second_card_id = second_issue.result_json['card_id']
 env.cr.commit()
 
 
@@ -129,12 +139,25 @@ with registry.cursor() as same_retry_cr:
     assert len(replay.hold_ids) == 1
     same_retry_cr.commit()
 
-# Expiry workers skip a Hold already locked by another cursor, then a fresh
-# bounded run expires it exactly once and a repeat is idempotent.
+# A locked earliest Hold cannot starve an unrelated later candidate. The
+# bounded worker skips the locked Hold, expires the other one, then a fresh run
+# expires the formerly locked Hold exactly once and remains idempotent.
 with registry.cursor() as expiry_setup_cr:
     expiry_setup_env = api.Environment(expiry_setup_cr, SUPERUSER_ID, {})
+    # This command intentionally targets the second card to keep dimensions unrelated.
+    expiry_other = expiry_setup_env['loyalty.consign.engine']._authorize(
+        source=expiry_setup_env['res.partner'].browse(partner_id),
+        partner=expiry_setup_env['res.partner'].browse(partner_id),
+        requests=[{
+            'card_id': second_card_id, 'product_id': product_id,
+            'uom_id': expiry_setup_env['product.product'].browse(product_id).uom_id.id,
+            'quantity': 1,
+        }],
+        idempotency_key=f'task5:probe:authorize:expiry-other-card:{partner_id}',
+    )
+    expiry_other_hold_id = expiry_other.result_json['hold_id']
     expiry_setup_env['loyalty.consign.hold'].browse(
-        winner_hold_id
+        [winner_hold_id, expiry_other_hold_id]
     )._write_from_engine({
         'expires_at': fields.Datetime.now() - timedelta(seconds=1),
     })
@@ -147,14 +170,16 @@ expiry_blocker.execute(
 expiry_blocker.fetchone()
 with registry.cursor() as skipped_cr:
     skipped_env = api.Environment(skipped_cr, SUPERUSER_ID, {})
-    assert skipped_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 0
+    assert skipped_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 1
+    assert skipped_env['loyalty.consign.hold'].browse(winner_hold_id).state == 'active'
+    assert skipped_env['loyalty.consign.hold'].browse(expiry_other_hold_id).state == 'expired'
     skipped_cr.commit()
 expiry_blocker.rollback()
 expiry_blocker.close()
 with registry.cursor() as expiry_cr:
     expiry_env = api.Environment(expiry_cr, SUPERUSER_ID, {})
-    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 1
-    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 0
+    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 1
+    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 0
     expiry_cr.commit()
 
 # Authorize versus issue reversal: the stale authorization loses; after outer
@@ -212,5 +237,6 @@ print('TASK5_ONE_HOLD_AVAILABLE_FOUR=PASS')
 print('TASK5_SAME_KEY_REPLAY=PASS')
 print('TASK5_AUTHORIZE_REVERSAL_RACE=PASS')
 print('TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS')
+print('TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS')
 print('TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS')
 print('TASK5_CONCURRENCY_PROBE=PASS')
