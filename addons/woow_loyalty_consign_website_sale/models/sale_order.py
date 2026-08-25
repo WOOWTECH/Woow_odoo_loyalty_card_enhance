@@ -45,11 +45,44 @@ class SaleOrder(models.Model):
             order.consign_allocation_warning = warnings
         return self.consign_allocation_warning
 
+    def _release_website_consign_holds(self):
+        """Trusted cart lifecycle seam; never exposed through RPC."""
+        self.ensure_one()
+        holds = self.env['loyalty.consign.hold'].sudo().search([
+            ('state', '=', 'active'), ('source_model', '=', self._name),
+            ('source_res_id', '=', self.id),
+        ])
+        engine = self.env['loyalty.consign.engine']
+        for hold in holds:
+            engine._release(self, self.partner_id, hold, 'website-cart-release-%s-%s' % (self.id, hold.id))
+
     def _invalidate_consign_allocations(self):
         self.ensure_one()
+        self._release_website_consign_holds()
         self.sudo().write({'consign_allocation_version': self.consign_allocation_version + 1})
         self.env['sale.order.consign.coverage'].sudo().search([('order_id', '=', self.id)]).unlink()
         return self._revalidate_consign_allocations()
+
+    def _set_website_consign_allocation(self, card_id, product_id, quantity):
+        self.ensure_one()
+        if not self.website_id.consign_redemption_enabled:
+            raise ValidationError(_('Consignment redemption is not enabled for this website.'))
+        card = self.env['loyalty.card'].browse(card_id).exists()
+        product = self.env['product.product'].browse(product_id).exists()
+        if not card or not product or self.partner_id != self.env.user.partner_id:
+            raise ValidationError(_('The requested card or product is unavailable.'))
+        if card.partner_id != self.partner_id or card.company_id != self.company_id or (product.company_id and product.company_id != self.company_id):
+            raise ValidationError(_('The selected card, product, and cart must belong to one customer and company.'))
+        if not self._consign_eligible_lines(product) or quantity <= 0:
+            raise ValidationError(_('The selected product is not eligible in this cart.'))
+        self._invalidate_consign_allocations()
+        allocation = self.env['sale.order.consign.allocation'].sudo().search([('order_id','=',self.id),('card_id','=',card.id),('product_id','=',product.id),('product_uom_id','=',product.uom_id.id)], limit=1)
+        vals = {'requested_qty': quantity, 'version': self.consign_allocation_version}
+        if allocation:
+            allocation.write(vals)
+        else:
+            allocation = self.env['sale.order.consign.allocation'].sudo().create(dict(vals, order_id=self.id, card_id=card.id, product_id=product.id, product_uom_id=product.uom_id.id))
+        return {'allocation_id': allocation.id, 'version': self.consign_allocation_version, 'warnings': self._revalidate_consign_allocations()}
 
     def _cart_update(self, *args, **kwargs):
         result = super()._cart_update(*args, **kwargs)
