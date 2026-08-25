@@ -63,11 +63,16 @@ class TestConsignPaidIssuance(TransactionCase):
         order = self._order(2)
         order.action_confirm()
         invoice = order._create_invoices()
-        # Account owns this computed state.  The adapter test calls the same
-        # durable hook after the account payment tests have transitioned it.
-        invoice.with_context(check_move_validity=False).write({
-            'state': 'posted', 'payment_state': 'paid',
-        })
+        # Account owns this computed state.  Post normally, then simulate its
+        # durable settled result rather than attempting to write a computed
+        # payment_state through the ORM.
+        invoice.action_post()
+        self.env.cr.execute(
+            'UPDATE account_move SET payment_state = %s WHERE id = %s',
+            ('paid', invoice.id),
+        )
+        invoice.invalidate_recordset(['payment_state'])
+        self.assertEqual(invoice.payment_state, 'paid')
         invoice._issue_consign_paid_invoice_grants()
         invoice._issue_consign_paid_invoice_grants()
         movements = order.consign_source_movement_ids
