@@ -95,6 +95,32 @@ class TestConsignAuthorize(TransactionCase):
         self.assertEqual(operation.result_json['hold_id'], hold.id)
         self.assertEqual(operation.result_json['card_ids'], card.ids)
 
+    def test_fifo_allocation_uses_occurrence_before_movement_id_lock_order(self):
+        first = self._issue('test:authorize:fifo:occurred:first', quantity=3)
+        line = first.movement_ids.aggregate_line_id
+        second = self.env['loyalty.consign.movement']._append_movement(
+            aggregate_line=line,
+            movement_type='issue',
+            quantity=3,
+            source_channel='manual',
+            source_model=line._name,
+            source_res_id=line.id,
+            source_name='Earlier Task 5 FIFO issue',
+            idempotency_key='test:authorize:fifo:occurred:second',
+            occurred_at=first.movement_ids.occurred_at - timedelta(days=1),
+        )
+        self.assertLess(first.movement_ids.id, second.id)
+        self.assertLess(second.occurred_at, first.movement_ids.occurred_at)
+
+        operation = self._authorize(
+            'test:authorize:fifo:occurred:authorize',
+            [self._request(first.movement_ids.card_id, quantity=2)],
+        )
+        allocation = operation.hold_ids.allocation_line_ids
+        self.assertEqual(len(allocation), 1)
+        self.assertEqual(allocation.issue_movement_id, second)
+        self.assertEqual(allocation.quantity, 2)
+
     def test_one_hold_supports_multiple_cards_and_products(self):
         first = self._issue('test:authorize:multi:first', quantity=4)
         second = self._issue(
