@@ -5,7 +5,11 @@ class TestConsignRendering(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        partner = cls.env['res.partner'].create({'name': 'Rendered Recipient', 'email': 'recipient@example.test'})
+        partner = cls.env['res.partner'].create({
+            'name': 'Rendered Recipient',
+            'email': 'recipient@example.test',
+            'company_id': cls.env.company.id,
+        })
         program = cls.env['loyalty.program'].create({
             'name': 'Rendering Consign', 'program_type': 'consign', 'company_id': cls.env.company.id,
             'currency_id': cls.env.company.currency_id.id,

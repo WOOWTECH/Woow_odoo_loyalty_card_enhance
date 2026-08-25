@@ -12,7 +12,9 @@ class TestConsignWebsiteCheckout(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.partner = cls.env['res.partner'].create({'name': 'Website checkout owner'})
+        cls.partner = cls.env['res.partner'].create({
+            'name': 'Website checkout owner', 'company_id': cls.env.company.id,
+        })
         cls.product = cls.env['product.product'].create({
             'name': 'Website checkout product', 'type': 'service', 'list_price': 100,
         })
