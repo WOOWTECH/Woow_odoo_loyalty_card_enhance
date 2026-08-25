@@ -73,20 +73,14 @@ class TestConsignGrants(TransactionCase):
         })
 
     def _confirm_and_pay(self, order):
-        """Exercise the trusted paid-invoice boundary without a payment provider.
-
-        ``payment_state`` is computed by account and cannot be made durable by
-        ``write``.  Post the invoice normally, then simulate account's settled
-        state at SQL level and invalidate only that cached computed field.
-        The adapter itself still validates the stored posted/paid state.
-        """
+        """Settle the invoice through account's real payment workflow."""
         order.action_confirm()
         invoice = order._create_invoices()
         invoice.action_post()
-        self.env.cr.execute(
-            'UPDATE account_move SET payment_state = %s WHERE id = %s',
-            ('paid', invoice.id),
-        )
+        register = self.env['account.payment.register'].with_context(
+            active_model='account.move', active_ids=invoice.ids,
+        ).create({})
+        register.action_create_payments()
         invoice.invalidate_recordset(['payment_state'])
         self.assertEqual(invoice.state, 'posted')
         self.assertEqual(invoice.payment_state, 'paid')

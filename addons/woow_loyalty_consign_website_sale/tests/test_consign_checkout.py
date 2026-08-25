@@ -16,7 +16,10 @@ class TestConsignWebsiteCheckout(TransactionCase):
             'name': 'Website checkout owner', 'company_id': cls.env.company.id,
         })
         cls.product = cls.env['product.product'].create({
-            'name': 'Website checkout product', 'type': 'service', 'list_price': 100,
+            'name': 'Website checkout product',
+            'type': 'service',
+            'list_price': 100,
+            'company_id': cls.env.company.id,
         })
         cls.program = cls.env['loyalty.program'].create({
             'name': 'Website checkout program', 'program_type': 'consign',
@@ -33,6 +36,7 @@ class TestConsignWebsiteCheckout(TransactionCase):
         )
         order = self.env['sale.order'].create({
             'partner_id': self.partner.id,
+            'company_id': self.env.company.id,
             'order_line': [(0, 0, {
                 'product_id': self.product.id, 'product_uom_qty': quantity,
                 'product_uom': self.product.uom_id.id, 'price_unit': 100,
