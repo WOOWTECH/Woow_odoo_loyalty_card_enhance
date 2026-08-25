@@ -72,6 +72,15 @@ class TestConsignGrants(TransactionCase):
             'order_line': order_lines,
         })
 
+    def _confirm_and_pay(self, order):
+        order.action_confirm()
+        invoice = order._create_invoices()
+        invoice.with_context(check_move_validity=False).write({
+            'state': 'posted', 'payment_state': 'paid',
+        })
+        invoice._issue_consign_paid_invoice_grants()
+        return invoice
+
     def _non_base_uom(self, name, product, uom_type, ratio):
         vals = {
             'name': name,
@@ -119,7 +128,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 1.0)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         issued = self._issued_lines(program, order)
         self.assertEqual(set(issued.product_id.ids), {
@@ -157,7 +166,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 2.0)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         issued = self._issued_lines(program, order)
         self.assertEqual(issued.qty_deposited, 6.0)
@@ -172,7 +181,7 @@ class TestConsignGrants(TransactionCase):
         )
 
         with notification_patch:
-            order.action_confirm()
+            self._confirm_and_pay(order)
 
         self.assertEqual(len(notification_contexts), 1)
         self.assertFalse(notification_contexts[0].get('loyalty_no_mail'))
@@ -191,7 +200,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 2.0, trigger_dozen)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         # 2 trigger dozens = 24 base triggers; each grants 0.5 entitlement
         # dozen = 6 base entitlements, for 144 base entitlements total.
@@ -210,7 +219,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 20.0, trigger_tenth)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         # 20 trigger tenths = 2 base triggers; each grants 30 entitlement
         # tenths = 3 base entitlements, for 6 base entitlements total.
@@ -226,7 +235,7 @@ class TestConsignGrants(TransactionCase):
             (self.unrelated, 7.0),
         ])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         issued = self._issued_lines(program, order)
         self.assertEqual(issued.product_id, self.treatment)
@@ -244,7 +253,7 @@ class TestConsignGrants(TransactionCase):
         })
         order = self._order([(self.trigger, 1.0)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         self.assertFalse(self.env['loyalty.card'].search([
             ('program_id', '=', program.id),
@@ -258,7 +267,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 1.0)])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         issued = self._issued_lines(program, order)
         self.assertEqual(len(issued), 1)
@@ -280,8 +289,8 @@ class TestConsignGrants(TransactionCase):
         )
 
         with notification_patch:
-            first_order.action_confirm()
-            second_order.action_confirm()
+            self._confirm_and_pay(first_order)
+            self._confirm_and_pay(second_order)
 
         cards = self.env['loyalty.card'].search([
             ('program_id', '=', program.id),
@@ -317,10 +326,10 @@ class TestConsignGrants(TransactionCase):
             (self.treatment, self.treatment.uom_id, 2.0),
         ])
         order = self._order([(self.trigger, 1.0)])
-        order.action_confirm()
+        invoice = self._confirm_and_pay(order)
         movement = self._issued_lines(program, order).movement_ids
 
-        order._action_create_consign_card()
+        invoice._issue_consign_paid_invoice_grants()
 
         self.assertEqual(
             self.env['loyalty.consign.movement'].search_count([
@@ -344,7 +353,7 @@ class TestConsignGrants(TransactionCase):
             (self.unrelated, 9.0),
         ])
 
-        order.action_confirm()
+        self._confirm_and_pay(order)
 
         first_lines = self._issued_lines(first_program, order)
         second_lines = self._issued_lines(second_program, order)
