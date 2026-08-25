@@ -240,7 +240,7 @@ clawback_stale.execute('SELECT count(*) FROM res_partner')
 clawback_stale.fetchone()
 with registry.cursor() as winner_cr:
     winner_env = api.Environment(winner_cr, SUPERUSER_ID, {})
-    winner_env['loyalty.consign.engine']._authorize(
+    winner_authorization = winner_env['loyalty.consign.engine']._authorize(
         source=winner_env['res.partner'].browse(partner_id),
         partner=winner_env['res.partner'].browse(partner_id),
         requests=[{
@@ -251,6 +251,7 @@ with registry.cursor() as winner_cr:
         }],
         idempotency_key='task6:probe:clawback:authorize',
     )
+    race_authorize_hold_id = winner_authorization.hold_ids.id
     winner_cr.commit()
 try:
     api.Environment(clawback_stale, SUPERUSER_ID, {})['loyalty.consign.engine']._clawback_issue(
@@ -289,6 +290,95 @@ with registry.cursor() as check_cr:
     ]) == 0
     check_cr.commit()
 
+# Capture versus clawback uses the exact linked issue.  Capture locks that
+# issue operation before its projection; the stale clawback therefore fences
+# on the same durable token instead of forming an inverse lock cycle.  Its
+# fresh retry can claw back only the exact post-capture remainder.
+with registry.cursor() as release_cr:
+    release_env = api.Environment(release_cr, SUPERUSER_ID, {})
+    lifecycle(
+        release_env, 'release', race_authorize_hold_id,
+        'task6:probe:capture-clawback:release-prior-hold',
+    )
+    release_cr.commit()
+with registry.cursor() as setup_cr:
+    setup_env = api.Environment(setup_cr, SUPERUSER_ID, {})
+    capture_authorization = setup_env['loyalty.consign.engine']._authorize(
+        source=setup_env['res.partner'].browse(partner_id),
+        partner=setup_env['res.partner'].browse(partner_id),
+        requests=[{
+            'card_id': card_id,
+            'product_id': race_product_id,
+            'uom_id': setup_env['product.product'].browse(race_product_id).uom_id.id,
+            'quantity': 6,
+        }],
+        idempotency_key='task6:probe:capture-clawback:authorize',
+    )
+    capture_clawback_hold_id = capture_authorization.hold_ids.id
+    setup_cr.commit()
+clawback_stale = registry.cursor()
+clawback_stale.execute('SELECT count(*) FROM res_partner')
+clawback_stale.fetchone()
+with registry.cursor() as winner_cr:
+    winner_env = api.Environment(winner_cr, SUPERUSER_ID, {})
+    capture = lifecycle(
+        winner_env, 'capture', capture_clawback_hold_id,
+        'task6:probe:capture-clawback:capture',
+    )
+    assert len(capture.movement_ids) == 1
+    assert capture.movement_ids.quantity == 6
+    winner_cr.commit()
+try:
+    stale_env = api.Environment(clawback_stale, SUPERUSER_ID, {})
+    stale_env['loyalty.consign.engine']._clawback_issue(
+        source=stale_env['res.partner'].browse(partner_id),
+        partner=stale_env['res.partner'].browse(partner_id),
+        issue_movement=stale_env['loyalty.consign.movement'].browse(race_issue_id),
+        quantity=4,
+        idempotency_key='task6:probe:capture-clawback:clawback',
+    )
+except SerializationFailure:
+    clawback_stale.rollback()
+else:
+    raise AssertionError('Capture/clawback stale transaction was not fenced.')
+finally:
+    clawback_stale.close()
+with registry.cursor() as retry_cr:
+    retry_env = api.Environment(retry_cr, SUPERUSER_ID, {})
+    clawback = retry_env['loyalty.consign.engine']._clawback_issue(
+        source=retry_env['res.partner'].browse(partner_id),
+        partner=retry_env['res.partner'].browse(partner_id),
+        issue_movement=retry_env['loyalty.consign.movement'].browse(race_issue_id),
+        quantity=4,
+        idempotency_key='task6:probe:capture-clawback:clawback',
+    )
+    assert clawback.movement_ids.movement_type == 'issue_reversal'
+    assert clawback.movement_ids.quantity == 4
+    retry_cr.commit()
+with registry.cursor() as check_cr:
+    check_env = api.Environment(check_cr, SUPERUSER_ID, {})
+    line = check_env['loyalty.consign.line'].browse(line_id)
+    issue = check_env['loyalty.consign.movement'].browse(race_issue_id)
+    states = check_env['loyalty.consign.movement']._fifo_issue_availability(
+        line, include_active_holds=False,
+    )
+    issue_capacity = next(
+        state['available'] for state in states if state['issue'] == issue
+    )
+    assert check_env['loyalty.consign.hold'].browse(capture_clawback_hold_id).state == 'captured'
+    assert line.qty_on_hold == 0 and line.qty_available == 0
+    assert issue_capacity == 0
+    assert check_env['loyalty.consign.movement'].search_count([
+        ('operation_id.idempotency_key', '=', 'task6:probe:capture-clawback:capture'),
+    ]) == 1
+    assert check_env['loyalty.consign.movement'].search_count([
+        ('operation_id.idempotency_key', '=', 'task6:probe:capture-clawback:clawback'),
+    ]) == 1
+    assert check_env['loyalty.consign.movement'].search_count([
+        ('original_movement_id', '=', race_issue_id),
+    ]) == 2
+    check_cr.commit()
+
 print('TASK6_CAPTURE_EXPIRY_STALE_FENCE=PASS')
 print('TASK6_CAPTURE_EXPIRY_CONTROLLED_RETRY=PASS')
 print('TASK6_CAPTURE_NO_DOUBLE_REDEEM=PASS')
@@ -301,5 +391,9 @@ print('TASK6_SAME_KEY_EXACT_REDEEMS=PASS')
 print('TASK6_CLAWBACK_AUTHORIZE_STALE_FENCE=PASS')
 print('TASK6_CLAWBACK_AUTHORIZE_CONTROLLED_RETRY=PASS')
 print('TASK6_CLAWBACK_AUTHORIZE_NO_OVERCONSUME=PASS')
+print('TASK6_CAPTURE_CLAWBACK_STALE_FENCE=PASS')
+print('TASK6_CAPTURE_CLAWBACK_SAFE_RETRY=PASS')
+print('TASK6_CAPTURE_CLAWBACK_LOCK_ORDER=PASS')
+print('TASK6_CAPTURE_CLAWBACK_NO_OVERCONSUME=PASS')
 print('TASK6_NO_UNIQUE_OR_RAW_ERROR=PASS')
 print('TASK6_CONCURRENCY_PROBE=PASS')

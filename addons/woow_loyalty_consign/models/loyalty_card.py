@@ -35,7 +35,7 @@ class LoyaltyCard(models.Model):
     )
 
     def write(self, vals):
-        if vals.get('active') is False:
+        if 'active' in vals and not vals['active']:
             consign_cards = self.filtered('is_consign')
             if consign_cards:
                 # Match the command hierarchy: lock cards before checking the
