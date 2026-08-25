@@ -31,6 +31,9 @@ class SaleOrder(models.Model):
     consign_allocation_ids = fields.One2many('sale.order.consign.allocation', 'order_id', readonly=True)
     consign_allocation_warning = fields.Json(readonly=True, copy=False)
     consign_hold_operation_id = fields.Many2one('loyalty.consign.operation', readonly=True, copy=False)
+    consign_hold_version = fields.Integer(readonly=True, copy=False)
+    consign_payment_transaction_id = fields.Many2one('payment.transaction', readonly=True, copy=False)
+    consign_capture_operation_id = fields.Many2one('loyalty.consign.operation', readonly=True, copy=False)
 
 
 class SaleOrderLine(models.Model):
@@ -86,6 +89,11 @@ class SaleOrder(models.Model):
                                      'reward_line_id': reward.id, 'version': order.consign_allocation_version})
                     remaining -= quantity
 
+    def _lock_website_consign_payment(self):
+        self.ensure_one()
+        self.flush_recordset()
+        self.env.cr.execute('SELECT id FROM sale_order WHERE id = %s FOR UPDATE', (self.id,))
+
     def _prepare_website_consign_authorization(self):
         """Checkout-only trusted seam; payment callbacks capture in the next phase."""
         self.ensure_one()
@@ -99,7 +107,12 @@ class SaleOrder(models.Model):
             self, self.partner_id, requests,
             'website-authorize-%s-%s' % (self.id, self.consign_allocation_version),
         )
-        self.sudo().write({'consign_hold_operation_id': operation.id})
+        self.sudo().write({
+            'consign_hold_operation_id': operation.id,
+            'consign_hold_version': self.consign_allocation_version,
+            'consign_payment_transaction_id': False,
+            'consign_capture_operation_id': False,
+        })
         return operation
 
     def _release_website_consign_holds(self):
