@@ -294,6 +294,11 @@ class TestConsignAuthorize(TransactionCase):
         card_operation = self._authorize(
             'test:authorize:replay:card', [self._request(card, quantity=2)],
         )
+        self.env['loyalty.consign.engine']._release(
+            source=self.partner, partner=self.partner,
+            hold=card_operation.hold_ids,
+            idempotency_key='test:authorize:replay:card:release',
+        )
         card.active = False
         self.assertEqual(
             self._authorize(

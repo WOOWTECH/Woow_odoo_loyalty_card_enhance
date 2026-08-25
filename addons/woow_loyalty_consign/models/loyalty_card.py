@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class LoyaltyCard(models.Model):
@@ -32,6 +33,42 @@ class LoyaltyCard(models.Model):
     consign_active_lines = fields.Integer(
         string='有效品項數', compute='_compute_consign_totals', store=True,
     )
+
+    def write(self, vals):
+        if vals.get('active') is False:
+            consign_cards = self.filtered('is_consign')
+            if consign_cards:
+                # Match the command hierarchy: lock cards before checking the
+                # active Hold rows which prevent a safe direct deactivation.
+                for card_id in sorted(consign_cards.ids):
+                    self.env.cr.execute(
+                        '''UPDATE loyalty_card SET write_date = write_date
+                            WHERE id = %s RETURNING id''',
+                        (card_id,),
+                    )
+                    if not self.env.cr.fetchone():
+                        raise ValidationError('The consignment card no longer exists.')
+                self.env.cr.execute(
+                    '''SELECT hold.id
+                         FROM loyalty_consign_hold hold
+                        WHERE hold.state = 'active'
+                          AND EXISTS (
+                              SELECT 1
+                                FROM loyalty_consign_hold_allocation allocation
+                                JOIN loyalty_consign_line line
+                                  ON line.id = allocation.aggregate_line_id
+                               WHERE allocation.hold_id = hold.id
+                                 AND line.card_id = ANY(%s)
+                          )
+                     ORDER BY hold.id
+                        FOR UPDATE''',
+                    (consign_cards.ids,),
+                )
+                if self.env.cr.fetchall():
+                    raise ValidationError(
+                        'A consignment card with an active Hold cannot be deactivated.'
+                    )
+        return super().write(vals)
 
     @api.depends('consign_movement_ids')
     def _compute_consign_movement_count(self):
