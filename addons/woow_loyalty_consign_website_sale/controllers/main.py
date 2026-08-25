@@ -12,3 +12,13 @@ class ConsignCartController(http.Controller):
         if not order or order.partner_id != request.env.user.partner_id:
             raise AccessError('The current cart is not owned by this user.')
         return order._set_website_consign_allocation(card_id, product_id, quantity)
+
+    @http.route('/shop/consign/prepare', type='json', auth='user', website=True)
+    def consign_prepare_checkout(self, **kwargs):
+        order = request.website.sale_get_order()
+        if not order or order.partner_id != request.env.user.partner_id:
+            raise AccessError('The current cart is not owned by this user.')
+        operation = order._prepare_website_consign_authorization()
+        return {'operation_id': operation.id if operation else False,
+                'hold_id': operation.hold_ids.id if operation else False,
+                'version': order.consign_allocation_version}

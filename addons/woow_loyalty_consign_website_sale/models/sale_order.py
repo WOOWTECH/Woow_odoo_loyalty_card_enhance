@@ -30,9 +30,19 @@ class SaleOrder(models.Model):
     consign_allocation_version = fields.Integer(default=0, readonly=True, copy=False)
     consign_allocation_ids = fields.One2many('sale.order.consign.allocation', 'order_id', readonly=True)
     consign_allocation_warning = fields.Json(readonly=True, copy=False)
+    consign_hold_operation_id = fields.Many2one('loyalty.consign.operation', readonly=True, copy=False)
+
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+    consign_generated_reward = fields.Boolean(default=False, readonly=True, copy=False)
+
+
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
 
     def _consign_eligible_lines(self, product):
-        return self.order_line.filtered(lambda l: l.product_id == product and not l.display_type and not l.is_reward_line).sorted(lambda l: (l.sequence, l.id))
+        return self.order_line.filtered(lambda l: l.product_id == product and not l.display_type and not l.is_reward_line and not l.consign_generated_reward).sorted(lambda l: (l.sequence, l.id))
 
     def _revalidate_consign_allocations(self):
         for order in self:
@@ -43,7 +53,54 @@ class SaleOrder(models.Model):
                     allocation.sudo().write({'requested_qty': maximum})
                     warnings.append({'allocation_id': allocation.id, 'requested_qty': maximum, 'reason': 'cart_quantity_reduced'})
             order.consign_allocation_warning = warnings
+            order._recompute_consign_coverage()
         return self.consign_allocation_warning
+
+    def _recompute_consign_coverage(self):
+        """Server-priced, deterministic coverage; browser input has no price seam."""
+        Coverage = self.env['sale.order.consign.coverage'].sudo()
+        for order in self:
+            old = Coverage.search([('order_id', '=', order.id)])
+            old.mapped('reward_line_id').sudo().unlink()
+            old.unlink()
+            for allocation in order.consign_allocation_ids:
+                remaining = allocation.requested_qty
+                for line in order._consign_eligible_lines(allocation.product_id):
+                    if remaining <= 0:
+                        break
+                    already = sum(Coverage.search([('order_line_id', '=', line.id)]).mapped('covered_qty'))
+                    quantity = min(remaining, max(0, line.product_uom_qty - already))
+                    if quantity <= 0:
+                        continue
+                    fingerprint = '%s|%s|%s' % (line.price_unit, line.discount, tuple(line.tax_id.ids))
+                    reward = self.env['sale.order.line'].sudo().create({
+                        'order_id': order.id, 'product_id': line.product_id.id,
+                        'product_uom_qty': quantity, 'product_uom': line.product_uom.id,
+                        'price_unit': -line.price_unit, 'discount': line.discount,
+                        'tax_id': [(6, 0, line.tax_id.ids)], 'is_reward_line': True,
+                        'consign_generated_reward': True,
+                        'name': _('Consignment redemption: %s') % line.name,
+                    })
+                    Coverage.create({'allocation_id': allocation.id, 'order_line_id': line.id,
+                                     'covered_qty': quantity, 'price_tax_fingerprint': fingerprint,
+                                     'reward_line_id': reward.id, 'version': order.consign_allocation_version})
+                    remaining -= quantity
+
+    def _prepare_website_consign_authorization(self):
+        """Checkout-only trusted seam; payment callbacks capture in the next phase."""
+        self.ensure_one()
+        if not self.consign_allocation_ids:
+            return False
+        self._recompute_consign_coverage()
+        requests = [{'card_id': row.card_id.id, 'product_id': row.product_id.id,
+                     'product_uom_id': row.product_uom_id.id, 'quantity': row.requested_qty}
+                    for row in self.consign_allocation_ids]
+        operation = self.env['loyalty.consign.engine']._authorize(
+            self, self.partner_id, requests,
+            'website-authorize-%s-%s' % (self.id, self.consign_allocation_version),
+        )
+        self.sudo().write({'consign_hold_operation_id': operation.id})
+        return operation
 
     def _release_website_consign_holds(self):
         """Trusted cart lifecycle seam; never exposed through RPC."""
@@ -60,7 +117,9 @@ class SaleOrder(models.Model):
         self.ensure_one()
         self._release_website_consign_holds()
         self.sudo().write({'consign_allocation_version': self.consign_allocation_version + 1})
-        self.env['sale.order.consign.coverage'].sudo().search([('order_id', '=', self.id)]).unlink()
+        coverage = self.env['sale.order.consign.coverage'].sudo().search([('order_id', '=', self.id)])
+        coverage.mapped('reward_line_id').sudo().unlink()
+        coverage.unlink()
         return self._revalidate_consign_allocations()
 
     def _set_website_consign_allocation(self, card_id, product_id, quantity):
