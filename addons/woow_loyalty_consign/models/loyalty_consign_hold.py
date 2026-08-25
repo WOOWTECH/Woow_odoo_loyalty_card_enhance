@@ -5,6 +5,19 @@ from odoo.tools import float_compare, float_round
 
 _HOLD_MUTATION_CONTEXT_KEY = '_woow_consign_hold_mutation_token'
 _HOLD_MUTATION_TOKEN = object()
+_MAX_EXPIRY_BATCH_SIZE = 1000
+_EXPIRY_CANDIDATE_SCAN_FACTOR = 10
+_MAX_EXPIRY_CANDIDATE_SCAN = (
+    _MAX_EXPIRY_BATCH_SIZE * _EXPIRY_CANDIDATE_SCAN_FACTOR
+)
+
+
+def _expiry_candidate_scan_limit(batch_size):
+    """Return a bounded candidate window larger than a permitted batch."""
+    return min(
+        batch_size * _EXPIRY_CANDIDATE_SCAN_FACTOR,
+        _MAX_EXPIRY_CANDIDATE_SCAN,
+    )
 
 
 class LoyaltyConsignHold(models.Model):
@@ -88,12 +101,12 @@ class LoyaltyConsignHold(models.Model):
     @api.model
     def _cron_expire_holds(self, batch_size=100, now=None):
         """Expire one bounded deterministic batch without contending workers."""
-        batch_size = max(1, min(int(batch_size or 100), 1000))
+        batch_size = max(1, min(int(batch_size or 100), _MAX_EXPIRY_BATCH_SIZE))
         now = now or fields.Datetime.now()
         # Scan a bounded window larger than the completion batch. This lets a
         # locked earliest Hold be skipped without starving unrelated later Holds,
         # while locking every acquired dimension in card -> line -> Hold order.
-        candidate_scan_limit = min(max(batch_size * 10, batch_size + 1), 1000)
+        candidate_scan_limit = _expiry_candidate_scan_limit(batch_size)
         self.env.cr.execute(
             '''SELECT id
                  FROM loyalty_consign_hold

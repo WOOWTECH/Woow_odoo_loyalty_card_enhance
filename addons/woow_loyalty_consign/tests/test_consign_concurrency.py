@@ -9,6 +9,9 @@ from odoo.addons.woow_loyalty_consign.models.loyalty_consign_engine import (
 )
 from odoo.addons.woow_loyalty_consign.models.loyalty_consign_hold import (
     LoyaltyConsignHold,
+    _MAX_EXPIRY_BATCH_SIZE,
+    _MAX_EXPIRY_CANDIDATE_SCAN,
+    _expiry_candidate_scan_limit,
 )
 
 
@@ -35,12 +38,24 @@ class TestConsignConcurrencyContract(TransactionCase):
     def test_expiry_contract_uses_bounded_skip_locked_selection(self):
         source = inspect.getsource(LoyaltyConsignHold._cron_expire_holds)
         self.assertIn('batch_size', source)
-        self.assertIn('candidate_scan_limit = min(max(batch_size * 10, batch_size + 1), 1000)', source)
+        self.assertIn('candidate_scan_limit = _expiry_candidate_scan_limit(batch_size)', source)
         self.assertIn('FOR UPDATE SKIP LOCKED', source)
         self.assertIn("state = 'active'", source)
         self.assertIn('expires_at <=', source)
         self.assertIn('_reconcile_projection', source)
         self.assertIn("'transition_user_id': self.env.uid", source)
+
+    def test_expiry_candidate_window_exceeds_maximum_completion_batch(self):
+        self.assertEqual(_MAX_EXPIRY_BATCH_SIZE, 1000)
+        self.assertEqual(_MAX_EXPIRY_CANDIDATE_SCAN, 10000)
+        self.assertGreater(
+            _expiry_candidate_scan_limit(_MAX_EXPIRY_BATCH_SIZE),
+            _MAX_EXPIRY_BATCH_SIZE,
+        )
+        self.assertLessEqual(
+            _expiry_candidate_scan_limit(_MAX_EXPIRY_BATCH_SIZE),
+            _MAX_EXPIRY_CANDIDATE_SCAN,
+        )
 
     def test_real_two_cursor_probe_is_executable_and_covers_required_races(self):
         addon_root = Path(inspect.getfile(LoyaltyConsignEngine)).parents[1]
