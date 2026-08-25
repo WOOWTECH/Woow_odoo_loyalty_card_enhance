@@ -8,3 +8,5 @@ from . import test_consign_concurrency
 from . import test_consign_reverse
 from . import test_consign_backend
 from . import test_redemption_audit
+from . import test_consign_security
+from . import test_consign_rendering
