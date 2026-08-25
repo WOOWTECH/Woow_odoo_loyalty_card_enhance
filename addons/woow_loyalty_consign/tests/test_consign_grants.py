@@ -73,11 +73,23 @@ class TestConsignGrants(TransactionCase):
         })
 
     def _confirm_and_pay(self, order):
+        """Exercise the trusted paid-invoice boundary without a payment provider.
+
+        ``payment_state`` is computed by account and cannot be made durable by
+        ``write``.  Post the invoice normally, then simulate account's settled
+        state at SQL level and invalidate only that cached computed field.
+        The adapter itself still validates the stored posted/paid state.
+        """
         order.action_confirm()
         invoice = order._create_invoices()
-        invoice.with_context(check_move_validity=False).write({
-            'state': 'posted', 'payment_state': 'paid',
-        })
+        invoice.action_post()
+        self.env.cr.execute(
+            'UPDATE account_move SET payment_state = %s WHERE id = %s',
+            ('paid', invoice.id),
+        )
+        invoice.invalidate_recordset(['payment_state'])
+        self.assertEqual(invoice.state, 'posted')
+        self.assertEqual(invoice.payment_state, 'paid')
         invoice._issue_consign_paid_invoice_grants()
         return invoice
 
@@ -441,23 +453,30 @@ class TestConsignGrants(TransactionCase):
             ),
         ])
 
-    def test_card_creation_partner_lock_uses_serialization_token_update(self):
-        order = self._order([(self.trigger, 1.0)])
+    def test_card_creation_tuple_lock_uses_durable_serialization_token(self):
+        program = self._program('Card Token Program', self.trigger, [
+            (self.treatment, self.treatment.uom_id, 1.0),
+        ])
+        engine = self.env['loyalty.consign.engine']
 
         with patch.object(
             type(self.env.cr), 'execute', autospec=True,
-        ) as execute:
-            order._lock_consign_card_partner()
+        ) as execute, patch.object(
+            type(self.env.cr), 'fetchone', autospec=True, return_value=(1,),
+        ):
+            engine._lock_card_tuple(self.env.company, program, self.partner)
 
-        execute.assert_called_once()
+        self.assertEqual(execute.call_count, 2)
         self.assertEqual(
-            ' '.join(execute.call_args.args[1].split()),
-            'UPDATE res_partner SET write_date = write_date '
-            'WHERE id = %s RETURNING id',
+            ' '.join(execute.call_args_list[0].args[1].split()),
+            'SELECT pg_advisory_xact_lock(%s)',
         )
+        token_insert = ' '.join(execute.call_args_list[1].args[1].split())
+        self.assertIn('INSERT INTO loyalty_consign_card_token', token_insert)
+        self.assertIn('ON CONFLICT (company_id, program_id, partner_id)', token_insert)
         self.assertEqual(
-            execute.call_args.args[2],
-            (self.partner.id,),
+            execute.call_args_list[1].args[2],
+            (self.env.company.id, program.id, self.partner.id, self.env.uid, self.env.uid),
         )
 
     def test_duplicate_overlapping_active_trigger_headers_are_rejected(self):
