@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
 
 
 class LoyaltyCard(models.Model):
@@ -161,18 +161,29 @@ class LoyaltyCard(models.Model):
         if template:
             template.send_mail(self.id, force_send=True)
 
+    def _require_consign_manager(self):
+        if not self.env.is_superuser() and not self.env.user.has_group(
+            'woow_loyalty_consign.group_consign_manager'
+        ):
+            raise AccessError('Only Consign Managers may execute manual consignment commands.')
+
     def action_open_redeem_wizard(self):
-        """開啟核銷精靈。"""
+        """Open the manager-only backend redemption adapter."""
         self.ensure_one()
+        self._require_consign_manager()
         return {
-            'name': '寄品核銷',
-            'type': 'ir.actions.act_window',
-            'res_model': 'consign.redeem.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_card_id': self.id,
-            },
+            'name': '寄品核銷', 'type': 'ir.actions.act_window',
+            'res_model': 'consign.redeem.wizard', 'view_mode': 'form',
+            'target': 'new', 'context': {'default_card_id': self.id},
+        }
+
+    def action_open_adjust_wizard(self):
+        self.ensure_one()
+        self._require_consign_manager()
+        return {
+            'name': '寄品調整', 'type': 'ir.actions.act_window',
+            'res_model': 'consign.adjust.wizard', 'view_mode': 'form',
+            'target': 'new', 'context': {'default_card_id': self.id},
         }
 
     def _send_creation_communication(self, force_send=False):

@@ -59,6 +59,11 @@ class TestConsignMovements(TransactionCase):
     def _redeem(self, line, quantity):
         redemption = self.env['loyalty.consign.redemption'].create({
             'card_id': self.card.id,
+            'service_note': 'Standard ledger test redemption',
+            'submission_uuid': (
+                f'test:movements:redeem:{line.id}:{quantity}:'
+                f'{self.env["loyalty.consign.redemption"].search_count([])}'
+            ),
             'line_ids': [(0, 0, {
                 'consign_line_id': line.id,
                 'qty_redeemed': quantity,
@@ -131,14 +136,7 @@ class TestConsignMovements(TransactionCase):
 
     def test_redemption_and_partial_cancellation_append_shadow_facts(self):
         line = self._line(quantity=5)
-        redemption = self.env['loyalty.consign.redemption'].create({
-            'card_id': self.card.id,
-            'line_ids': [(0, 0, {
-                'consign_line_id': line.id,
-                'qty_redeemed': 2,
-            })],
-        })
-        redemption.action_done()
+        redemption = self._redeem(line, 2)
         self.assertEqual(
             line.movement_ids.filtered(lambda m: m.movement_type == 'redeem').quantity,
             2,
@@ -191,20 +189,8 @@ class TestConsignMovements(TransactionCase):
         self.assertEqual(redemption.line_ids.unit_price, 150)
         self.assertEqual(redemption.line_ids.subtotal, 300)
 
-        for movement in redeems:
-            replay = self.env['loyalty.consign.movement']._append_movement(
-                aggregate_line=line,
-                movement_type='redeem',
-                quantity=movement.quantity,
-                source_channel='manual',
-                source_model='loyalty.consign.redemption.line',
-                source_res_id=redemption.line_ids.id,
-                source_name=redemption.display_name,
-                idempotency_key=movement.idempotency_key,
-                occurred_at=redemption.date_redemption,
-                original_movement=movement.original_movement_id,
-            )
-            self.assertEqual(replay, movement)
+        self.assertTrue(redemption.action_done())
+        self.assertEqual(redemption.capture_operation_id.movement_ids.sorted('id'), redeems)
         self.assertEqual(len(line.movement_ids.filtered(
             lambda movement: movement.movement_type == 'redeem'
         )), 2)
@@ -224,40 +210,21 @@ class TestConsignMovements(TransactionCase):
         )
 
         redemption = self._redeem(line, 1)
-        movement = line.movement_ids.filtered(
-            lambda item: item.movement_type == 'redeem'
-            and item.source_model == 'loyalty.consign.redemption.line'
-            and item.source_res_id == redemption.line_ids.id
-        )
+        movement = redemption.capture_operation_id.movement_ids
         self.assertEqual(movement.original_movement_id, issues[1])
         self.assertEqual(movement.value_delta, 200)
 
     def test_redeem_reversal_restores_exact_issue_capacity(self):
         line, issues = self._mixed_price_line()
         first = self._redeem(line, 1)
-        original_redeem = line.movement_ids.filtered(
-            lambda item: item.movement_type == 'redeem'
-            and item.source_model == 'loyalty.consign.redemption.line'
-            and item.source_res_id == first.line_ids.id
-        )
-        self.env['loyalty.consign.movement']._append_movement(
-            aggregate_line=line,
-            movement_type='redeem_reversal',
-            quantity=1,
-            source_channel='manual',
-            source_model='loyalty.consign.redemption.line',
-            source_res_id=first.line_ids.id,
-            source_name=first.display_name,
-            idempotency_key=f'test:restore-redeem:{original_redeem.id}',
-            original_movement=original_redeem,
+        original_redeem = first.capture_operation_id.movement_ids
+        self.env['loyalty.consign.engine']._reverse_redeem(
+            source=first, partner=self.partner, redeem_movement=original_redeem,
+            quantity=1, idempotency_key=f'test:restore-redeem:{original_redeem.id}',
         )
 
         second = self._redeem(line, 1)
-        restored_redeem = line.movement_ids.filtered(
-            lambda item: item.movement_type == 'redeem'
-            and item.source_model == 'loyalty.consign.redemption.line'
-            and item.source_res_id == second.line_ids.id
-        )
+        restored_redeem = second.capture_operation_id.movement_ids
         self.assertEqual(restored_redeem.original_movement_id, issues[0])
         self.assertEqual(restored_redeem.value_delta, 100)
 
@@ -276,11 +243,7 @@ class TestConsignMovements(TransactionCase):
         )
 
         redemption = self._redeem(line, 1)
-        movement = line.movement_ids.filtered(
-            lambda item: item.movement_type == 'redeem'
-            and item.source_model == 'loyalty.consign.redemption.line'
-            and item.source_res_id == redemption.line_ids.id
-        )
+        movement = redemption.capture_operation_id.movement_ids
         self.assertEqual(movement.original_movement_id, issues[1])
         self.assertEqual(movement.value_delta, 200)
 
@@ -304,25 +267,22 @@ class TestConsignMovements(TransactionCase):
         })
 
         redemption = self._redeem(line, 1)
-        movement = line.movement_ids.filtered(
-            lambda item: item.movement_type == 'redeem'
-            and item.source_model == 'loyalty.consign.redemption.line'
-            and item.source_res_id == redemption.line_ids.id
-        )
+        movement = redemption.capture_operation_id.movement_ids
         self.assertEqual(movement.original_movement_id, issues[1])
         self.assertEqual(movement.value_delta, 200)
 
     def test_duplicate_redemption_lines_are_aggregated_before_posting(self):
         line = self._line(quantity=10)
         redemption = self.env['loyalty.consign.redemption'].create({
-            'card_id': self.card.id,
+            'card_id': self.card.id, 'service_note': 'duplicate quantity test',
+            'submission_uuid': 'test:movements:duplicate:quantity',
             'line_ids': [
                 (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 6}),
                 (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 6}),
             ],
         })
         movement_count = self.env['loyalty.consign.movement'].search_count([])
-        with self.assertRaisesRegex(ValidationError, '核銷總數量'):
+        with self.assertRaisesRegex(ValidationError, 'authoritative available quantity'):
             redemption.action_done()
         self.assertEqual(redemption.state, 'draft')
         self.assertEqual(
@@ -331,26 +291,22 @@ class TestConsignMovements(TransactionCase):
         self.assertEqual(line.qty_redeemed, 0)
         self.assertEqual(line.qty_available, 10)
 
-    def test_duplicate_redemption_rounds_each_fact_before_aggregate_cap(self):
+    def test_duplicate_redemption_aggregates_before_rounding_once(self):
         self.product.uom_id.sudo().write({'rounding': 1.0})
         line = self._line(quantity=1)
         self.assertEqual(line.product_uom_id.rounding, 1.0)
         redemption = self.env['loyalty.consign.redemption'].create({
-            'card_id': self.card.id,
+            'card_id': self.card.id, 'service_note': 'aggregate rounding test',
+            'submission_uuid': 'test:movements:duplicate:rounding',
             'line_ids': [
                 (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 0.6}),
                 (0, 0, {'consign_line_id': line.id, 'qty_redeemed': 0.6}),
             ],
         })
-        movement_count = self.env['loyalty.consign.movement'].search_count([])
-        with self.assertRaisesRegex(ValidationError, '核銷總數量'):
-            redemption.action_done()
-        self.assertEqual(redemption.state, 'draft')
-        self.assertEqual(
-            self.env['loyalty.consign.movement'].search_count([]), movement_count,
-        )
-        self.assertEqual(line.qty_redeemed, 0)
-        self.assertEqual(line.qty_available, 1)
+        redemption.action_done()
+        self.assertEqual(redemption.state, 'done')
+        self.assertEqual(line.qty_redeemed, 1)
+        self.assertEqual(line.qty_available, 0)
 
     def test_redemption_rounding_is_persisted_with_exact_audit_value(self):
         self.product.uom_id.sudo().write({'rounding': 1.0})
@@ -937,7 +893,7 @@ class TestConsignMovements(TransactionCase):
         self.assertEqual(owner_line.state, 'active')
         self.assertFalse(owner_line.is_cancelled)
 
-    def test_only_sale_manager_or_superuser_can_cancel(self):
+    def test_only_consign_manager_or_superuser_can_cancel(self):
         salesperson = new_test_user(
             self.env,
             login='consign-cancel-salesperson',
@@ -946,7 +902,7 @@ class TestConsignMovements(TransactionCase):
         manager = new_test_user(
             self.env,
             login='consign-cancel-manager',
-            groups='sales_team.group_sale_manager',
+            groups='woow_loyalty_consign.group_consign_manager',
         )
         products = self.env['product.product'].create([
             {'name': 'Denied cancellation product', 'type': 'service'},
@@ -958,7 +914,7 @@ class TestConsignMovements(TransactionCase):
         superuser_line = self._line(quantity=1, product_id=products[2].id)
         before_count = self.env['loyalty.consign.movement'].sudo().search_count([])
 
-        with self.assertRaisesRegex(AccessError, 'Only Sales managers'):
+        with self.assertRaisesRegex(AccessError, 'Only Consign Managers'):
             denied_line.with_user(salesperson).action_cancel()
         self.assertEqual(
             self.env['loyalty.consign.movement'].sudo().search_count([]),
@@ -1024,14 +980,7 @@ class TestConsignMovements(TransactionCase):
 
     def test_backfill_is_idempotent_and_net_matches_legacy_facts(self):
         line = self._line(quantity=4)
-        redemption = self.env['loyalty.consign.redemption'].create({
-            'card_id': self.card.id,
-            'line_ids': [(0, 0, {
-                'consign_line_id': line.id,
-                'qty_redeemed': 1,
-            })],
-        })
-        redemption.action_done()
+        redemption = self._redeem(line, 1)
         before = self.env['loyalty.consign.movement'].search_count([])
 
         backfill_consign_movements(self.env)

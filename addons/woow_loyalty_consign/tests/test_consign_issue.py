@@ -337,7 +337,7 @@ class TestConsignIssue(TransactionCase):
         )
         manager = new_test_user(
             self.env, login='task4_projection_manager',
-            groups='sales_team.group_sale_manager',
+            groups='woow_loyalty_consign.group_consign_manager',
             company_id=self.env.company.id,
         )
         line = self.env['loyalty.consign.line'].with_user(manager).create(vals)

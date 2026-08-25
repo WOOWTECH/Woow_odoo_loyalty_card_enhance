@@ -5,4 +5,5 @@ from . import test_consign_issue
 from . import test_consign_authorize
 from . import test_consign_concurrency
 from . import test_consign_reverse
+from . import test_consign_backend
 from . import test_redemption_audit
