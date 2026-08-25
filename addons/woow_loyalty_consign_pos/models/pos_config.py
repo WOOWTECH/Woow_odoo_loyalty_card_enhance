@@ -1,8 +1,13 @@
-from odoo import _, models
+from odoo import _, fields, models
 
 
 class PosConfig(models.Model):
     _inherit = 'pos.config'
+
+    enable_consign_redemption = fields.Boolean(
+        string='Enable Consignment Redemption', default=False,
+        help='Allow online, server-authorized consignment redemption in this POS.',
+    )
 
     def _get_consign_redemption_product_id(self):
         """Return the consign redemption service product ID."""
