@@ -39,11 +39,20 @@ class TestConsignConcurrencyContract(TransactionCase):
         source = inspect.getsource(LoyaltyConsignHold._cron_expire_holds)
         self.assertIn('batch_size', source)
         self.assertIn('candidate_scan_limit = _expiry_candidate_scan_limit(batch_size)', source)
-        self.assertIn('FOR UPDATE SKIP LOCKED', source)
+        lock_source = inspect.getsource(LoyaltyConsignHold._lock_expiry_candidates)
+        self.assertIn('FOR UPDATE SKIP LOCKED', lock_source)
         self.assertIn("state = 'active'", source)
+        self.assertIn('ORDER BY expires_at, id', source)
         self.assertIn('expires_at <=', source)
+        self.assertIn('_probe_expiry_candidate', source)
+        self.assertIn('while remaining:', source)
         self.assertIn('_reconcile_projection', source)
         self.assertIn("'transition_user_id': self.env.uid", source)
+        probe = inspect.getsource(LoyaltyConsignHold._probe_expiry_candidate)
+        self.assertIn('with self.env.cr.savepoint()', probe)
+        self.assertIn('raise _ReleaseExpiryProbe()', probe)
+        self.assertIn('except _ReleaseExpiryProbe:', probe)
+        self.assertIn('except _ExpiryCandidateUnavailable:', probe)
 
     def test_expiry_candidate_window_exceeds_maximum_completion_batch(self):
         self.assertEqual(_MAX_EXPIRY_BATCH_SIZE, 1000)
@@ -71,6 +80,8 @@ class TestConsignConcurrencyContract(TransactionCase):
             'TASK5_SAME_KEY_REPLAY=PASS',
             'TASK5_AUTHORIZE_REVERSAL_RACE=PASS',
             'TASK5_EXPIRY_BATCH_ONE_SKIPS_LOCKED=PASS',
+            'TASK5_EXPIRY_MULTI_CARD_DIMENSION_SKIP=PASS',
+            'TASK5_EXPIRY_UNSELECTED_DIMENSIONS_RELEASED=PASS',
             'TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS',
             'TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS',
             'TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS',
