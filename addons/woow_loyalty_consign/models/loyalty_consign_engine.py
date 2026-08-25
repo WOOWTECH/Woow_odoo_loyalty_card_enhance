@@ -399,12 +399,20 @@ class LoyaltyConsignEngine(models.AbstractModel):
             card.check_access('read')
             product.check_access('read')
             request_uom.check_access('read')
+            if product.uom_id.category_id != request_uom.category_id:
+                raise ValidationError(
+                    'The authorization product and UoM must have the same category.'
+                )
             raw_quantity = request.get(
                 'quantity', request.get('qty', request.get('requested_quantity', 0.0)),
             )
             quantity = request_uom._compute_quantity(
                 raw_quantity, product.uom_id, round=False,
             )
+            if quantity <= 0.0:
+                raise ValidationError(
+                    'Every authorization quantity must be positive before aggregation.'
+                )
             key = (card.id, product.id, product.uom_id.id)
             if key not in aggregated:
                 aggregated[key] = {

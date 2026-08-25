@@ -140,8 +140,8 @@ with registry.cursor() as same_retry_cr:
     same_retry_cr.commit()
 
 # A locked earliest Hold cannot starve an unrelated later candidate. The
-# bounded worker skips the locked Hold, expires the other one, then a fresh run
-# expires the formerly locked Hold exactly once and remains idempotent.
+# batch_size=1 worker skips the locked Hold, expires the other one, then a fresh
+# batch_size=1 run expires the formerly locked Hold exactly once and remains idempotent.
 with registry.cursor() as expiry_setup_cr:
     expiry_setup_env = api.Environment(expiry_setup_cr, SUPERUSER_ID, {})
     # This command intentionally targets the second card to keep dimensions unrelated.
@@ -170,7 +170,7 @@ expiry_blocker.execute(
 expiry_blocker.fetchone()
 with registry.cursor() as skipped_cr:
     skipped_env = api.Environment(skipped_cr, SUPERUSER_ID, {})
-    assert skipped_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 1
+    assert skipped_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 1
     assert skipped_env['loyalty.consign.hold'].browse(winner_hold_id).state == 'active'
     assert skipped_env['loyalty.consign.hold'].browse(expiry_other_hold_id).state == 'expired'
     skipped_cr.commit()
@@ -178,8 +178,8 @@ expiry_blocker.rollback()
 expiry_blocker.close()
 with registry.cursor() as expiry_cr:
     expiry_env = api.Environment(expiry_cr, SUPERUSER_ID, {})
-    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 1
-    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=2) == 0
+    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 1
+    assert expiry_env['loyalty.consign.hold']._cron_expire_holds(batch_size=1) == 0
     expiry_cr.commit()
 
 # Authorize versus issue reversal: the stale authorization loses; after outer
@@ -236,6 +236,7 @@ print('TASK5_FRESH_RETRY_DOMAIN_ERROR=PASS')
 print('TASK5_ONE_HOLD_AVAILABLE_FOUR=PASS')
 print('TASK5_SAME_KEY_REPLAY=PASS')
 print('TASK5_AUTHORIZE_REVERSAL_RACE=PASS')
+print('TASK5_EXPIRY_BATCH_ONE_SKIPS_LOCKED=PASS')
 print('TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS')
 print('TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS')
 print('TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS')

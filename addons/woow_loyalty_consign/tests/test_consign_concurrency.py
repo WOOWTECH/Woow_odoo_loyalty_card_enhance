@@ -35,6 +35,7 @@ class TestConsignConcurrencyContract(TransactionCase):
     def test_expiry_contract_uses_bounded_skip_locked_selection(self):
         source = inspect.getsource(LoyaltyConsignHold._cron_expire_holds)
         self.assertIn('batch_size', source)
+        self.assertIn('candidate_scan_limit = min(max(batch_size * 10, batch_size + 1), 1000)', source)
         self.assertIn('FOR UPDATE SKIP LOCKED', source)
         self.assertIn("state = 'active'", source)
         self.assertIn('expires_at <=', source)
@@ -54,6 +55,7 @@ class TestConsignConcurrencyContract(TransactionCase):
             'TASK5_ONE_HOLD_AVAILABLE_FOUR=PASS',
             'TASK5_SAME_KEY_REPLAY=PASS',
             'TASK5_AUTHORIZE_REVERSAL_RACE=PASS',
+            'TASK5_EXPIRY_BATCH_ONE_SKIPS_LOCKED=PASS',
             'TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS',
             'TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS',
             'TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS',
