@@ -690,6 +690,186 @@ class LoyaltyConsignEngine(models.AbstractModel):
         return operation
 
     @api.model
+    def _find_completed_reverse_replay(
+        self, company, partner, source_snapshot, idempotency_key, original, movement_type,
+        quantity,
+    ):
+        """Return one exact completed reversal before mutable card checks."""
+        operation_model = self.env['loyalty.consign.operation']
+        payload = {
+            'original_movement_id': original.id,
+            'movement_type': movement_type,
+            'quantity': quantity,
+        }
+        _canonical, payload_hash = operation_model._canonical_payload({
+            'operation_type': 'reverse',
+            'partner_id': partner.id,
+            'source_model': source_snapshot['model'],
+            'source_res_id': source_snapshot['res_id'],
+            'payload': payload,
+        })
+        operation = operation_model.sudo().search([
+            ('company_id', '=', company.id),
+            ('idempotency_key', '=', idempotency_key),
+        ], limit=1)
+        if not operation:
+            return False
+        if operation.payload_hash != payload_hash:
+            raise ValidationError(
+                'The idempotency key was already used with a different payload.'
+            )
+        if (
+            operation.state == 'done'
+            and operation.operation_type == 'reverse'
+            and (operation.result_json or {}).get('original_movement_id') == original.id
+            and (operation.result_json or {}).get('movement_type') == movement_type
+            and len(operation.movement_ids) == 1
+        ):
+            return operation_model.browse(operation.ids)
+        return False
+
+    @api.model
+    def _validate_reverse_dimensions(
+        self, source_snapshot, partner, company, original, expected_type,
+    ):
+        """Validate trusted source and immutable original movement dimensions."""
+        original = self._coerce_record(
+            'loyalty.consign.movement', original, 'original consignment movement',
+        )
+        original.check_access('read')
+        if original.movement_type != expected_type:
+            raise ValidationError('The original movement has an incompatible type.')
+        if (
+            original.company_id != company
+            or original.partner_id != partner
+            or original.source_model != source_snapshot['model']
+            or original.source_res_id != source_snapshot['res_id']
+        ):
+            raise ValidationError(
+                'The original movement must match the exact source, company, and customer.'
+            )
+        if (
+            not original.card_id.is_consign
+            or original.aggregate_line_id.card_id != original.card_id
+            or original.aggregate_line_id.partner_id != partner
+            or original.aggregate_line_id.company_id != company
+        ):
+            raise ValidationError('The original consignment movement dimensions are invalid.')
+        return original
+
+    @api.model
+    def _normalized_reverse_quantity(self, original, quantity):
+        rounded = float_round(
+            quantity, precision_rounding=original.product_uom_id.rounding,
+        )
+        if float_compare(
+            rounded, 0.0, precision_rounding=original.product_uom_id.rounding,
+        ) <= 0:
+            raise ValidationError('Reversal quantity must be positive after UoM rounding.')
+        return rounded
+
+    @api.model
+    def _open_reverse_command(
+        self, source_snapshot, partner, company, original, movement_type, quantity,
+        idempotency_key,
+    ):
+        payload = {
+            'original_movement_id': original.id,
+            'movement_type': movement_type,
+            'quantity': quantity,
+        }
+        operation, replay = self.env['loyalty.consign.operation']._open_command(
+            operation_type='reverse',
+            company=company,
+            partner=partner,
+            source_model=source_snapshot['model'],
+            source_res_id=source_snapshot['res_id'],
+            source_name=source_snapshot['name'],
+            idempotency_key=idempotency_key,
+            payload=payload,
+            identity_payload=payload,
+        )
+        if replay:
+            if (
+                operation.state != 'done'
+                or operation.operation_type != 'reverse'
+                or (operation.result_json or {}).get('original_movement_id') != original.id
+                or (operation.result_json or {}).get('movement_type') != movement_type
+                or len(operation.movement_ids) != 1
+            ):
+                raise ValidationError('The replayed reversal command is not complete.')
+        return operation, replay
+
+    @api.model
+    def _reverse_original_movement(
+        self, source, partner, original, quantity, idempotency_key,
+        expected_type, movement_type,
+    ):
+        """Append one exact linked reversal under a durable reverse operation."""
+        source_snapshot = self._source_snapshot(source)
+        partner = self._coerce_record('res.partner', partner, 'customer')
+        company = self._authorization_company(source_snapshot['record'], partner)
+        original = self._coerce_record(
+            'loyalty.consign.movement', original, 'original consignment movement',
+        )
+        quantity = self._normalized_reverse_quantity(original, quantity)
+        replay = self._find_completed_reverse_replay(
+            company, partner, source_snapshot, idempotency_key, original,
+            movement_type, quantity,
+        )
+        if replay:
+            return replay
+        original = self._validate_reverse_dimensions(
+            source_snapshot, partner, company, original, expected_type,
+        )
+        # A command error must not leave a pending journal or movement when a
+        # trusted server caller catches ValidationError inside a larger request.
+        with self.env.cr.savepoint():
+            operation, replay = self._open_reverse_command(
+                source_snapshot, partner, company, original, movement_type,
+                quantity, idempotency_key,
+            )
+            if replay:
+                return operation
+            movement = self.env['loyalty.consign.movement']._append_to_operation(
+                operation=operation,
+                aggregate_line=original.aggregate_line_id,
+                movement_type=movement_type,
+                quantity=quantity,
+                source_channel=original.source_channel,
+                source_model=source_snapshot['model'],
+                source_res_id=source_snapshot['res_id'],
+                source_name=source_snapshot['name'],
+                idempotency_key=f'{idempotency_key}:movement:{original.id}',
+                original_movement=original,
+                reconcile=False,
+            )
+            original.aggregate_line_id._reconcile_projection()
+            operation._complete_from_engine({
+                'original_movement_id': original.id,
+                'movement_type': movement_type,
+                'movement_ids': [movement.id],
+                'projection_ids': [original.aggregate_line_id.id],
+            })
+        return operation
+
+    @api.model
+    def _reverse_redeem(self, source, partner, redeem_movement, quantity, idempotency_key):
+        """Append an immutable reversal for one captured redeem movement."""
+        return self._reverse_original_movement(
+            source, partner, redeem_movement, quantity, idempotency_key,
+            expected_type='redeem', movement_type='redeem_reversal',
+        )
+
+    @api.model
+    def _clawback_issue(self, source, partner, issue_movement, quantity, idempotency_key):
+        """Append an immutable reversal for unused, unheld issue capacity only."""
+        return self._reverse_original_movement(
+            source, partner, issue_movement, quantity, idempotency_key,
+            expected_type='issue', movement_type='issue_reversal',
+        )
+
+    @api.model
     def _lock_authorization_dimensions(self, normalized, company, partner):
         card_ids = sorted({item['card_id'] for item in normalized})
         projection_ids = sorted({item['projection_id'] for item in normalized})
