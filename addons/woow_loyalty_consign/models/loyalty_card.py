@@ -101,6 +101,18 @@ class LoyaltyCard(models.Model):
             )
             card.consign_active_lines = len(active_lines)
 
+    def _consign_recipient_balance_lines(self):
+        """Return recipient-facing balances from ledger projections only.
+
+        ``qty_available`` is reconciled from posted movements and active Holds;
+        legacy deposited/redeemed snapshots are deliberately not used in mail or
+        PDF communications.
+        """
+        self.ensure_one()
+        return self.consign_line_ids.filtered(
+            lambda line: line.state == 'active' and line.qty_available > 0
+        )
+
     def _compute_access_url(self):
         super()._compute_access_url()
         for card in self:

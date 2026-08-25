@@ -68,7 +68,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-foreach="card.consign_line_ids.filtered(lambda l: l.state != 'cancelled')"
+                                <t t-foreach="card._consign_recipient_balance_lines()"
                                    t-as="line">
                                     <tr>
                                         <td>
