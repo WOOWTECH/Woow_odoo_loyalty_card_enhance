@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="consign_adjust_wizard_view_form" model="ir.ui.view">
+        <field name="name">consign.adjust.wizard.form</field>
+        <field name="model">consign.adjust.wizard</field>
+        <field name="arch" type="xml">
+            <form string="寄品調整">
+                <group>
+                    <group>
+                        <field name="card_id"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="product_id"/>
+                        <field name="product_uom_id"/>
+                    </group>
+                    <group>
+                        <field name="quantity"/>
+                        <field name="submission_uuid" invisible="1"/>
+                        <field name="operation_id" invisible="not operation_id" readonly="1"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="reason" required="1" placeholder="請說明調整原因..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="確認調整" class="btn-primary"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

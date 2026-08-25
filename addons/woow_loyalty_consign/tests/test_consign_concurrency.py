@@ -19,7 +19,7 @@ class TestConsignConcurrencyContract(TransactionCase):
     """Standard-safe gates; real cursor interleavings live in the shell probe."""
 
     def test_authorization_lock_hierarchy_and_durable_fences_are_checked_in(self):
-        engine = inspect.getsource(LoyaltyConsignEngine)
+        engine = inspect.getsource(LoyaltyConsignEngine._lock_authorization_dimensions)
         card = engine.index('UPDATE loyalty_card SET write_date = write_date')
         projection = engine.index('UPDATE loyalty_consign_line SET write_date = write_date')
         hold = engine.index("FROM loyalty_consign_hold\n                WHERE state = 'active'")
@@ -32,8 +32,9 @@ class TestConsignConcurrencyContract(TransactionCase):
         movement_lock = engine[issue:allocation]
         self.assertIn('ORDER BY id\n                  FOR UPDATE', movement_lock)
         self.assertNotIn('ORDER BY occurred_at, id\n                  FOR UPDATE', movement_lock)
-        self.assertIn('_open_command(', engine)
-        self.assertIn('_authorization_allocation_plan', engine)
+        full_engine = inspect.getsource(LoyaltyConsignEngine)
+        self.assertIn('_open_command(', full_engine)
+        self.assertIn('_authorization_allocation_plan', full_engine)
 
     def test_capture_lifecycle_locks_original_operations_before_projections(self):
         source = inspect.getsource(LoyaltyConsignHold._lock_active_lifecycle_dimensions)

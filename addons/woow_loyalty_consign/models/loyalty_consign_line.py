@@ -95,12 +95,13 @@ class LoyaltyConsignLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Public compatibility creation is temporarily manager-only until the
-        # formal manual adjustment command arrives in Task 9. This check must
+        # Public compatibility creation remains manager-only.  Task 7 adds
+        # the formal manual adjustment command; direct projection creation is
+        # still not a command authority. This check must
         # precede every lookup, sudo, row lock, or private mutation.
         if (
             not self.env.is_superuser()
-            and not self.env.user.has_group('sales_team.group_sale_manager')
+            and not self.env.user.has_group('woow_loyalty_consign.group_consign_manager')
         ):
             raise AccessError(
                 _('Only Sales managers may create consignment projections.')
@@ -411,9 +412,9 @@ class LoyaltyConsignLine(models.Model):
     def action_repair_projection(self):
         self.check_access('read')
         if not self.env.is_superuser() and not self.env.user.has_group(
-            'sales_team.group_sale_manager'
+            'woow_loyalty_consign.group_consign_manager'
         ):
-            raise AccessError(_('Only Sales managers may repair consignment projections.'))
+            raise AccessError(_('Only Consign Managers may repair consignment projections.'))
         lines = self.sudo().exists().sorted(
             lambda line: (line.company_id.id, line.card_id.id, line.product_id.id,
                           line.product_uom_id.id, line.id)
@@ -509,9 +510,9 @@ class LoyaltyConsignLine(models.Model):
         # the group check below is the mutation authority.
         self.check_access('read')
         if not self.env.is_superuser() and not self.env.user.has_group(
-            'sales_team.group_sale_manager'
+            'woow_loyalty_consign.group_consign_manager'
         ):
-            raise AccessError(_('Only Sales managers may cancel consignment lines.'))
+            raise AccessError(_('Only Consign Managers may cancel consignment lines.'))
         for line in self.filtered(lambda item: item.state != 'cancelled'):
             if float_compare(
                 line.qty_available, 0.0,

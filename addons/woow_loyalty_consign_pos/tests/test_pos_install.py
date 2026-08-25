@@ -50,8 +50,10 @@ class TestConsignPosInstall(TransactionCase):
         self.assertSetEqual(set(matching_acls.ids), set(bridge_acls.ids))
         expected_permissions = {
             'loyalty.consign.line': (True, False, False, False),
-            'loyalty.consign.redemption': (True, False, True, False),
-            'loyalty.consign.redemption.line': (True, False, True, False),
+            # Task 7 removes POS generic document creation.  Task 15 will
+            # restore only a server-side online adapter, never POS CRUD.
+            'loyalty.consign.redemption': (True, False, False, False),
+            'loyalty.consign.redemption.line': (True, False, False, False),
         }
         for access in bridge_acls:
             with self.subTest(model=access.model_id.model):

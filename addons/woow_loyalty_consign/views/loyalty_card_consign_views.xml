@@ -17,7 +17,13 @@
                     <button name="action_open_redeem_wizard"
                             type="object"
                             string="核銷"
+                            groups="woow_loyalty_consign.group_consign_manager"
                             class="btn-primary"/>
+                    <button name="action_open_adjust_wizard"
+                            type="object"
+                            string="調整"
+                            groups="woow_loyalty_consign.group_consign_manager"
+                            class="btn-secondary"/>
                 </header>
             </xpath>
 

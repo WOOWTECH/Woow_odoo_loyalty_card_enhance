@@ -10,6 +10,7 @@
                 <header>
                     <button name="action_done" type="object" string="確認核銷"
                             invisible="state != 'draft'"
+                            groups="woow_loyalty_consign.group_consign_manager"
                             class="btn-primary"/>
                     <field name="state" widget="statusbar"/>
                 </header>
@@ -24,11 +25,14 @@
                             <field name="card_id" readonly="state == 'done'"/>
                             <field name="partner_id"/>
                             <field name="date_redemption" readonly="state == 'done'"/>
+                            <field name="submission_uuid" readonly="state == 'done'"/>
                         </group>
                         <group>
                             <field name="staff_user_id" readonly="state == 'done'"/>
                             <field name="currency_id" invisible="1"/>
-                            <field name="total_redeemed_value"/>
+                            <field name="total_redeemed_value" readonly="1"/>
+                            <field name="authorization_operation_id" readonly="1"/>
+                            <field name="capture_operation_id" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -53,6 +57,16 @@
                             <field name="service_note" nolabel="1"
                                    placeholder="施打劑量、操作師、備註..."
                                    readonly="state == 'done'"/>
+                        </page>
+                        <page string="Ledger Movements" name="movements" invisible="not capture_operation_id">
+                            <field name="movement_ids" readonly="1">
+                                <list create="false" delete="false">
+                                    <field name="movement_type"/>
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="value_delta"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

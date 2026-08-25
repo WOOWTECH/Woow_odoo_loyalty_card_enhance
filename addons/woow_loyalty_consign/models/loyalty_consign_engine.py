@@ -870,6 +870,133 @@ class LoyaltyConsignEngine(models.AbstractModel):
         )
 
     @api.model
+    def _require_manual_manager(self):
+        """Manual adapters are manager-only; channel adapters have distinct seams."""
+        if not self.env.is_superuser() and not self.env.user.has_group(
+            'woow_loyalty_consign.group_consign_manager'
+        ):
+            raise ValidationError(
+                'Only Consign Managers may execute manual consignment adjustments.'
+            )
+
+    @api.model
+    def _adjust(self, source, card, product, uom, quantity, reason, idempotency_key):
+        """Append one manager-approved signed adjustment through the ledger.
+
+        The transient manager wizard is only the authenticated UI adapter.
+        The durable journal and movement source is the card, so a retry using
+        the same submission UUID remains an exact replay even if Odoo created
+        a new transient wizard record.
+        """
+        self._require_manual_manager()
+        source_snapshot = self._source_snapshot(source)
+        card = self._coerce_record('loyalty.card', card, 'consignment card')
+        product = self._coerce_record('product.product', product, 'adjustment product')
+        uom = self._coerce_record('uom.uom', uom or product.uom_id, 'adjustment UoM')
+        if not (reason or '').strip():
+            raise ValidationError('An adjustment reason is required.')
+        if product.uom_id.category_id != uom.category_id:
+            raise ValidationError('The adjustment product and UoM must have the same category.')
+        company = source_snapshot['record'].company_id if 'company_id' in source_snapshot['record']._fields else False
+        if not company or company not in self.env.companies:
+            raise ValidationError('The adjustment source company is not allowed for this user.')
+        if card.company_id != company or card.program_id.company_id != company:
+            raise ValidationError('The adjustment card and source must belong to one exact company.')
+        if not card.is_consign or not card.active or not card.partner_id:
+            raise ValidationError('Adjustments require an active consignment card with an owner.')
+        if product.company_id and product.company_id != company:
+            raise ValidationError('The adjustment product belongs to another company.')
+        normalized_quantity = uom._compute_quantity(quantity, product.uom_id, round=False)
+        normalized_quantity = float_round(
+            normalized_quantity, precision_rounding=product.uom_id.rounding,
+        )
+        if float_compare(
+            normalized_quantity, 0.0, precision_rounding=product.uom_id.rounding,
+        ) == 0:
+            raise ValidationError('The adjustment quantity cannot be zero after UoM rounding.')
+        line = self.env['loyalty.consign.line'].sudo().search([
+            ('card_id', '=', card.id), ('product_id', '=', product.id),
+            ('product_uom_id', '=', product.uom_id.id),
+        ], limit=1)
+        if not line:
+            raise ValidationError('The exact card, product, and base UoM projection is missing.')
+        movement_type = 'adjustment_in' if normalized_quantity > 0 else 'adjustment_out'
+        absolute_quantity = abs(normalized_quantity)
+        payload = {
+            'card_id': card.id, 'product_id': product.id,
+            'product_uom_id': product.uom_id.id, 'quantity': absolute_quantity,
+            'movement_type': movement_type, 'reason': reason.strip(),
+        }
+        operation_model = self.env['loyalty.consign.operation']
+        _canonical, payload_hash = operation_model._canonical_payload({
+            'operation_type': 'adjust', 'partner_id': card.partner_id.id,
+            'source_model': card._name, 'source_res_id': card.id,
+            'payload': payload,
+        })
+        existing = operation_model.sudo().search([
+            ('company_id', '=', company.id), ('idempotency_key', '=', idempotency_key),
+        ], limit=1)
+        if existing:
+            if existing.payload_hash != payload_hash:
+                raise ValidationError('The idempotency key was already used with a different payload.')
+            if existing.state == 'done' and existing.operation_type == 'adjust' and len(existing.movement_ids) == 1:
+                return operation_model.browse(existing.ids)
+            raise ValidationError('The replayed adjustment command is not complete.')
+        operation, replay = operation_model._open_command(
+            operation_type='adjust', company=company, partner=card.partner_id,
+            source_model=card._name, source_res_id=card.id,
+            source_name=card.display_name, idempotency_key=idempotency_key,
+            payload=payload, identity_payload=payload,
+        )
+        if replay:
+            return operation
+        # Preserve the engine-wide hierarchy: command token -> card ->
+        # projection -> active Holds -> issue facts -> allocations.
+        self.env.cr.execute(
+            'UPDATE loyalty_card SET write_date = write_date WHERE id = %s RETURNING id',
+            (card.id,),
+        )
+        if not self.env.cr.fetchone():
+            raise ValidationError('The adjustment card no longer exists.')
+        movement_model = self.env['loyalty.consign.movement']
+        movement_model._lock_projection_token(line)
+        self.env.cr.execute(
+            '''SELECT id FROM loyalty_consign_hold WHERE state = 'active'
+                 AND id IN (SELECT hold_id FROM loyalty_consign_hold_allocation
+                            WHERE aggregate_line_id = %s)
+               ORDER BY id FOR UPDATE''', (line.id,),
+        )
+        self.env.cr.fetchall()
+        self.env.cr.execute(
+            'SELECT id FROM loyalty_consign_movement WHERE aggregate_line_id = %s ORDER BY id FOR UPDATE',
+            (line.id,),
+        )
+        self.env.cr.fetchall()
+        self.env.cr.execute(
+            'SELECT id FROM loyalty_consign_hold_allocation WHERE aggregate_line_id = %s ORDER BY id FOR UPDATE',
+            (line.id,),
+        )
+        self.env.cr.fetchall()
+        card.invalidate_recordset()
+        line.invalidate_recordset()
+        if not card.active or not card.is_consign or line.card_id != card:
+            raise ValidationError('The adjustment dimensions changed while the command was locking.')
+        line._reconcile_projection()
+        movement = movement_model._append_to_operation(
+            operation=operation, aggregate_line=line, movement_type=movement_type,
+            quantity=absolute_quantity, source_channel='manual',
+            source_model=card._name, source_res_id=card.id,
+            source_name=card.display_name,
+            idempotency_key=f'{idempotency_key}:movement', reconcile=False,
+        )
+        line._reconcile_projection()
+        operation._complete_from_engine({
+            'movement_ids': [movement.id], 'projection_ids': [line.id],
+            'card_id': card.id, 'reason': reason.strip(),
+        })
+        return operation
+
+    @api.model
     def _lock_authorization_dimensions(self, normalized, company, partner):
         card_ids = sorted({item['card_id'] for item in normalized})
         projection_ids = sorted({item['projection_id'] for item in normalized})

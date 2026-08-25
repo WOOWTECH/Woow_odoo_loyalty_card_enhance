@@ -95,6 +95,11 @@ def backfill_consign_movements(env):
         ('qty_redeemed', '>', 0),
     ], order='id')
     for redemption_line in done_redemption_lines:
+        # Task 7 documents link to an engine capture operation.  They are
+        # already represented by exact redeem facts and must never be treated
+        # as pre-ledger legacy rows during a later migration/backfill run.
+        if redemption_line.redemption_id.capture_operation_id:
+            continue
         line = redemption_line.consign_line_id
         existing = line.movement_ids.filtered(lambda movement: (
             movement.movement_type == 'redeem'
