@@ -5,8 +5,12 @@ class TestConsignPortalSecurity(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.owner = cls.env['res.partner'].create({'name': 'Consign Owner'})
-        cls.other = cls.env['res.partner'].create({'name': 'Other Owner'})
+        cls.owner = cls.env['res.partner'].create({
+            'name': 'Consign Owner', 'company_id': cls.env.company.id,
+        })
+        cls.other = cls.env['res.partner'].create({
+            'name': 'Other Owner', 'company_id': cls.env.company.id,
+        })
         cls.portal = new_test_user(cls.env, login='consign.portal.owner', groups='base.group_portal')
         cls.portal.partner_id = cls.owner
         cls.program = cls.env['loyalty.program'].create({
