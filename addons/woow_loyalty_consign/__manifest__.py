@@ -1,6 +1,6 @@
 {
     'name': '寄品卡 (Consignment Card)',
-    'version': '18.0.7.0.0',
+    'version': '18.0.8.0.0',
     'category': 'Sales/Loyalty',
     'summary': '延伸忠誠度模組，新增寄品卡功能：酒窖寄存、醫美療程預購等',
     'description': """
@@ -22,7 +22,7 @@
 * 繼承 loyalty.card，沿用 barcode 掃碼與 email 通知機制
 * 獨立核銷單據，完整追蹤每次取用紀錄
 * Portal 入口讓會員自助查閱寄品餘額
-* 銷售訂單確認時可自動建立寄品卡
+* 客戶發票完成付款後才自動建立寄品卡
     """,
     'author': 'Woow Tech',
     'website': 'https://www.woow.tw',
@@ -31,6 +31,7 @@
         'loyalty',
         'sale_loyalty',
         'stock',
+        'account',
         'mail',
     ],
     'data': [
