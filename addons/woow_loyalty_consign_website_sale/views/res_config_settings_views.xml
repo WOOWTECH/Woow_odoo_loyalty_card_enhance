@@ -1,0 +1,7 @@
+<odoo>
+  <record id="website_config_settings_view_form_consign" model="ir.ui.view">
+    <field name="name">website.config.settings.view.form.consign</field>
+    <field name="model">website</field>
+    <field name="arch" type="xml"><form string="Website"><sheet><group string="Consignment"><field name="consign_redemption_enabled"/></group></sheet></form></field>
+  </record>
+</odoo>
