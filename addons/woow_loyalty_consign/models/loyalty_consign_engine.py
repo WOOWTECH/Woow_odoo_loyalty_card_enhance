@@ -516,6 +516,180 @@ class LoyaltyConsignEngine(models.AbstractModel):
         return False
 
     @api.model
+    def _find_completed_hold_lifecycle_replay(
+        self, operation_type, company, partner, source_snapshot, idempotency_key,
+        hold_id,
+    ):
+        """Return an exact completed Hold lifecycle replay before mutable checks."""
+        operation_model = self.env['loyalty.consign.operation']
+        _canonical, payload_hash = operation_model._canonical_payload({
+            'operation_type': operation_type,
+            'partner_id': partner.id,
+            'source_model': source_snapshot['model'],
+            'source_res_id': source_snapshot['res_id'],
+            'payload': {'hold_id': hold_id},
+        })
+        operation = operation_model.sudo().search([
+            ('company_id', '=', company.id),
+            ('idempotency_key', '=', idempotency_key),
+        ], limit=1)
+        if not operation:
+            return False
+        if operation.payload_hash != payload_hash:
+            raise ValidationError(
+                'The idempotency key was already used with a different payload.'
+            )
+        if (
+            operation.state == 'done'
+            and operation.operation_type == operation_type
+            and (operation.result_json or {}).get('hold_id') == hold_id
+        ):
+            return operation_model.browse(operation.ids)
+        return False
+
+    @api.model
+    def _validate_hold_lifecycle_dimensions(
+        self, source_snapshot, partner, company, hold,
+    ):
+        """Validate immutable command dimensions before a new lifecycle journal."""
+        hold = self._coerce_record('loyalty.consign.hold', hold, 'authorization Hold')
+        hold.check_access('read')
+        if (
+            hold.company_id != company or hold.partner_id != partner
+            or hold.source_model != source_snapshot['model']
+            or hold.source_res_id != source_snapshot['res_id']
+        ):
+            raise ValidationError(
+                'The authorization Hold must match the exact source, company, and customer.'
+            )
+        if hold.state != 'active':
+            raise ValidationError('Capture or release requires an active Hold.')
+        if hold.expires_at <= fields.Datetime.now():
+            raise ValidationError('Capture or release requires an unexpired Hold.')
+        return hold
+
+    @api.model
+    def _open_hold_lifecycle_command(
+        self, operation_type, source_snapshot, partner, company, hold,
+        idempotency_key,
+    ):
+        """Open one new lifecycle operation after caller validation."""
+        operation, replay = self.env['loyalty.consign.operation']._open_command(
+            operation_type=operation_type,
+            company=company,
+            partner=partner,
+            source_model=source_snapshot['model'],
+            source_res_id=source_snapshot['res_id'],
+            source_name=source_snapshot['name'],
+            idempotency_key=idempotency_key,
+            payload={'hold_id': hold.id},
+            identity_payload={'hold_id': hold.id},
+        )
+        if replay:
+            if (
+                operation.state != 'done'
+                or operation.operation_type != operation_type
+                or (operation.result_json or {}).get('hold_id') != hold.id
+            ):
+                raise ValidationError('The replayed Hold lifecycle command is not complete.')
+        return operation, replay
+
+    @api.model
+    def _capture(self, source, partner, hold, idempotency_key):
+        """Append exact redeem facts and atomically capture one authorization Hold."""
+        source_snapshot = self._source_snapshot(source)
+        partner = self._coerce_record('res.partner', partner, 'customer')
+        company = self._authorization_company(source_snapshot['record'], partner)
+        hold = self._coerce_record('loyalty.consign.hold', hold, 'authorization Hold')
+        replay = self._find_completed_hold_lifecycle_replay(
+            'capture', company, partner, source_snapshot, idempotency_key, hold.id,
+        )
+        if replay:
+            return replay
+        hold = self._validate_hold_lifecycle_dimensions(
+            source_snapshot, partner, company, hold,
+        )
+        operation, replay = self._open_hold_lifecycle_command(
+            'capture', source_snapshot, partner, company, hold, idempotency_key,
+        )
+        if replay:
+            return operation
+        hold, allocations, lines = hold._lock_active_lifecycle_dimensions(
+            company, partner,
+        )
+        now = fields.Datetime.now()
+        # The active-Hold capacity is intentionally released before appending
+        # redeems.  The transaction is atomic, so a later append failure rolls
+        # the transition back; this lets the existing outgoing ledger guard
+        # consume the exact allocation even when all available quantity is held.
+        hold._write_from_engine({
+            'state': 'captured',
+            'captured_at': now,
+            'transition_user_id': self.env.uid,
+        })
+        movement_model = self.env['loyalty.consign.movement']
+        movements = movement_model.browse()
+        for allocation in allocations.sorted('id'):
+            movements |= movement_model._append_to_operation(
+                operation=operation,
+                aggregate_line=allocation.aggregate_line_id,
+                movement_type='redeem',
+                quantity=allocation.quantity,
+                source_channel='manual',
+                source_model=source_snapshot['model'],
+                source_res_id=source_snapshot['res_id'],
+                source_name=source_snapshot['name'],
+                idempotency_key=f'{idempotency_key}:allocation:{allocation.id}',
+                original_movement=allocation.issue_movement_id,
+                reconcile=False,
+            )
+        lines._reconcile_projection()
+        operation._complete_from_engine({
+            'hold_id': hold.id,
+            'movement_ids': sorted(movements.ids),
+            'allocation_ids': sorted(allocations.ids),
+            'projection_ids': sorted(lines.ids),
+        })
+        return operation
+
+    @api.model
+    def _release(self, source, partner, hold, idempotency_key):
+        """Release one active authorization Hold without appending a movement."""
+        source_snapshot = self._source_snapshot(source)
+        partner = self._coerce_record('res.partner', partner, 'customer')
+        company = self._authorization_company(source_snapshot['record'], partner)
+        hold = self._coerce_record('loyalty.consign.hold', hold, 'authorization Hold')
+        replay = self._find_completed_hold_lifecycle_replay(
+            'release', company, partner, source_snapshot, idempotency_key, hold.id,
+        )
+        if replay:
+            return replay
+        hold = self._validate_hold_lifecycle_dimensions(
+            source_snapshot, partner, company, hold,
+        )
+        operation, replay = self._open_hold_lifecycle_command(
+            'release', source_snapshot, partner, company, hold, idempotency_key,
+        )
+        if replay:
+            return operation
+        hold, allocations, lines = hold._lock_active_lifecycle_dimensions(
+            company, partner,
+        )
+        hold._write_from_engine({
+            'state': 'released',
+            'released_at': fields.Datetime.now(),
+            'transition_user_id': self.env.uid,
+        })
+        lines._reconcile_projection()
+        operation._complete_from_engine({
+            'hold_id': hold.id,
+            'allocation_ids': sorted(allocations.ids),
+            'projection_ids': sorted(lines.ids),
+            'movement_ids': [],
+        })
+        return operation
+
+    @api.model
     def _lock_authorization_dimensions(self, normalized, company, partner):
         card_ids = sorted({item['card_id'] for item in normalized})
         projection_ids = sorted({item['projection_id'] for item in normalized})

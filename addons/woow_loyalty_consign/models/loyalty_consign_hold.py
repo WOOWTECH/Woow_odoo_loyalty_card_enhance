@@ -109,6 +109,113 @@ class LoyaltyConsignHold(models.Model):
         affected._reconcile_projection()
         return result
 
+    def _lock_active_lifecycle_dimensions(self, company, partner, now=None):
+        """Lock one active Hold in the shared lifecycle hierarchy.
+
+        The caller already owns the command idempotency token.  This helper
+        acquires card, aggregate projection, Hold, issue movement/original
+        operation, then allocation rows in deterministic ID order and returns
+        freshly revalidated records.  It deliberately uses no ``SKIP LOCKED``:
+        a capture/release command must serialize rather than silently skip its
+        own Hold.
+        """
+        self.ensure_one()
+        now = now or fields.Datetime.now()
+        hold_id = self.id
+        self.env.cr.execute(
+            '''SELECT allocation.aggregate_line_id, line.card_id,
+                      allocation.issue_movement_id, allocation.id
+                 FROM loyalty_consign_hold_allocation allocation
+                 JOIN loyalty_consign_line line
+                   ON line.id = allocation.aggregate_line_id
+                WHERE allocation.hold_id = %s
+             ORDER BY line.card_id, allocation.aggregate_line_id,
+                      allocation.issue_movement_id, allocation.id''',
+            (hold_id,),
+        )
+        dimensions = self.env.cr.fetchall()
+        if not dimensions:
+            raise ValidationError('An authorization Hold requires allocations.')
+        card_ids = sorted({row[1] for row in dimensions})
+        line_ids = sorted({row[0] for row in dimensions})
+        issue_ids = sorted({row[2] for row in dimensions})
+        allocation_ids = sorted({row[3] for row in dimensions})
+        for card_id in card_ids:
+            self.env.cr.execute(
+                '''UPDATE loyalty_card SET write_date = write_date
+                    WHERE id = %s RETURNING id''',
+                (card_id,),
+            )
+            if not self.env.cr.fetchone():
+                raise ValidationError('The authorization card no longer exists.')
+        for line_id in line_ids:
+            self.env.cr.execute(
+                '''UPDATE loyalty_consign_line SET write_date = write_date
+                    WHERE id = %s RETURNING id''',
+                (line_id,),
+            )
+            if not self.env.cr.fetchone():
+                raise ValidationError('The authorization projection no longer exists.')
+        self.env.cr.execute(
+            '''SELECT id FROM loyalty_consign_hold
+                WHERE id = %s AND state = 'active' AND expires_at > %s
+                FOR UPDATE''',
+            (hold_id, now),
+        )
+        if not self.env.cr.fetchone():
+            raise ValidationError('Capture or release requires an active unexpired Hold.')
+        self.env.cr.execute(
+            '''SELECT id FROM loyalty_consign_movement
+                WHERE id = ANY(%s)
+             ORDER BY id FOR UPDATE''',
+            (issue_ids,),
+        )
+        if len(self.env.cr.fetchall()) != len(issue_ids):
+            raise ValidationError('An authorization issue movement no longer exists.')
+        movement_model = self.env['loyalty.consign.movement']
+        issues = movement_model.sudo().browse(issue_ids)
+        for issue in issues.sorted(lambda movement: (movement.operation_id.id, movement.id)):
+            movement_model._lock_original_operation_token(issue)
+        self.env.cr.execute(
+            '''SELECT id FROM loyalty_consign_hold_allocation
+                WHERE id = ANY(%s) AND hold_id = %s
+             ORDER BY id FOR UPDATE''',
+            (allocation_ids, hold_id),
+        )
+        if len(self.env.cr.fetchall()) != len(allocation_ids):
+            raise ValidationError('An authorization allocation no longer exists.')
+        hold = self.sudo().browse(hold_id).exists()
+        allocations = self.env['loyalty.consign.hold.allocation'].sudo().browse(
+            allocation_ids
+        )
+        cards = self.env['loyalty.card'].sudo().browse(card_ids)
+        lines = self.env['loyalty.consign.line'].sudo().browse(line_ids)
+        cards.invalidate_recordset()
+        lines.invalidate_recordset()
+        hold.invalidate_recordset()
+        if (
+            not hold or hold.company_id != company or hold.partner_id != partner
+            or hold.state != 'active' or hold.expires_at <= now
+            or any(not card.active or not card.is_consign
+                   or card.company_id != company
+                   or card.program_id.company_id != company
+                   or not card.program_id.active
+                   or card.program_id.program_type != 'consign'
+                   for card in cards)
+            or any(line.card_id not in cards or line.partner_id != partner
+                   or line.company_id != company for line in lines)
+            or any(allocation.hold_id != hold
+                   or allocation.aggregate_line_id not in lines
+                   or allocation.issue_movement_id not in issues
+                   for allocation in allocations)
+        ):
+            raise ValidationError('The authorization Hold changed while locking.')
+        return (
+            self.browse(hold.ids),
+            self.env['loyalty.consign.hold.allocation'].browse(allocations.ids),
+            self.env['loyalty.consign.line'].browse(lines.ids),
+        )
+
     @api.model
     def _expiry_candidate_dimensions(self, candidate_ids):
         """Return every card/projection dimension required by each candidate."""
