@@ -63,14 +63,13 @@ class TestConsignPaidIssuance(TransactionCase):
         order = self._order(2)
         order.action_confirm()
         invoice = order._create_invoices()
-        # Account owns this computed state.  Post normally, then simulate its
-        # durable settled result rather than attempting to write a computed
-        # payment_state through the ORM.
+        # Exercise account's real payment flow; payment_state remains owned by
+        # account and is never forced through an ORM or SQL write in this test.
         invoice.action_post()
-        self.env.cr.execute(
-            'UPDATE account_move SET payment_state = %s WHERE id = %s',
-            ('paid', invoice.id),
-        )
+        register = self.env['account.payment.register'].with_context(
+            active_model='account.move', active_ids=invoice.ids,
+        ).create({})
+        register.action_create_payments()
         invoice.invalidate_recordset(['payment_state'])
         self.assertEqual(invoice.payment_state, 'paid')
         invoice._issue_consign_paid_invoice_grants()
