@@ -90,15 +90,17 @@ class LoyaltyConsignHold(models.Model):
         """Expire one bounded deterministic batch without contending workers."""
         batch_size = max(1, min(int(batch_size or 100), 1000))
         now = now or fields.Datetime.now()
-        # Discovering candidates does not lock them. Lock dimensions first, then
-        # acquire eligible Hold rows with SKIP LOCKED in the global hierarchy.
+        # Scan a bounded window larger than the completion batch. This lets a
+        # locked earliest Hold be skipped without starving unrelated later Holds,
+        # while locking every acquired dimension in card -> line -> Hold order.
+        candidate_scan_limit = min(max(batch_size * 10, batch_size + 1), 1000)
         self.env.cr.execute(
             '''SELECT id
                  FROM loyalty_consign_hold
                 WHERE state = 'active' AND expires_at <= %s
              ORDER BY id
                 LIMIT %s''',
-            (now, batch_size),
+            (now, candidate_scan_limit),
         )
         candidate_ids = [row[0] for row in self.env.cr.fetchall()]
         if not candidate_ids:
@@ -149,6 +151,8 @@ class LoyaltyConsignHold(models.Model):
                 skipped.update(line_candidates[line_id])
         hold_ids = []
         for hold_id in candidate_ids:
+            if len(hold_ids) >= batch_size:
+                break
             if hold_id in skipped:
                 continue
             self.env.cr.execute(

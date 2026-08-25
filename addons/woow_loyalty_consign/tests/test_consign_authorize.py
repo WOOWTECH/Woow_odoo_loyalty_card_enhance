@@ -175,6 +175,26 @@ class TestConsignAuthorize(TransactionCase):
         self.assertEqual(len(allocation), 1)
         self.assertEqual(allocation.quantity, 0.01)
 
+    def test_negative_request_cannot_be_cancelled_by_a_positive_duplicate(self):
+        issue = self._issue('test:authorize:negative:issue', quantity=10)
+        card = issue.movement_ids.card_id
+        operation_count = self.env['loyalty.consign.operation'].search_count([])
+        hold_count = self.env['loyalty.consign.hold'].search_count([])
+        allocation_count = self.env['loyalty.consign.hold.allocation'].search_count([])
+        with self.assertRaisesRegex(ValidationError, 'Every authorization quantity'):
+            self._authorize('test:authorize:negative', [
+                self._request(card, quantity=-5),
+                self._request(card, quantity=6),
+            ])
+        self.assertEqual(
+            self.env['loyalty.consign.operation'].search_count([]), operation_count,
+        )
+        self.assertEqual(self.env['loyalty.consign.hold'].search_count([]), hold_count)
+        self.assertEqual(
+            self.env['loyalty.consign.hold.allocation'].search_count([]), allocation_count,
+        )
+        self.assertEqual(issue.movement_ids.aggregate_line_id.qty_available, 10)
+
     def test_pure_validation_rejects_owner_company_state_uom_and_forged_authority(self):
         issue = self._issue('test:authorize:validation:issue')
         card = issue.movement_ids.card_id
@@ -323,6 +343,34 @@ class TestConsignAuthorize(TransactionCase):
             self.env['loyalty.consign.hold']._cron_expire_holds(batch_size=2, now=now), 2,
         )
         self.assertEqual((first_hold | second_hold).mapped('state'), ['expired', 'expired'])
+
+    def test_expiration_cron_batch_size_one_transitions_only_one_hold(self):
+        first = self._issue('test:authorize:cron:one:first', quantity=2)
+        second = self._issue(
+            'test:authorize:cron:one:second', quantity=2,
+            program=self.second_program,
+        )
+        first_hold = self._authorize(
+            'test:authorize:cron:one:first:hold',
+            [self._request(first.movement_ids.card_id, quantity=1)],
+        ).hold_ids
+        second_hold = self._authorize(
+            'test:authorize:cron:one:second:hold',
+            [self._request(second.movement_ids.card_id, quantity=1)],
+        ).hold_ids
+        now = fields.Datetime.now()
+        (first_hold | second_hold)._write_from_engine({
+            'expires_at': now - timedelta(seconds=1),
+        })
+        self.assertEqual(
+            self.env['loyalty.consign.hold']._cron_expire_holds(batch_size=1, now=now), 1,
+        )
+        self.assertEqual(first_hold.state, 'expired')
+        self.assertEqual(second_hold.state, 'active')
+        self.assertEqual(
+            self.env['loyalty.consign.hold']._cron_expire_holds(batch_size=1, now=now), 1,
+        )
+        self.assertEqual(second_hold.state, 'expired')
 
     def test_expiration_cron_is_bounded_idempotent_and_leaves_future_hold(self):
         cron = self.env.ref('woow_loyalty_consign.ir_cron_expire_consign_holds')
