@@ -113,23 +113,27 @@ class LoyaltyConsignHold(models.Model):
         """Lock one active Hold in the shared lifecycle hierarchy.
 
         The caller already owns the command idempotency token.  This helper
-        acquires card, aggregate projection, Hold, issue movement/original
-        operation, then allocation rows in deterministic ID order and returns
-        freshly revalidated records.  It deliberately uses no ``SKIP LOCKED``:
-        a capture/release command must serialize rather than silently skip its
-        own Hold.
+        acquires original-operation durable tokens, cards, aggregate
+        projections, the Hold, issue movements, then allocation rows in
+        deterministic order and returns freshly revalidated records.  It
+        deliberately uses no ``SKIP LOCKED``: a capture/release command must
+        serialize rather than silently skip its own Hold.
         """
         self.ensure_one()
         now = now or fields.Datetime.now()
         hold_id = self.id
         self.env.cr.execute(
             '''SELECT allocation.aggregate_line_id, line.card_id,
-                      allocation.issue_movement_id, allocation.id
+                      allocation.issue_movement_id, issue.operation_id,
+                      allocation.id
                  FROM loyalty_consign_hold_allocation allocation
                  JOIN loyalty_consign_line line
                    ON line.id = allocation.aggregate_line_id
+                 JOIN loyalty_consign_movement issue
+                   ON issue.id = allocation.issue_movement_id
                 WHERE allocation.hold_id = %s
-             ORDER BY line.card_id, allocation.aggregate_line_id,
+             ORDER BY issue.operation_id, line.card_id,
+                      allocation.aggregate_line_id,
                       allocation.issue_movement_id, allocation.id''',
             (hold_id,),
         )
@@ -139,7 +143,23 @@ class LoyaltyConsignHold(models.Model):
         card_ids = sorted({row[1] for row in dimensions})
         line_ids = sorted({row[0] for row in dimensions})
         issue_ids = sorted({row[2] for row in dimensions})
-        allocation_ids = sorted({row[3] for row in dimensions})
+        operation_ids = sorted({row[3] for row in dimensions})
+        allocation_ids = sorted({row[4] for row in dimensions})
+        movement_model = self.env['loyalty.consign.movement']
+        issues = movement_model.sudo().browse(issue_ids)
+        # TASK6_CAPTURE_CLAWBACK_LOCK_ORDER: linked-cap commands take every
+        # original-operation durable token first, ascending, before any
+        # projection token.  This matches _append_movement() for clawback.
+        issues_by_operation = {
+            operation_id: issues.filtered(
+                lambda issue: issue.operation_id.id == operation_id
+            )[:1]
+            for operation_id in operation_ids
+        }
+        for operation_id in operation_ids:
+            movement_model._lock_original_operation_token(
+                issues_by_operation[operation_id]
+            )
         for card_id in card_ids:
             self.env.cr.execute(
                 '''UPDATE loyalty_card SET write_date = write_date
@@ -172,10 +192,6 @@ class LoyaltyConsignHold(models.Model):
         )
         if len(self.env.cr.fetchall()) != len(issue_ids):
             raise ValidationError('An authorization issue movement no longer exists.')
-        movement_model = self.env['loyalty.consign.movement']
-        issues = movement_model.sudo().browse(issue_ids)
-        for issue in issues.sorted(lambda movement: (movement.operation_id.id, movement.id)):
-            movement_model._lock_original_operation_token(issue)
         self.env.cr.execute(
             '''SELECT id FROM loyalty_consign_hold_allocation
                 WHERE id = ANY(%s) AND hold_id = %s

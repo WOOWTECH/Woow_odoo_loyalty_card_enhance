@@ -35,6 +35,21 @@ class TestConsignConcurrencyContract(TransactionCase):
         self.assertIn('_open_command(', engine)
         self.assertIn('_authorization_allocation_plan', engine)
 
+    def test_capture_lifecycle_locks_original_operations_before_projections(self):
+        source = inspect.getsource(LoyaltyConsignHold._lock_active_lifecycle_dimensions)
+        original_operation = source.index('movement_model._lock_original_operation_token')
+        card = source.index('UPDATE loyalty_card SET write_date = write_date')
+        projection = source.index('UPDATE loyalty_consign_line SET write_date = write_date')
+        hold = source.index('SELECT id FROM loyalty_consign_hold')
+        issue = source.index('SELECT id FROM loyalty_consign_movement')
+        allocation = source.index('SELECT id FROM loyalty_consign_hold_allocation')
+        self.assertIn('TASK6_CAPTURE_CLAWBACK_LOCK_ORDER', source)
+        self.assertLess(original_operation, card)
+        self.assertLess(card, projection)
+        self.assertLess(projection, hold)
+        self.assertLess(hold, issue)
+        self.assertLess(issue, allocation)
+
     def test_expiry_contract_uses_bounded_skip_locked_selection(self):
         source = inspect.getsource(LoyaltyConsignHold._cron_expire_holds)
         self.assertIn('batch_size', source)
@@ -80,6 +95,10 @@ class TestConsignConcurrencyContract(TransactionCase):
                 'TASK6_RELEASE_EXPIRY_STALE_FENCE=PASS',
                 'TASK6_SAME_KEY_CAPTURE_REPLAY=PASS',
                 'TASK6_CLAWBACK_AUTHORIZE_STALE_FENCE=PASS',
+                'TASK6_CAPTURE_CLAWBACK_LOCK_ORDER=PASS',
+                'TASK6_CAPTURE_CLAWBACK_STALE_FENCE=PASS',
+                'TASK6_CAPTURE_CLAWBACK_SAFE_RETRY=PASS',
+                'TASK6_CAPTURE_CLAWBACK_NO_OVERCONSUME=PASS',
             ),
             'task6_upgrade_lifecycle_probe.py': (
                 'TASK6_UPGRADE_PREPARE=PASS',

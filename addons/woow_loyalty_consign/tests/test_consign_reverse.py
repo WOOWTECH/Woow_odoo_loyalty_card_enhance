@@ -283,6 +283,9 @@ class TestConsignCaptureRelease(TransactionCase):
         with self.assertRaisesRegex(ValidationError, 'active Hold cannot be deactivated'):
             card.active = False
         self.assertTrue(card.active)
+        with self.assertRaisesRegex(ValidationError, 'active Hold cannot be deactivated'):
+            card.write({'active': 0})
+        self.assertTrue(card.active)
         self._release('test:lifecycle:deactivation:release', hold)
         card.active = False
         self.assertFalse(card.active)
