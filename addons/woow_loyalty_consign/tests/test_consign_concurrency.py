@@ -66,25 +66,30 @@ class TestConsignConcurrencyContract(TransactionCase):
             _MAX_EXPIRY_CANDIDATE_SCAN,
         )
 
-    def test_real_two_cursor_probe_is_executable_and_covers_required_races(self):
+    def test_real_two_cursor_probes_are_executable_and_cover_required_races(self):
         addon_root = Path(inspect.getfile(LoyaltyConsignEngine)).parents[1]
-        probe = addon_root / 'tests' / 'probes' / 'task5_authorize_concurrency_probe.py'
-        self.assertTrue(probe.exists())
-        self.assertTrue(os.access(probe, os.X_OK))
-        source = probe.read_text()
-        for marker in (
-            'SerializationFailure', 'ValidationError',
-            'TASK5_DISTINCT_KEYS_STALE_FENCE=PASS',
-            'TASK5_FRESH_RETRY_DOMAIN_ERROR=PASS',
-            'TASK5_ONE_HOLD_AVAILABLE_FOUR=PASS',
-            'TASK5_SAME_KEY_REPLAY=PASS',
-            'TASK5_AUTHORIZE_REVERSAL_RACE=PASS',
-            'TASK5_EXPIRY_BATCH_ONE_SKIPS_LOCKED=PASS',
-            'TASK5_EXPIRY_MULTI_CARD_DIMENSION_SKIP=PASS',
-            'TASK5_EXPIRY_UNSELECTED_DIMENSIONS_RELEASED=PASS',
-            'TASK5_EXPIRY_SKIP_LOCKED_IDEMPOTENT=PASS',
-            'TASK5_EXPIRY_LOCKED_FIRST_PROGRESS=PASS',
-            'TASK5_NO_UNIQUE_OR_RAW_ERROR=PASS',
-            'refuses a non-test database',
-        ):
-            self.assertIn(marker, source)
+        requirements = {
+            'task5_authorize_concurrency_probe.py': (
+                'TASK5_CONCURRENCY_PROBE=PASS',
+                'TASK5_SAME_KEY_REPLAY=PASS',
+                'TASK5_AUTHORIZE_REVERSAL_RACE=PASS',
+            ),
+            'task6_lifecycle_concurrency_probe.py': (
+                'TASK6_CONCURRENCY_PROBE=PASS',
+                'TASK6_CAPTURE_EXPIRY_STALE_FENCE=PASS',
+                'TASK6_RELEASE_EXPIRY_STALE_FENCE=PASS',
+                'TASK6_SAME_KEY_CAPTURE_REPLAY=PASS',
+                'TASK6_CLAWBACK_AUTHORIZE_STALE_FENCE=PASS',
+            ),
+        }
+        for filename, markers in requirements.items():
+            with self.subTest(filename=filename):
+                probe = addon_root / 'tests' / 'probes' / filename
+                self.assertTrue(probe.exists())
+                self.assertTrue(os.access(probe, os.X_OK))
+                source = probe.read_text()
+                self.assertIn('SerializationFailure', source)
+                self.assertIn('ValidationError', source)
+                self.assertIn('refuses a non-test database', source)
+                for marker in markers:
+                    self.assertIn(marker, source)
