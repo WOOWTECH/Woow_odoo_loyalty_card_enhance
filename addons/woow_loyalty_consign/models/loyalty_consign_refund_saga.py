@@ -1,5 +1,8 @@
+import json
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_compare
 
 
 class LoyaltyConsignRefundSaga(models.Model):
@@ -72,3 +75,119 @@ class LoyaltyConsignRefundSaga(models.Model):
 
     def unlink(self):
         raise ValidationError('Refund sagas are retained for audit and cannot be deleted.')
+
+    @api.model
+    def _canonical_payload(self, payload):
+        """Return a stable replay identity without trusting caller ordering."""
+        return json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+
+    @api.model
+    def _open_refund(self, source, partner, currency, idempotency_key, cash_amount, reversals):
+        """Open or exactly replay a trusted refund request.
+
+        ``reversals`` is deliberately a compact server-side snapshot: each row
+        names an original posted movement and the exact quantity to reverse once
+        the payment adapter reports terminal ``done``.  Browser/controller input
+        must never call this method directly.
+        """
+        if not isinstance(source, models.BaseModel):
+            raise ValidationError('The refund source must be a trusted record.')
+        source.ensure_one()
+        partner.ensure_one()
+        currency.ensure_one()
+        company = source.company_id if 'company_id' in source._fields else False
+        if not company or partner.company_id and partner.company_id != company:
+            raise ValidationError('The refund source and customer must belong to one company.')
+        if not idempotency_key or not idempotency_key.strip():
+            raise ValidationError('A refund idempotency key is required.')
+        if cash_amount < 0:
+            raise ValidationError('Refund cash amount cannot be negative.')
+        normalized = []
+        for item in reversals or []:
+            if not isinstance(item, dict):
+                raise ValidationError('Every refund reversal must be a mapping.')
+            movement = self.env['loyalty.consign.movement'].browse(item.get('movement_id'))
+            movement.ensure_one()
+            if not movement.exists() or movement.company_id != company:
+                raise ValidationError('A refund reversal movement is invalid for this company.')
+            kind = item.get('kind')
+            if kind not in ('redeem', 'issue') or movement.movement_type != kind:
+                raise ValidationError('A refund reversal must name its exact original movement type.')
+            quantity = float(item.get('quantity', 0.0))
+            if float_compare(quantity, 0.0, precision_rounding=movement.product_uom_id.rounding) <= 0:
+                raise ValidationError('A refund reversal quantity must be positive.')
+            normalized.append({
+                'kind': kind, 'movement_id': movement.id, 'quantity': quantity,
+            })
+        normalized.sort(key=lambda item: (item['kind'], item['movement_id']))
+        payload = {
+            'source_model': source._name, 'source_res_id': source.id,
+            'partner_id': partner.id, 'currency_id': currency.id,
+            'cash_amount': cash_amount, 'reversals': normalized,
+        }
+        canonical = self._canonical_payload(payload)
+        existing = self.sudo().search([
+            ('company_id', '=', company.id), ('idempotency_key', '=', idempotency_key),
+        ], limit=1)
+        if existing:
+            if self._canonical_payload(existing.requested_payload) != canonical:
+                raise ValidationError('The refund idempotency key was already used with a different payload.')
+            return existing
+        return self.sudo().create({
+            'company_id': company.id,
+            'partner_id': partner.id,
+            'currency_id': currency.id,
+            'source_model': source._name,
+            'source_res_id': source.id,
+            'source_name': source.display_name,
+            'idempotency_key': idempotency_key,
+            'requested_payload': payload,
+            'coverage_snapshot': {'reversals': normalized},
+            'cash_amount': cash_amount,
+            'state': 'pending',
+        })
+
+    def _payment_callback(self, payment_state, child_transaction=False):
+        """Advance one refund saga; only terminal done restores entitlement."""
+        self.ensure_one()
+        if payment_state not in ('pending', 'done', 'error', 'cancel'):
+            raise ValidationError('The refund payment state is invalid.')
+        if child_transaction:
+            child_transaction.ensure_one()
+            self.write({
+                'child_transaction_model': child_transaction._name,
+                'child_transaction_res_id': child_transaction.id,
+                'child_transaction_name': child_transaction.display_name,
+            })
+        if self.state == 'done':
+            if payment_state == 'done':
+                return self
+            raise ValidationError('A completed refund saga cannot change payment state.')
+        if payment_state != 'done':
+            self.write({'state': payment_state})
+            return self
+        source = self.env[self.source_model].browse(self.source_res_id).exists()
+        if not source:
+            raise ValidationError('The refund source no longer exists.')
+        engine = self.env['loyalty.consign.engine']
+        operations = self.env['loyalty.consign.operation']
+        for item in self.coverage_snapshot.get('reversals', []):
+            movement = self.env['loyalty.consign.movement'].browse(item['movement_id']).exists()
+            if not movement:
+                raise ValidationError('The original movement no longer exists.')
+            key = '%s:%s:%s' % (self.idempotency_key, item['kind'], movement.id)
+            if item['kind'] == 'redeem':
+                operation = engine._reverse_redeem(
+                    source, self.partner_id, movement, item['quantity'], key,
+                )
+            else:
+                operation = engine._clawback_issue(
+                    source, self.partner_id, movement, item['quantity'], key,
+                )
+            operations |= operation
+        self.write({
+            'state': 'done',
+            'reversal_operation_id': operations[:1].id if operations else False,
+            'error_code': False, 'error_message': False, 'error_metadata': False,
+        })
+        return self
