@@ -1,4 +1,5 @@
 import inspect
+from pathlib import Path
 
 from odoo.tests.common import TransactionCase
 
@@ -80,9 +81,42 @@ class TestConsignPosInstall(TransactionCase):
         self.assertNotIn('loyalty.consign.redemption', source)
         self.assertNotIn('_append_movement(', source)
 
+    def test_frontend_uses_persisted_line_intent_without_post_payment_rpc(self):
+        module_root = Path(__file__).resolve().parents[1]
+        product_source = (module_root / 'static/src/overrides/components/product_screen/product_screen.js').read_text()
+        popup_source = (module_root / 'static/src/overrides/components/consign_card_popup/consign_card_popup.js').read_text()
+        payment_source = (module_root / 'static/src/overrides/components/payment_screen/payment_screen.js').read_text()
+        order_source = (module_root / 'static/src/overrides/models/pos_order.js').read_text()
+        self.assertIn('consign_card_id', product_source)
+        self.assertIn('consign_covered_qty', product_source)
+        self.assertNotIn('consign_line_id:', product_source)
+        self.assertNotIn('confirm_consign_redemptions', payment_source)
+        self.assertNotIn('consignRedemptions', order_source)
+        self.assertIn('navigator.onLine', order_source)
+        self.assertIn('syncAllOrders({ orders: [order], throw: true })', order_source)
+        self.assertNotIn('parseInt', popup_source)
+        self.assertIn('uom_rounding', popup_source)
+
+    def test_backend_order_fields_do_not_replace_frontend_order_schema(self):
+        loaded_fields = self.env['pos.order']._load_pos_data_fields(False)
+        for backend_only_field in (
+            'consign_hold_id',
+            'consign_authorize_operation_id',
+            'consign_capture_operation_id',
+            'consign_allocation_hash',
+            'consign_state',
+        ):
+            self.assertNotIn(backend_only_field, loaded_fields)
+
     def test_pos_consign_feature_is_disabled_by_default(self):
         self.assertFalse(
             self.env['pos.config'].new({}).enable_consign_redemption
+        )
+        # Odoo 18 deliberately returns an empty field list for pos.config;
+        # search_read then loads every readable field, including our flag.
+        self.assertNotIn(
+            'enable_consign_redemption',
+            self.env['pos.config']._load_pos_data_fields(False),
         )
 
     def test_redemption_product_reuses_legacy_xmlid(self):

@@ -34,6 +34,7 @@
                                                style="width: 60px;"
                                                t-att-value="line.qty_to_redeem"
                                                t-att-max="line.qty_available"
+                                               t-att-step="line.uom_rounding || 1"
                                                min="0"
                                                t-on-change="(ev) => this.setQty(line, ev)"/>
                                         <button class="btn btn-sm btn-outline-secondary"

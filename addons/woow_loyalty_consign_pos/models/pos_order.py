@@ -3,6 +3,7 @@ import json
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_compare
 
 
 class PosOrder(models.Model):
@@ -24,28 +25,33 @@ class PosOrder(models.Model):
         default='none', readonly=True, copy=False,
     )
 
-    @api.model
-    def _load_pos_data_fields(self, config_id):
-        fields_to_load = super()._load_pos_data_fields(config_id)
-        return fields_to_load + [
-            'consign_hold_id', 'consign_authorize_operation_id',
-            'consign_capture_operation_id', 'consign_allocation_hash',
-            'consign_state',
-        ]
-
     def _consign_requests_from_persisted_lines(self):
         """Derive engine input exclusively from persisted POS order lines."""
         self.ensure_one()
         requests = []
         for line in self.lines.filtered('consign_card_id'):
-            quantity = line.consign_covered_qty
-            if quantity <= 0:
-                continue
+            rounding = line.product_uom_id.rounding
+            if (
+                not line.is_consign_redemption
+                or float_compare(line.qty, 0, precision_rounding=rounding) <= 0
+                or float_compare(
+                    line.consign_covered_qty,
+                    line.qty,
+                    precision_rounding=rounding,
+                ) != 0
+                or not self.currency_id.is_zero(line.price_unit)
+            ):
+                raise ValidationError(_(
+                    'A POS consignment line must preserve its zero-priced '
+                    'persisted quantity and declared coverage.'
+                ))
             requests.append({
                 'card_id': line.consign_card_id.id,
                 'product_id': line.product_id.id,
                 'product_uom_id': line.product_uom_id.id,
-                'quantity': quantity,
+                # Persisted line quantity is authority; the declared coverage
+                # is only an equality-checked intent snapshot.
+                'quantity': line.qty,
             })
         return requests
 
@@ -141,12 +147,22 @@ class PosOrder(models.Model):
         """Persist lines first, then derive/capture trusted consign coverage atomically."""
         result = super()._process_order(order, existing_order)
         pos_order = self.browse(result) if isinstance(result, int) else result
-        if pos_order and pos_order.config_id.enable_consign_redemption:
+        if pos_order:
             requests = pos_order._consign_requests_from_persisted_lines()
             if requests:
+                # The authorization method enforces the feature flag. A
+                # disabled config must never accept forged zero-priced intent.
                 pos_order._authorize_consign_redemption()
                 if pos_order.state in ('paid', 'done', 'invoiced'):
                     pos_order._capture_consign_redemption()
+            elif pos_order.consign_state == 'authorized':
+                hold = pos_order.consign_hold_id
+                if hold.state == 'active' and hold.partner_id != pos_order.partner_id:
+                    raise ValidationError(_(
+                        'The authorized consignment customer changed. Cancel '
+                        'the order or restore the original customer before syncing.'
+                    ))
+                pos_order._release_consign_redemption()
         return result
 
     def action_pos_order_cancel(self):
