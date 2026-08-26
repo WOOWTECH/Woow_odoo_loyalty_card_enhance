@@ -47,14 +47,75 @@ class SaleOrder(models.Model):
     def _consign_eligible_lines(self, product):
         return self.order_line.filtered(lambda l: l.product_id == product and not l.display_type and not l.is_reward_line and not l.consign_generated_reward).sorted(lambda l: (l.sequence, l.id))
 
+    def _website_consign_cart_options(self):
+        """Return masked, owner-scoped balance options for Cart rendering."""
+        self.ensure_one()
+        if (
+            not self.website_id.consign_redemption_enabled
+            or self.env.user._is_public()
+            or self.partner_id != self.env.user.partner_id
+        ):
+            return []
+        products = self.order_line.filtered(
+            lambda line: not line.display_type
+            and not line.is_reward_line
+            and not line.consign_generated_reward
+        ).mapped('product_id')
+        if not products:
+            return []
+        cards = self.env['loyalty.card'].sudo().search([
+            ('partner_id', '=', self.partner_id.id),
+            ('company_id', '=', self.company_id.id),
+            ('is_consign', '=', True),
+            ('active', '=', True),
+            ('program_id.active', '=', True),
+        ], order='id')
+        allocation_by_dimension = {
+            (allocation.card_id.id, allocation.product_id.id): allocation
+            for allocation in self.consign_allocation_ids.sudo()
+        }
+        options = []
+        for card in cards:
+            for line in card.consign_line_ids.filtered(
+                lambda candidate: candidate.product_id in products
+                and candidate.state == 'active'
+                and candidate.qty_available > 0
+            ).sorted(lambda candidate: (candidate.product_id.display_name, candidate.id)):
+                allocation = allocation_by_dimension.get(
+                    (card.id, line.product_id.id)
+                )
+                code = card.code or ''
+                options.append({
+                    'card_id': card.id,
+                    'masked_code': ('••••' + code[-4:]) if code else '••••',
+                    'product_id': line.product_id.id,
+                    'product_name': line.product_id.display_name,
+                    'uom_name': line.product_uom_id.display_name,
+                    'available_qty': line.qty_available,
+                    'requested_qty': allocation.requested_qty if allocation else 0,
+                })
+        return options
+
     def _revalidate_consign_allocations(self):
         for order in self:
             warnings = []
             for allocation in order.consign_allocation_ids:
-                maximum = sum(order._consign_eligible_lines(allocation.product_id).mapped('product_uom_qty'))
+                allocation_id = allocation.id
+                maximum = sum(
+                    order._consign_eligible_lines(allocation.product_id).mapped(
+                        'product_uom_qty'
+                    )
+                )
                 if allocation.requested_qty > maximum:
-                    allocation.sudo().write({'requested_qty': maximum})
-                    warnings.append({'allocation_id': allocation.id, 'requested_qty': maximum, 'reason': 'cart_quantity_reduced'})
+                    if maximum <= 0:
+                        allocation.sudo().unlink()
+                    else:
+                        allocation.sudo().write({'requested_qty': maximum})
+                    warnings.append({
+                        'allocation_id': allocation_id,
+                        'requested_qty': maximum,
+                        'reason': 'cart_quantity_reduced',
+                    })
             order.consign_allocation_warning = warnings
             order._recompute_consign_coverage()
         return self.consign_allocation_warning
@@ -122,9 +183,14 @@ class SaleOrder(models.Model):
             ('state', '=', 'active'), ('source_model', '=', self._name),
             ('source_res_id', '=', self.id),
         ])
+        holds._expire_due_holds()
+        holds.invalidate_recordset(['state', 'expired_at'])
         engine = self.env['loyalty.consign.engine']
-        for hold in holds:
-            engine._release(self, self.partner_id, hold, 'website-cart-release-%s-%s' % (self.id, hold.id))
+        for hold in holds.filtered(lambda candidate: candidate.state == 'active'):
+            engine._release(
+                self, self.partner_id, hold,
+                'website-cart-release-%s-%s' % (self.id, hold.id),
+            )
 
     def _invalidate_consign_allocations(self):
         self.ensure_one()
@@ -145,10 +211,21 @@ class SaleOrder(models.Model):
             raise ValidationError(_('The requested card or product is unavailable.'))
         if card.partner_id != self.partner_id or card.company_id != self.company_id or (product.company_id and product.company_id != self.company_id):
             raise ValidationError(_('The selected card, product, and cart must belong to one customer and company.'))
-        if not self._consign_eligible_lines(product) or quantity <= 0:
+        if not self._consign_eligible_lines(product) or quantity < 0:
             raise ValidationError(_('The selected product is not eligible in this cart.'))
         self._invalidate_consign_allocations()
         allocation = self.env['sale.order.consign.allocation'].sudo().search([('order_id','=',self.id),('card_id','=',card.id),('product_id','=',product.id),('product_uom_id','=',product.uom_id.id)], limit=1)
+        if quantity == 0:
+            if allocation:
+                rewards = allocation.coverage_ids.mapped('reward_line_id').sudo()
+                allocation.sudo().unlink()
+                rewards.exists().unlink()
+            warnings = self._revalidate_consign_allocations()
+            return {
+                'allocation_id': False,
+                'version': self.consign_allocation_version,
+                'warnings': warnings,
+            }
         vals = {'requested_qty': quantity, 'version': self.consign_allocation_version}
         if allocation:
             allocation.write(vals)
@@ -156,7 +233,45 @@ class SaleOrder(models.Model):
             allocation = self.env['sale.order.consign.allocation'].sudo().create(dict(vals, order_id=self.id, card_id=card.id, product_id=product.id, product_uom_id=product.uom_id.id))
         return {'allocation_id': allocation.id, 'version': self.consign_allocation_version, 'warnings': self._revalidate_consign_allocations()}
 
+    def _check_cart_is_ready_to_be_paid(self):
+        """Refresh server-priced coverage before Odoo validates payment amount."""
+        self.ensure_one()
+        if self.consign_allocation_ids:
+            self._recompute_consign_coverage()
+        return super()._check_cart_is_ready_to_be_paid()
+
+    def _validate_order(self):
+        """Capture fully covered Cart intent before zero-total confirmation."""
+        self.ensure_one()
+        if self.consign_allocation_ids:
+            self._recompute_consign_coverage()
+            if self.currency_id.is_zero(self.amount_total):
+                self._lock_website_consign_payment()
+                authorization = self._prepare_website_consign_authorization()
+                hold = authorization.hold_ids
+                if len(hold) != 1:
+                    raise ValidationError(
+                        _('The zero-total consignment authorization is invalid.')
+                    )
+                capture = self.env['loyalty.consign.engine']._capture(
+                    self, self.partner_id, hold,
+                    'website-zero-total-capture-%s-%s' % (
+                        self.id, self.consign_allocation_version,
+                    ),
+                )
+                self.sudo().write({
+                    'consign_capture_operation_id': capture.id,
+                })
+        return super()._validate_order()
+
     def _cart_update(self, *args, **kwargs):
+        # Native cart deletion may cascade the coverage row before our
+        # invalidation seam can follow its ``reward_line_id``.  Snapshot the
+        # old server-generated lines first so no orphan negative line survives.
+        old_reward_lines = self.order_line.filtered(
+            'consign_generated_reward'
+        ).sudo()
         result = super()._cart_update(*args, **kwargs)
         self._invalidate_consign_allocations()
+        old_reward_lines.exists().unlink()
         return result

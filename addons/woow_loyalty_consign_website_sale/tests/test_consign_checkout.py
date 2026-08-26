@@ -55,6 +55,7 @@ class TestConsignWebsiteCheckout(TransactionCase):
             self.skipTest('The payment_demo provider is required for checkout tests.')
         return self.env['payment.transaction'].create({
             'provider_id': self.provider.id,
+            'payment_method_id': self.provider.payment_method_ids[:1].id,
             'reference': 'TEST-WEBSITE-CONSIGN-%s' % uuid4(),
             'amount': max(order.amount_total, 0.01),
             'currency_id': order.currency_id.id,
@@ -100,11 +101,10 @@ class TestConsignWebsiteCheckout(TransactionCase):
         old_tx = self._transaction(order)
         order._invalidate_consign_allocations()
         self.assertEqual(old_hold.state, 'released')
-        # Re-create the same intent for a newer cart version.
-        self.env['sale.order.consign.allocation'].create({
-            'order_id': order.id, 'card_id': old_hold.card_id.id,
-            'product_id': self.product.id, 'product_uom_id': self.product.uom_id.id,
-            'requested_qty': 1, 'version': order.consign_allocation_version,
+        # Carry the same unique intent into the newer cart version.
+        order.consign_allocation_ids.write({
+            'requested_qty': 1,
+            'version': order.consign_allocation_version,
         })
         order._prepare_website_consign_authorization()
         new_hold = order.consign_hold_operation_id.hold_ids
@@ -116,11 +116,25 @@ class TestConsignWebsiteCheckout(TransactionCase):
             old_tx._post_process()
         self.assertEqual(new_hold.state, 'active')
 
+    def test_cart_mutation_expires_overdue_hold_before_release(self):
+        order, hold = self._order_with_hold()
+        previous_version = order.consign_allocation_version
+        hold._write_from_engine({
+            'expires_at': fields.Datetime.now() - timedelta(minutes=1),
+        })
+
+        order._invalidate_consign_allocations()
+
+        self.assertEqual(hold.state, 'expired')
+        self.assertEqual(order.consign_allocation_version, previous_version + 1)
+
     def test_expired_hold_cannot_be_late_captured(self):
         order, hold = self._order_with_hold()
         tx = self._transaction(order)
-        hold.write({'expires_at': fields.Datetime.now() - timedelta(minutes=1)})
-        self.env['loyalty.consign.engine']._expire_holds(limit=10)
+        hold._write_from_engine({
+            'expires_at': fields.Datetime.now() - timedelta(minutes=1),
+        })
+        hold._expire_due_holds()
         tx.write({'state': 'done'})
         with self.assertRaises(ValidationError):
             tx._post_process()
@@ -138,8 +152,30 @@ class TestConsignWebsiteCheckout(TransactionCase):
         self.assertEqual(hold.state, 'captured')
         self.assertEqual(order.consign_payment_transaction_id, winner)
 
-    def test_zero_total_neither_authorizes_nor_captures(self):
+    def test_zero_total_without_allocations_neither_authorizes_nor_captures(self):
         order = self.env['sale.order'].create({'partner_id': self.partner.id})
         self.assertFalse(order._prepare_website_consign_authorization())
         self.assertFalse(order.consign_hold_operation_id)
         self.assertFalse(order.consign_capture_operation_id)
+
+    def test_payment_readiness_refreshes_stale_coverage_amount(self):
+        order, _hold = self._order_with_hold()
+        order.consign_allocation_ids.coverage_ids.mapped(
+            'reward_line_id'
+        ).unlink()
+        self.assertFalse(order.currency_id.is_zero(order.amount_total))
+
+        order._check_cart_is_ready_to_be_paid()
+
+        self.assertTrue(order.currency_id.is_zero(order.amount_total))
+        self.assertTrue(order.order_line.filtered('consign_generated_reward'))
+
+    def test_fully_covered_zero_total_captures_before_confirmation(self):
+        order, hold = self._order_with_hold()
+        self.assertTrue(order.currency_id.is_zero(order.amount_total))
+
+        order._validate_order()
+
+        self.assertEqual(order.state, 'sale')
+        self.assertEqual(hold.state, 'captured')
+        self.assertTrue(order.consign_capture_operation_id)

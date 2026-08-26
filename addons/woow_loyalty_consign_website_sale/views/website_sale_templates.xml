@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="consign_cart_controls"
+              inherit_id="website_sale.cart_lines"
+              name="Website consignment cart controls">
+        <xpath expr="//div[@id='cart_products']" position="after">
+            <t t-if="website_sale_order">
+                <t t-set="consign_options"
+                   t-value="website_sale_order._website_consign_cart_options()"/>
+                <section t-if="consign_options"
+                         id="o_consign_cart_controls"
+                         class="card border-primary-subtle mt-4">
+                    <div class="card-header fw-bold">
+                        Use consignment balance
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3">
+                        <div t-foreach="consign_options"
+                             t-as="option"
+                             class="o_consign_cart_option row g-2 align-items-end"
+                             t-att-data-card-id="option['card_id']"
+                             t-att-data-product-id="option['product_id']">
+                            <div class="col-12 col-lg-6">
+                                <div class="fw-semibold" t-out="option['product_name']"/>
+                                <small class="text-muted">
+                                    Card <t t-out="option['masked_code']"/>
+                                    · Available
+                                    <t t-out="option['available_qty']"/>
+                                    <t t-out="option['uom_name']"/>
+                                </small>
+                            </div>
+                            <div class="col-7 col-lg-3">
+                                <label class="form-label small mb-1">Quantity to redeem</label>
+                                <input type="number"
+                                       class="form-control js_consign_quantity"
+                                       min="0"
+                                       step="any"
+                                       t-att-max="option['available_qty']"
+                                       t-att-value="option['requested_qty']"/>
+                            </div>
+                            <div class="col-5 col-lg-3 d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-primary js_consign_apply">
+                                    Apply
+                                </button>
+                                <button t-if="option['requested_qty']"
+                                        type="button"
+                                        class="btn btn-outline-secondary js_consign_remove">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger d-none mb-0 js_consign_status"
+                             role="alert"/>
+                        <div t-if="website_sale_order.consign_allocation_warning"
+                             class="alert alert-warning mb-0"
+                             role="alert">
+                            A consignment quantity was adjusted to match the current cart.
+                        </div>
+                    </div>
+                </section>
+            </t>
+        </xpath>
+    </template>
+</odoo>
