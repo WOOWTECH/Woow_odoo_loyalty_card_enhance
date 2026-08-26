@@ -456,7 +456,7 @@ class TestConsignGrants(TransactionCase):
         with patch.object(
             type(self.env.cr), 'execute', autospec=True,
         ) as execute, patch.object(
-            type(self.env.cr), 'fetchone', autospec=True, return_value=(1,),
+            type(self.env.cr), 'fetchall', autospec=True, return_value=[(1,)],
         ):
             engine._lock_card_tuple(self.env.company, program, self.partner)
 

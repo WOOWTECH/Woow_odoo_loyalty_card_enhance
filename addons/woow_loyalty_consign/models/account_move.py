@@ -31,7 +31,7 @@ class AccountMove(models.Model):
                 'UPDATE sale_order_line SET write_date = write_date '
                 'WHERE id = %s RETURNING id', (sale_line.id,),
             )
-            if not self.env.cr.fetchone():
+            if not self.env.cr.fetchall():
                 return False
         return True
 
