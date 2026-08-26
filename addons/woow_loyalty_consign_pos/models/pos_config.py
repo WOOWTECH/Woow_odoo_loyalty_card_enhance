@@ -20,10 +20,17 @@ class PosConfig(models.Model):
     def use_consign_card_code(self, code, partner_id):
         """Validate a consignment card by barcode code and return card data."""
         self.ensure_one()
+        if not self.enable_consign_redemption:
+            return {
+                'successful': False,
+                'payload': {'error_message': _('Consignment redemption is disabled for this POS.')},
+            }
         card = self.env['loyalty.card'].search([
             ('code', '=', code),
             ('is_consign', '=', True),
             ('active', '=', True),
+            ('company_id', '=', self.company_id.id),
+            ('program_id.active', '=', True),
         ], limit=1)
 
         if not card:
@@ -32,13 +39,9 @@ class PosConfig(models.Model):
                 'payload': {'error_message': _('Consignment card not found.'), 'not_found': True},
             }
 
-        # 驗證卡片擁有者：要求必須指定客戶，且與卡片擁有者一致
-        if not partner_id:
-            return {
-                'successful': False,
-                'payload': {'error_message': _('Please select a customer before scanning a consignment card.')},
-            }
-        if card.partner_id and card.partner_id.id != partner_id:
+        # An exact barcode may auto-select its owner.  If the cashier already
+        # selected a customer, ownership must still match exactly.
+        if partner_id and card.partner_id and card.partner_id.id != partner_id:
             return {
                 'successful': False,
                 'payload': {'error_message': _('This card does not belong to the selected customer.')},
@@ -52,6 +55,11 @@ class PosConfig(models.Model):
     def get_partner_consign_cards(self, partner_id):
         """Get all active consignment cards for a specific partner."""
         self.ensure_one()
+        if not self.enable_consign_redemption:
+            return {
+                'successful': False,
+                'payload': {'error_message': _('Consignment redemption is disabled for this POS.')},
+            }
         if not partner_id:
             return {'successful': False, 'payload': {'error_message': _('No customer selected.')}}
 
@@ -59,6 +67,8 @@ class PosConfig(models.Model):
             ('is_consign', '=', True),
             ('active', '=', True),
             ('partner_id', '=', partner_id),
+            ('company_id', '=', self.company_id.id),
+            ('program_id.active', '=', True),
         ])
 
         result = []
@@ -95,6 +105,7 @@ class PosConfig(models.Model):
                 'product_id': line.product_id.id,
                 'product_name': line.product_desc or line.product_id.display_name,
                 'qty_available': line.qty_available,
+                'uom_rounding': line.product_uom_id.rounding,
                 'unit_price': line.unit_price,
             } for line in active_lines],
         }

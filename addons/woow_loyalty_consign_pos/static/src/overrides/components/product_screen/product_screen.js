@@ -1,4 +1,4 @@
-/** @odoo-module */
+/** @odoo-module **/
 
 import { ControlButtons } from "@point_of_sale/app/screens/product_screen/control_buttons/control_buttons";
 import { ProductScreen } from "@point_of_sale/app/screens/product_screen/product_screen";
@@ -7,26 +7,54 @@ import { _t } from "@web/core/l10n/translation";
 import { ConsignCardPopup } from "@woow_loyalty_consign_pos/overrides/components/consign_card_popup/consign_card_popup";
 import { ConsignCardListPopup } from "@woow_loyalty_consign_pos/overrides/components/consign_card_list_popup/consign_card_list_popup";
 
-/**
- * Patch ControlButtons — "Consignment" button handler.
- * Customer-driven flow: auto-select partner → fetch cards → show list or direct popup.
- */
+async function addPersistedConsignLines(component, order, consignSelection) {
+    const card = component.pos.models["loyalty.card"].get(consignSelection.card_id);
+    const selections = consignSelection.lines.map((line) => ({
+        line,
+        product: component.pos.models["product.product"].get(line.product_id),
+    }));
+    if (!card || selections.some(({ product }) => !product)) {
+        component.notification.add(
+            _t("A selected consignment product is not available in this POS. Enable it in Point of Sale and reload the register."),
+            { type: "danger" }
+        );
+        return false;
+    }
+
+    for (const { line, product } of selections) {
+        await component.pos.addLineToCurrentOrder(
+            {
+                product_id: product,
+                qty: line.qty_redeemed,
+                price_unit: 0,
+                customer_note: `[${_t("Consign")}] ${line.product_name}`,
+                consign_card_id: card,
+                consign_covered_qty: line.qty_redeemed,
+                is_consign_redemption: true,
+            },
+            {},
+            false
+        );
+    }
+    component.notification.add(
+        _t("Added %s consignment item(s) for pickup", selections.length),
+        { type: "success" }
+    );
+    return true;
+}
+
 patch(ControlButtons.prototype, {
     async onClickConsignRedemption() {
         const order = this.pos.get_order();
-
-        // Step 1: Ensure a customer is selected
         let partner = order.get_partner();
         if (!partner) {
             await this.pos.selectPartner();
             partner = order.get_partner();
             if (!partner) {
-                // User cancelled partner selection
                 return;
             }
         }
 
-        // Step 2: Fetch this customer's consignment cards
         let result;
         try {
             result = await this.pos.data.call(
@@ -39,8 +67,7 @@ patch(ControlButtons.prototype, {
             this.notification.add(_t("Failed to load consignment cards."), { type: "danger" });
             return;
         }
-
-        if (!result || !result.successful) {
+        if (!result?.successful) {
             this.notification.add(
                 result?.payload?.error_message || _t("Failed to load consignment cards."),
                 { type: "danger" }
@@ -49,112 +76,53 @@ patch(ControlButtons.prototype, {
         }
 
         const cards = result.payload.cards || [];
-
-        // Step 3: Route based on card count
-        if (cards.length === 0) {
+        if (!cards.length) {
             this.notification.add(
                 _t("%s has no consignment cards available for redemption.", partner.name),
                 { type: "warning" }
             );
             return;
         }
-
         if (cards.length === 1) {
-            // Single card — go directly to item selection
             this._openConsignCardPopup(cards[0]);
             return;
         }
-
-        // Multiple cards — show card list popup
         this.dialog.add(ConsignCardListPopup, {
             partnerName: partner.name,
-            cards: cards,
-            onCardSelected: (cardData) => {
-                this._openConsignCardPopup(cardData);
-            },
+            cards,
+            onCardSelected: (cardData) => this._openConsignCardPopup(cardData),
         });
     },
 
     _openConsignCardPopup(cardData) {
         this.dialog.add(ConsignCardPopup, {
             cardData,
-            getPayload: async (consignSelection) => {
-                const order = this.pos.get_order();
-                await this._addConsignLinesToOrder(
-                    order,
-                    consignSelection,
-                    cardData.consign_redemption_product_id
-                );
+            getPayload: async (selection) => {
+                await addPersistedConsignLines(this, this.pos.get_order(), selection);
             },
         });
     },
-
-    async _addConsignLinesToOrder(order, consignSelection, redemptionProductId) {
-        if (!order.uiState.consignRedemptions) {
-            order.uiState.consignRedemptions = [];
-        }
-        order.uiState.consignRedemptions.push(consignSelection);
-
-        const consignProduct = redemptionProductId
-            ? this.pos.models["product.product"].get(redemptionProductId)
-            : null;
-        if (!consignProduct) {
-            this.notification.add(
-                _t("Consignment redemption product not found. Please verify module installation."),
-                { type: "danger" }
-            );
-            return;
-        }
-
-        for (const line of consignSelection.lines) {
-            await this.pos.addLineToCurrentOrder(
-                {
-                    product_id: consignProduct,
-                    qty: line.qty_redeemed,
-                    price_unit: 0,
-                    customer_note: `[${_t("Consign")}] ${line.product_name}`,
-                    consign_line_id: line.consign_line_id,
-                    is_consign_redemption: true,
-                },
-                {},
-                false
-            );
-        }
-
-        this.notification.add(
-            _t("Added %s consignment item(s) for pickup", consignSelection.lines.length),
-            { type: "success" }
-        );
-    },
 });
 
-/**
- * Patch ProductScreen for barcode scan interception.
- * On scan: validate card owner matches order customer, or auto-set customer.
- */
 patch(ProductScreen.prototype, {
     async _onCouponScan(code) {
         const order = this.pos.get_order();
         const partner = order.get_partner();
         const partnerId = partner?.id || false;
-
         let result;
         try {
             result = await this.pos.data.call(
                 "pos.config",
                 "use_consign_card_code",
-                [[this.pos.config.id], code.base_code, false]
+                [[this.pos.config.id], code.base_code, partnerId]
             );
         } catch (error) {
             console.error("[ConsignCard] Lookup RPC failed, falling back:", error);
             return super._onCouponScan(code);
         }
-
         if (!result || (!result.successful && result.payload?.not_found)) {
-            // Not a consignment card — fall back to normal coupon handling
             return super._onCouponScan(code);
         }
-
         if (!result.successful) {
             this.notification.add(
                 result.payload?.error_message || _t("Card validation failed"),
@@ -163,66 +131,26 @@ patch(ProductScreen.prototype, {
             return;
         }
 
-        // Card found — handle customer validation/auto-set
         const cardData = result.payload;
-        const cardPartnerId = cardData.partner_id;
-
-        if (partnerId && cardPartnerId && partnerId !== cardPartnerId) {
-            // Order has a different customer than the card owner
+        if (partnerId && cardData.partner_id && partnerId !== cardData.partner_id) {
             this.notification.add(
                 _t("This card belongs to %s, not the current customer.", cardData.partner_name),
                 { type: "danger" }
             );
             return;
         }
-
-        if (!partnerId && cardPartnerId) {
-            // No customer on order — auto-set card owner as customer
-            const cardPartner = this.pos.models["res.partner"].get(cardPartnerId);
-            if (cardPartner) {
-                order.set_partner(cardPartner);
+        if (!partnerId && cardData.partner_id) {
+            const cardPartner = this.pos.models["res.partner"].get(cardData.partner_id);
+            if (!cardPartner) {
+                this.notification.add(_t("The consignment card customer is unavailable."), { type: "danger" });
+                return;
             }
+            order.set_partner(cardPartner);
         }
-
-        // Open item selection popup
         this.dialog.add(ConsignCardPopup, {
             cardData,
-            getPayload: async (consignSelection) => {
-                if (!order.uiState.consignRedemptions) {
-                    order.uiState.consignRedemptions = [];
-                }
-                order.uiState.consignRedemptions.push(consignSelection);
-
-                const consignProduct = cardData.consign_redemption_product_id
-                    ? this.pos.models["product.product"].get(cardData.consign_redemption_product_id)
-                    : null;
-                if (!consignProduct) {
-                    this.notification.add(
-                        _t("Consignment redemption product not found."),
-                        { type: "danger" }
-                    );
-                    return;
-                }
-
-                for (const line of consignSelection.lines) {
-                    await this.pos.addLineToCurrentOrder(
-                        {
-                            product_id: consignProduct,
-                            qty: line.qty_redeemed,
-                            price_unit: 0,
-                            customer_note: `[${_t("Consign")}] ${line.product_name}`,
-                            consign_line_id: line.consign_line_id,
-                            is_consign_redemption: true,
-                        },
-                        {},
-                        false
-                    );
-                }
-
-                this.notification.add(
-                    _t("Added %s consignment item(s) for pickup", consignSelection.lines.length),
-                    { type: "success" }
-                );
+            getPayload: async (selection) => {
+                await addPersistedConsignLines(this, order, selection);
             },
         });
     },

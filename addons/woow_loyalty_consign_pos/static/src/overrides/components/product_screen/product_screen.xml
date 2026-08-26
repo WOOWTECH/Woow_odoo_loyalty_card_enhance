@@ -6,7 +6,8 @@
        t-inherit="point_of_sale.ControlButtons"
        t-inherit-mode="extension">
         <xpath expr="//t[@t-if='props.showRemainingButtons']/div" position="inside">
-            <button t-att-class="buttonClass"
+            <button t-if="pos.config.enable_consign_redemption"
+                    t-att-class="buttonClass"
                     t-on-click="onClickConsignRedemption">
                 <i class="fa fa-archive me-1"/>Consignment
             </button>

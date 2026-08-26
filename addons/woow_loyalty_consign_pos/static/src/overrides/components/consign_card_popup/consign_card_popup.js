@@ -35,21 +35,27 @@ export class ConsignCardPopup extends Component {
         return this.state.lines.some((l) => l.qty_to_redeem > 0);
     }
 
+    _roundedQty(line, value) {
+        const rounding = line.uom_rounding || 1;
+        const rounded = Math.round(value / rounding) * rounding;
+        return Math.max(0, Math.min(rounded, line.qty_available));
+    }
+
     increment(line) {
-        if (line.qty_to_redeem < line.qty_available) {
-            line.qty_to_redeem++;
-        }
+        line.qty_to_redeem = this._roundedQty(
+            line, line.qty_to_redeem + (line.uom_rounding || 1)
+        );
     }
 
     decrement(line) {
-        if (line.qty_to_redeem > 0) {
-            line.qty_to_redeem--;
-        }
+        line.qty_to_redeem = this._roundedQty(
+            line, line.qty_to_redeem - (line.uom_rounding || 1)
+        );
     }
 
     setQty(line, ev) {
-        const val = parseInt(ev.target.value) || 0;
-        line.qty_to_redeem = Math.max(0, Math.min(val, line.qty_available));
+        const value = Number.parseFloat(ev.target.value) || 0;
+        line.qty_to_redeem = this._roundedQty(line, value);
     }
 
     confirm() {
