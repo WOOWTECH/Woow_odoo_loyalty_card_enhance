@@ -84,7 +84,12 @@ class TestConsignGrants(TransactionCase):
         invoice.invalidate_recordset(['payment_state'])
         self.assertEqual(invoice.state, 'posted')
         self.assertEqual(invoice.payment_state, 'paid')
-        invoice._issue_consign_paid_invoice_grants()
+        product_lines = invoice.invoice_line_ids.filtered(
+            lambda line: line.display_type == 'product' and line.sale_line_ids
+        )
+        self.assertTrue(product_lines)
+        # The real Odoo 18 payment hook must issue automatically.  Calling the
+        # adapter manually here would hide regressions in the Web UI flow.
         return invoice
 
     def _non_base_uom(self, name, product, uom_type, ratio):
@@ -273,7 +278,7 @@ class TestConsignGrants(TransactionCase):
         ])
         order = self._order([(self.trigger, 1.0)])
 
-        self._confirm_and_pay(order)
+        invoice = self._confirm_and_pay(order)
 
         issued = self._issued_lines(program, order)
         self.assertEqual(len(issued), 1)
@@ -282,7 +287,19 @@ class TestConsignGrants(TransactionCase):
         self.assertEqual(order.consign_line_count, 1)
         self.assertEqual(len(issued.movement_ids), 2)
         self.assertEqual(sum(issued.movement_ids.mapped('quantity')), 3.0)
-        self.assertEqual(len(issued.movement_ids.mapped('operation_id')), 1)
+        operations = issued.movement_ids.mapped('operation_id')
+        # Paid issuance journals one replay-safe command per configured grant
+        # line.  Both facts still reconcile into the single projection.
+        self.assertEqual(len(operations), 2)
+        self.assertEqual(
+            set(operations.mapped('idempotency_key')),
+            {
+                'consign:paid-invoice-grant:v1:%s:%s:%s:%s' % (
+                    invoice.id, order.order_line.id, program.id, grant_line.id,
+                )
+                for grant_line in program.consign_grant_rule_ids.grant_line_ids
+            },
+        )
 
     def test_second_order_reuses_card_accumulates_and_does_not_renotify(self):
         program = self._program('Card Reuse Program', self.trigger, [
@@ -455,7 +472,9 @@ class TestConsignGrants(TransactionCase):
 
         with patch.object(
             type(self.env.cr), 'execute', autospec=True,
-        ) as execute:
+        ) as execute, patch.object(
+            type(self.env.cr), 'fetchone', return_value=(1,), create=True,
+        ):
             engine._lock_card_tuple(self.env.company, program, self.partner)
 
         self.assertEqual(execute.call_count, 2)

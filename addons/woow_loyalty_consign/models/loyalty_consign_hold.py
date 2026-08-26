@@ -316,6 +316,39 @@ class LoyaltyConsignHold(models.Model):
         except _ExpiryCandidateUnavailable:
             return False
 
+    def _expire_due_holds(self, now=None):
+        """Expire this exact due-Hold set through the shared lock hierarchy.
+
+        Channel lifecycle adapters use this before attempting release so an
+        overdue active row cannot strand an otherwise ordinary cart mutation
+        while waiting for the periodic cron.
+        """
+        now = now or fields.Datetime.now()
+        due = self.sudo().filtered(
+            lambda hold: hold.state == 'active' and hold.expires_at <= now
+        )
+        if not due:
+            return 0
+        candidate_ids = sorted(due.ids)
+        dimensions = self._expiry_candidate_dimensions(candidate_ids)
+        try:
+            self._lock_expiry_candidates(candidate_ids, dimensions, now)
+        except _ExpiryCandidateUnavailable as unavailable:
+            raise ValidationError(
+                'The expired authorization Hold is currently changing; retry the cart update.'
+            ) from unavailable
+        holds = self.sudo().browse(candidate_ids)
+        affected = holds.allocation_line_ids.mapped('aggregate_line_id')
+        holds.with_context(**{
+            _HOLD_MUTATION_CONTEXT_KEY: _HOLD_MUTATION_TOKEN,
+        }).sudo().write({
+            'state': 'expired',
+            'expired_at': now,
+            'transition_user_id': self.env.uid,
+        })
+        affected._reconcile_projection()
+        return len(holds)
+
     @api.model
     def _cron_expire_holds(self, batch_size=100, now=None):
         """Expire a bounded priority batch without retaining rejected candidate locks."""

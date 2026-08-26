@@ -35,6 +35,15 @@ class AccountMove(models.Model):
                 return False
         return True
 
+    def _is_consign_product_invoice_line(self, line):
+        """Return whether an invoice line represents a sold/refunded product.
+
+        Odoo 18 stores ordinary invoice rows with ``display_type='product'``;
+        only section/note/accounting rows must be excluded.  Accepting the
+        historical false value keeps upgraded rows eligible as well.
+        """
+        return line.display_type in (False, 'product')
+
     def _paid_trigger_quantity(self, sale_line, trigger_uom):
         """Net paid quantity for a sale line, in the rule trigger UoM.
 
@@ -48,7 +57,7 @@ class AccountMove(models.Model):
             lambda line: line.move_id.state == 'posted'
             and line.move_id.payment_state == 'paid'
             and line.move_id.move_type in ('out_invoice', 'out_refund')
-            and not line.display_type
+            and self._is_consign_product_invoice_line(line)
         ):
             line_quantity = invoice_line.product_uom_id._compute_quantity(
                 invoice_line.quantity, trigger_uom, round=False,
@@ -65,7 +74,12 @@ class AccountMove(models.Model):
             ('source_model', '=', 'sale.order.line'),
             ('source_res_id', '=', sale_line.id),
             ('card_id.program_id', '=', program.id),
-            ('provenance_key', 'like', f'%grant-line:{grant_line.id}'),
+            (
+                'operation_id.idempotency_key', 'like',
+                'consign:paid-invoice-grant:v1:%%:%s:%s:%s' % (
+                    sale_line.id, program.id, grant_line.id,
+                ),
+            ),
         ])
         product = grant_line.entitlement_product_id
         issued_grant_uom = sum(product.uom_id._compute_quantity(
@@ -90,7 +104,8 @@ class AccountMove(models.Model):
             ('consign_grant_rule_ids', '!=', False),
         ], order='id')
         sale_lines = self.invoice_line_ids.filtered(
-            lambda line: not line.display_type and line.quantity > 0
+            lambda line: self._is_consign_product_invoice_line(line)
+            and line.quantity > 0
         ).mapped('sale_line_ids').filtered(
             lambda line: line.company_id == self.company_id
             and line.order_id.partner_id == self.partner_id
