@@ -234,6 +234,7 @@ class LoyaltyConsignEngine(models.AbstractModel):
         card = self.env['loyalty.card'].with_context(
             loyalty_no_mail=True,
         ).sudo().create({
+            'company_id': company.id,
             'program_id': program.id,
             'partner_id': partner.id,
             'points': 0,
