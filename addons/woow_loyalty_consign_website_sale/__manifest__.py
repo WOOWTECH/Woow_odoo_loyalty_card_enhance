@@ -1,1 +1,23 @@
-{'name': 'Website Consignment Redemption', 'version': '18.0.1.0.0', 'category': 'Website', 'license': 'LGPL-3', 'depends': ['woow_loyalty_consign', 'website_sale', 'website_sale_loyalty'], 'data': ['security/ir.model.access.csv', 'views/res_config_settings_views.xml'], 'installable': True, 'application': False}
+{
+    'name': 'Website Consignment Redemption',
+    'version': '18.0.1.0.0',
+    'category': 'Website',
+    'license': 'LGPL-3',
+    'depends': [
+        'woow_loyalty_consign',
+        'website_sale',
+        'website_sale_loyalty',
+    ],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/res_config_settings_views.xml',
+        'views/website_sale_templates.xml',
+    ],
+    'assets': {
+        'web.assets_frontend': [
+            'woow_loyalty_consign_website_sale/static/src/js/consign_cart.js',
+        ],
+    },
+    'installable': True,
+    'application': False,
+}

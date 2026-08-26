@@ -66,7 +66,7 @@ class PaymentTransaction(models.Model):
                 return order.consign_capture_operation_id
             raise ValidationError('The checkout authorization is no longer available.')
         operation = self.env['loyalty.consign.engine']._capture(
-            self, order.partner_id, hold,
+            order, order.partner_id, hold,
             'website-payment-capture-%s-%s-%s' % (self.id, order.id, self.consign_allocation_version),
         )
         order.sudo().write({
@@ -89,6 +89,6 @@ class PaymentTransaction(models.Model):
         if not hold or hold.state != 'active':
             return False
         return self.env['loyalty.consign.engine']._release(
-            self, order.partner_id, hold,
+            order, order.partner_id, hold,
             'website-payment-release-%s-%s-%s' % (self.id, order.id, self.consign_allocation_version),
         )
