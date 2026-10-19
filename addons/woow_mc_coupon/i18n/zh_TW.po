@@ -124,7 +124,7 @@ msgstr "狀態"
 #. module: woow_mc_coupon
 #: model_terms:ir.ui.view,arch_db:woow_mc_coupon.portal_mc_coupon_detail
 msgid "Transaction History"
-msgstr "交易歷史"
+msgstr "交易紀錄"
 
 #. module: woow_mc_coupon
 #: model_terms:ir.ui.view,arch_db:woow_mc_coupon.mc_hub_coupon_card
