@@ -1,6 +1,6 @@
 {
     'name': '會員中心 - 電子錢包',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',
     'category': 'Sales/Loyalty',
     'summary': '會員中心電子錢包功能模組',
     'author': 'WoowTech',

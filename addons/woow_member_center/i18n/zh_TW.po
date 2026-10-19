@@ -111,3 +111,27 @@ msgstr "查看全部歷史 ("
 #: model_terms:ir.ui.view,arch_db:woow_member_center.portal_loyalty_history_table
 msgid "records)"
 msgstr "筆記錄)"
+
+#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+msgid "Coupon"
+msgstr "優惠券"
+
+#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+msgid "E-Wallet"
+msgstr "電子錢包"
+
+#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+msgid "Gift Card"
+msgstr "禮品卡"
+
+#. module: woow_member_center
+#. odoo-python
+#: code:addons/woow_member_center/controllers/portal.py:0
+msgid "Loyalty Card"
+msgstr "集點卡"

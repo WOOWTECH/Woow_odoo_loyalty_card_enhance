@@ -1,5 +1,6 @@
 from odoo import _, http
 from odoo.http import request
+from odoo.tools.translate import LazyTranslate
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.addons.portal.controllers.portal import pager as portal_pager
 
@@ -20,12 +21,14 @@ _CARD_LIST_URLS = {
     'coupons': '/my/member-center/coupons',
 }
 
-# Mapping: URL slug → breadcrumb labels
+_lt = LazyTranslate(__name__)
+
+# Mapping: URL slug → breadcrumb labels（用 _lt 標記，render 時依使用者語言翻譯）
 _CARD_TYPE_LABELS = {
-    'ewallet': 'E-Wallet',
-    'loyalty': 'Loyalty Card',
-    'gift-cards': 'Gift Card',
-    'coupons': 'Coupon',
+    'ewallet': _lt('E-Wallet'),
+    'loyalty': _lt('Loyalty Card'),
+    'gift-cards': _lt('Gift Card'),
+    'coupons': _lt('Coupon'),
 }
 
 _HISTORY_PAGE_SIZE = 10      # detail page: latest N
@@ -172,14 +175,16 @@ class MemberCenterPortal(CustomerPortal):
             offset=pager['offset'],
         )
 
+        label = _CARD_TYPE_LABELS.get(card_type)
+        card_type_label = request.env._(label) if label else ''
         values = {
             'page_name': 'mc_card_history',
             'card': card,
             'card_type': card_type,
-            'card_type_label': _CARD_TYPE_LABELS.get(card_type, ''),
+            'card_type_label': card_type_label,
             'card_url': f'/my/member-center/{card_type}/{card_id}',
             'parent_url': _CARD_LIST_URLS.get(card_type, '/my/member-center'),
-            'parent_title': _CARD_TYPE_LABELS.get(card_type, ''),
+            'parent_title': card_type_label,
             'history_lines': history_lines,
             'history_count': history_count,
             'pager': pager,

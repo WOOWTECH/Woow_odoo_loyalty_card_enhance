@@ -1,6 +1,6 @@
 {
     'name': '會員中心 (Member Center)',
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.0.1',
     'category': 'Sales/Loyalty',
     'summary': '會員中心 Portal Hub — 模組化架構，各功能可獨立安裝',
     'description': """
