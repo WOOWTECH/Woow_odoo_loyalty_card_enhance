@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### woow_mc_coupon／woow_mc_ewallet／woow_mc_gift_card／woow_mc_loyalty (18.0.1.0.1)
 - zh_TW「Transaction History」統一譯為「交易紀錄」（與 woow_member_center 一致）
 
-#### woow_loyalty_consign (18.0.8.0.1)
-- 版號標記 PR #2 補上的 consign token model 唯讀 access rules
+#### woow_loyalty_consign (18.0.8.0.0，不變)
+- 撤銷 PR #2：consign token model 維持原設計（只在 sudo 下使用、不給一般 ACL），
+  `test_internal_serialization_tokens_have_no_generic_acl` 恢復通過
 
 ## [18.0.1.0.0] - 2026-05-07
 
