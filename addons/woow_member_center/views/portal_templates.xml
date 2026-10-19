@@ -14,6 +14,7 @@
         <xpath expr="//div[@id='portal_client_category']" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="icon" t-value="'/woow_member_center/static/src/img/member-center.svg'"/>
+                <t t-set="config_card" t-value="True"/>
                 <t t-set="title">Member Center</t>
                 <t t-set="url" t-value="'/my/member-center'"/>
                 <t t-set="text">My Member Services</t>
