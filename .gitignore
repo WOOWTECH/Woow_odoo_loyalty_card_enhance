@@ -23,8 +23,7 @@ Thumbs.db
 # Odoo
 *.pyc
 filestore/
-data/odoo/.local/share/Odoo/sessions/
-data/postgres
+data/
 
 # Vibe / AI working files
 .vibe-images/
