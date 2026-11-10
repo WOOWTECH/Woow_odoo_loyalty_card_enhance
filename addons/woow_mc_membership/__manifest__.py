@@ -1,6 +1,6 @@
 {
     'name': '會員中心 - 會員資格',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',
     'category': 'Sales/Loyalty',
     'summary': '會員中心會員資格功能模組',
     'author': 'WoowTech',

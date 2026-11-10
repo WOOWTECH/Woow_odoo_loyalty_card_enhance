@@ -11,6 +11,7 @@ class CouponPortal(MemberCenterPortal):
         # Only count unused coupons (points > 0)
         coupon_count = request.env['loyalty.card'].sudo().search_count([
             ('partner_id', '=', partner.id),
+            ('company_id', 'in', [False, request.website.company_id.id]),
             ('program_id.program_type', '=', 'coupons'),
             ('active', '=', True),
             ('points', '>', 0),
@@ -28,6 +29,7 @@ class CouponPortal(MemberCenterPortal):
             partner = request.env.user.partner_id
             count = request.env['loyalty.card'].sudo().search_count([
                 ('partner_id', '=', partner.id),
+                ('company_id', 'in', [False, request.website.company_id.id]),
                 ('program_id.program_type', '=', 'coupons'),
                 ('active', '=', True),
                 ('points', '>', 0),
