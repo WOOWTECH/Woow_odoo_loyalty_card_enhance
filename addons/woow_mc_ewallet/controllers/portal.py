@@ -14,6 +14,7 @@ class EwalletPortal(MemberCenterPortal):
         partner = request.env.user.partner_id
         cards = request.env['loyalty.card'].sudo().search([
             ('partner_id', '=', partner.id),
+            ('company_id', 'in', [False, request.website.company_id.id]),
             ('program_id.program_type', '=', 'ewallet'),
             ('active', '=', True),
         ])
@@ -32,6 +33,7 @@ class EwalletPortal(MemberCenterPortal):
             partner = request.env.user.partner_id
             count = request.env['loyalty.card'].sudo().search_count([
                 ('partner_id', '=', partner.id),
+                ('company_id', 'in', [False, request.website.company_id.id]),
                 ('program_id.program_type', '=', 'ewallet'),
                 ('active', '=', True),
             ])
