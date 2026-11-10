@@ -70,6 +70,7 @@ class MemberCenterPortal(CustomerPortal):
         partner = request.env.user.partner_id
         return request.env['loyalty.card'].sudo().search([
             ('partner_id', '=', partner.id),
+            ('company_id', 'in', [False, request.env.user.company_id.id]),
             ('program_id.program_type', '=', program_type),
             ('active', '=', True),
         ])
@@ -79,6 +80,7 @@ class MemberCenterPortal(CustomerPortal):
         return request.env['loyalty.card'].sudo().search([
             ('id', '=', card_id),
             ('partner_id', '=', partner.id),
+            ('company_id', 'in', [False, request.env.user.company_id.id]),
             ('program_id.program_type', '=', program_type),
             ('active', '=', True),
         ], limit=1)
