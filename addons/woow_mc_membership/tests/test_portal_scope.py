@@ -1,8 +1,29 @@
 from odoo.tests.common import TransactionCase, new_test_user, tagged
+from odoo.addons.woow_mc_membership.controllers.portal import MembershipPortal
 
 
 @tagged('post_install', '-at_install')
 class TestMembershipPortalScope(TransactionCase):
+
+    def test_undated_line_does_not_make_a_member_current(self):
+        partner = self.env['res.partner'].create({'name': 'Undated member'})
+        product = self.env['product.product'].create({'name': 'Undated membership'})
+        line = self.env['membership.membership_line'].create({
+            'partner': partner.id, 'membership_id': product.id,
+            'member_price': 100,
+        })
+        self.assertEqual(MembershipPortal()._own_membership_state(partner, line), 'none')
+
+    def test_free_member_remains_free_with_an_unpaid_line(self):
+        partner = self.env['res.partner'].create({
+            'name': 'Free member', 'free_member': True,
+        })
+        product = self.env['product.product'].create({'name': 'Free membership'})
+        line = self.env['membership.membership_line'].create({
+            'partner': partner.id, 'membership_id': product.id,
+            'member_price': 100,
+        })
+        self.assertEqual(MembershipPortal()._own_membership_state(partner, line), 'free')
 
     def test_portal_cannot_read_another_company_membership_line(self):
         company = self.env.company
