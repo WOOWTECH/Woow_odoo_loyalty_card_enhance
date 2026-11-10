@@ -10,7 +10,7 @@ class ConsignMcPortal(MemberCenterPortal):
         partner = request.env.user.partner_id
         consign_count = request.env['loyalty.card'].sudo().search_count([
             ('partner_id', '=', partner.id),
-            ('company_id', '=', request.env.user.company_id.id),
+            ('company_id', '=', request.website.company_id.id),
             ('is_consign', '=', True),
             ('active', '=', True),
         ])
@@ -27,7 +27,7 @@ class ConsignMcPortal(MemberCenterPortal):
             partner = request.env.user.partner_id
             count = request.env['loyalty.card'].sudo().search_count([
                 ('partner_id', '=', partner.id),
-                ('company_id', '=', request.env.user.company_id.id),
+                ('company_id', '=', request.website.company_id.id),
                 ('is_consign', '=', True),
                 ('active', '=', True),
             ])
@@ -42,7 +42,7 @@ class ConsignMcPortal(MemberCenterPortal):
         partner = request.env.user.partner_id
         cards = request.env['loyalty.card'].sudo().search([
             ('partner_id', '=', partner.id),
-            ('company_id', '=', request.env.user.company_id.id),
+            ('company_id', '=', request.website.company_id.id),
             ('is_consign', '=', True),
             ('active', '=', True),
         ])
@@ -63,7 +63,7 @@ class ConsignMcPortal(MemberCenterPortal):
         card = request.env['loyalty.card'].sudo().search([
             ('id', '=', card_id),
             ('partner_id', '=', partner.id),
-            ('company_id', '=', request.env.user.company_id.id),
+            ('company_id', '=', request.website.company_id.id),
             ('is_consign', '=', True),
         ], limit=1)
         if not card:
@@ -88,7 +88,7 @@ class ConsignMcPortal(MemberCenterPortal):
         redemption = request.env['loyalty.consign.redemption'].sudo().search([
             ('id', '=', redemption_id),
             ('card_id.partner_id', '=', partner.id),
-            ('company_id', '=', request.env.user.company_id.id),
+            ('company_id', '=', request.website.company_id.id),
         ], limit=1)
         if not redemption:
             return request.redirect('/my/consign-cards')
