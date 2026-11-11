@@ -160,3 +160,21 @@ class TestPosCashierHoldLifecycle(TransactionCase):
 
         self.assertEqual(order.consign_state, 'captured')
         self.assertEqual(card.consign_line_ids.qty_available, 1)
+
+        second = self.env['pos.order'].create({
+            'name': 'POS consign cashier release test order',
+            'config_id': config.id, 'session_id': session.id,
+            'partner_id': partner.id, 'amount_tax': 0, 'amount_total': 0,
+            'amount_paid': 0, 'amount_return': 0,
+            'lines': [Command.create({
+                'product_id': product.id, 'qty': 1, 'price_unit': 0,
+                'price_subtotal': 0, 'price_subtotal_incl': 0,
+                'consign_card_id': card.id, 'consign_covered_qty': 1,
+                'is_consign_redemption': True,
+            })],
+        }).with_user(cashier)
+        second._authorize_consign_redemption()
+        second._release_consign_redemption()
+
+        self.assertEqual(second.consign_state, 'released')
+        self.assertEqual(card.consign_line_ids.qty_available, 1)
