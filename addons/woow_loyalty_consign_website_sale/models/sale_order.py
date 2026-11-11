@@ -20,7 +20,13 @@ class SaleOrderConsignAllocation(models.Model):
         for rec in self:
             if rec.requested_qty <= 0 or rec.product_uom_id != rec.product_id.uom_id:
                 raise ValidationError(_('The selected product quantity must be positive in its base UoM.'))
-            if rec.card_id.company_id != rec.order_id.company_id or rec.product_id.company_id not in (False, rec.order_id.company_id):
+            if (
+                rec.card_id.company_id != rec.order_id.company_id
+                or (
+                    rec.product_id.company_id
+                    and rec.product_id.company_id != rec.order_id.company_id
+                )
+            ):
                 raise ValidationError(_('Card, product, and order must belong to one company.'))
             if rec.card_id.partner_id != rec.order_id.partner_id:
                 raise ValidationError(_('The selected card does not belong to the order customer.'))

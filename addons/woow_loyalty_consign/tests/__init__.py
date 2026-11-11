@@ -11,3 +11,4 @@ from . import test_redemption_audit
 from . import test_consign_security
 from . import test_consign_rendering
 from . import test_consign_refund_saga
+from . import test_mail_upgrade

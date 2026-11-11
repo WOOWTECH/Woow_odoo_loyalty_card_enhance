@@ -3,6 +3,41 @@ from odoo.tests.common import TransactionCase
 
 
 class TestConsignCart(TransactionCase):
+    def test_shared_product_can_be_allocated_to_owners_cart(self):
+        owner = self.env['res.partner'].create({
+            'name': 'Shared Product Owner', 'company_id': self.env.company.id,
+        })
+        product = self.env['product.product'].create({
+            'name': 'Shared Consignment Service', 'type': 'service',
+            'company_id': False,
+        })
+        program = self.env['loyalty.program'].create({
+            'name': 'Shared Product Program', 'program_type': 'consign',
+            'company_id': self.env.company.id,
+            'currency_id': self.env.company.currency_id.id,
+        })
+        issue = self.env['loyalty.consign.engine']._issue(
+            source=owner, partner=owner, program=program,
+            grants=[{'product': product, 'quantity': 1}],
+            idempotency_key='test:website:shared-product',
+        )
+        order = self.env['sale.order'].create({
+            'partner_id': owner.id, 'company_id': self.env.company.id,
+            'order_line': [(0, 0, {
+                'product_id': product.id, 'product_uom_qty': 1,
+                'product_uom': product.uom_id.id, 'price_unit': 100,
+            })],
+        })
+        card = issue.movement_ids.card_id
+        allocation = self.env['sale.order.consign.allocation'].create({
+            'order_id': order.id, 'card_id': card.id,
+            'product_id': product.id, 'product_uom_id': product.uom_id.id,
+            'requested_qty': 1, 'version': order.consign_allocation_version,
+        })
+        self.assertTrue(allocation.exists())
+        order._recompute_consign_coverage()
+        self.assertEqual(len(order.order_line.filtered('consign_generated_reward')), 1)
+
     def test_feature_defaults_off_and_card_owner_is_required(self):
         # The HAOS Web-visible test website may be explicitly enabled.  Verify
         # the field default on a new website instead of assuming runtime config.
