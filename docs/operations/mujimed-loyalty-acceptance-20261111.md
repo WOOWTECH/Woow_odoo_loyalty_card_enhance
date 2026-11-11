@@ -1,0 +1,19 @@
+# Mujimed loyalty acceptance (2026-11-11)
+
+Scope: the ten installed loyalty and member-centre addons on the Mujimed Odoo 18 database. All mutations below were performed on an isolated database and filestore restored from a backup; the production database was only inspected read-only. Synthetic test people, cards, products, and redemption records were used. No external payments or mail were sent.
+
+| Role | Browser/workflow | Result |
+| --- | --- | --- |
+| Portal member A and B | Desktop and 390px mobile: member-centre hub; consignment, coupon, e-wallet, gift-card and loyalty lists and details | All ten list/detail routes loaded. Direct links to the other member's cards were denied for all five card types. No browser page errors. |
+| Portal member A | View a consignment card after an internal redemption | The remaining quantity changed from 5 to 4; member B's balance stayed at 5. |
+| Internal manager | Open a consignment card from its portal detail, redeem one item, enter a service note and confirm | The previous back-to-edit link led to a missing action; it now resolves to the native Odoo action. The redemption created a record and updated the balance. |
+| Mail recipient | Render the consignment deposit notice in English and Traditional Chinese after upgrading a legacy database | The legacy template referenced removed `line.x_expiry_date` and failed. The versioned migration repairs the obsolete column and balance expressions while retaining each translation. Both languages then rendered. |
+| POS cashier | Barcode card lookup, selected-customer ownership, disabled POS, inactive card, persisted line quantity and price constraints | The current tagged audit tests cover the supported backend contract. The old tagged audit called a removed API and was replaced. |
+
+The mobile consignment list previously put remaining quantity and amount outside the visible 390px viewport. It now renders each card with those values visible, while retaining the existing desktop table. This reuses Odoo's portal layout and Bootstrap components. The consignment PDF already uses Odoo's native `/report/barcode` Code128 renderer; the POS hook extends Odoo's native coupon scan entry point. No replacement QR or barcode engine is needed.
+
+Production configuration limits this acceptance: Mujimed has zero POS configurations and POS orders, and website consignment redemption is disabled. Its ten installed addons include the POS and website bridges, but no live POS checkout or website redemption can be asserted from current production usage. `woow_mc_membership` is an eleventh source addon and is not installed there. The isolated tests cover backend behavior; a future enablement needs a POS checkout and website cart acceptance run using that tenant's actual configuration.
+
+The versioned upgrade rehearsal on the isolated copy passed 161 Odoo tests across the ten installed addons (0 failed, 0 errors). The separate current-contract POS audit passed 8 tests (0 failed, 0 errors). A browser rerun after the upgrade covered four member/viewport combinations and 44 page loads, all HTTP 200, with no JavaScript page errors or horizontal page overflow. Twenty direct cross-member card links were blocked. An unrestricted Odoo test invocation also ran unrelated clinic tests and hit failures caused by production-derived fixture state, including a payroll replay count (276 rather than 2) and a clinic checkout setting requiring an EZ order number. Those failures are not included in the loyalty-only result and remain a separate clinic test-isolation issue.
+
+Evidence retained privately: Playwright desktop/mobile screenshots and result JSON, Odoo test and migration logs, and the legacy template snapshot. The private evidence contains a copy of tenant data and must not be published with this repository.

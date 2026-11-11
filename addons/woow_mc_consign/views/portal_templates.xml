@@ -66,37 +66,62 @@
                     No consignment cards found.
                 </div>
             </t>
-            <t t-if="cards" t-call="portal.portal_table">
-                <thead>
-                    <tr class="active">
-                        <th>Card No.</th>
-                        <th>Program</th>
-                        <th class="text-center">Active Items</th>
-                        <th class="text-center">Remaining Qty</th>
-                        <th class="text-end">Remaining Amount</th>
-                    </tr>
-                </thead>
-                <t t-foreach="cards" t-as="card">
-                    <tr>
-                        <td>
+            <div t-if="cards" class="d-none d-md-block">
+                <t t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>Card No.</th>
+                            <th>Program</th>
+                            <th class="text-center">Active Items</th>
+                            <th class="text-center">Remaining Qty</th>
+                            <th class="text-end">Remaining Amount</th>
+                        </tr>
+                    </thead>
+                    <t t-foreach="cards" t-as="card">
+                        <tr>
+                            <td>
+                                <a t-attf-href="/my/consign-cards/#{card.id}">
+                                    <t t-out="card.code"/>
+                                </a>
+                            </td>
+                            <td><t t-out="card.program_id.name"/></td>
+                            <td class="text-center">
+                                <t t-out="card.consign_active_lines"/>
+                            </td>
+                            <td class="text-center">
+                                <t t-out="card.consign_total_remaining_qty"/>
+                            </td>
+                            <td class="text-end">
+                                <t t-out="card.consign_total_remaining_value"
+                                   t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                            </td>
+                        </tr>
+                    </t>
+                </t>
+            </div>
+            <div t-if="cards" class="d-md-none" aria-label="寄品卡列表">
+                <article t-foreach="cards" t-as="card" class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">
                             <a t-attf-href="/my/consign-cards/#{card.id}">
                                 <t t-out="card.code"/>
                             </a>
-                        </td>
-                        <td><t t-out="card.program_id.name"/></td>
-                        <td class="text-center">
-                            <t t-out="card.consign_active_lines"/>
-                        </td>
-                        <td class="text-center">
-                            <t t-out="card.consign_total_remaining_qty"/>
-                        </td>
-                        <td class="text-end">
-                            <t t-out="card.consign_total_remaining_value"
-                               t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
-                        </td>
-                    </tr>
-                </t>
-            </t>
+                        </h5>
+                        <p class="card-text mb-2"><t t-out="card.program_id.name"/></p>
+                        <dl class="row mb-0">
+                            <dt class="col-7">Active Items</dt>
+                            <dd class="col-5 text-end"><t t-out="card.consign_active_lines"/></dd>
+                            <dt class="col-7">Remaining Qty</dt>
+                            <dd class="col-5 text-end"><t t-out="card.consign_total_remaining_qty"/></dd>
+                            <dt class="col-7">Remaining Amount</dt>
+                            <dd class="col-5 text-end">
+                                <t t-out="card.consign_total_remaining_value"
+                                   t-options="{'widget': 'monetary', 'display_currency': card.currency_id}"/>
+                            </dd>
+                        </dl>
+                    </div>
+                </article>
+            </div>
         </t>
     </template>
 
@@ -108,7 +133,7 @@
             <t t-set="o_portal_fullwidth_alert" groups="sales_team.group_sale_salesman">
                 <t t-call="portal.portal_back_in_edit_mode">
                     <t t-set="backend_url"
-                       t-value="'/odoo/loyalty-card/%s' % card.id"/>
+                       t-value="'/odoo/action-%s/%s' % (request.env.ref('woow_loyalty_consign.loyalty_card_consign_action').id, card.id)"/>
                 </t>
             </t>
 
