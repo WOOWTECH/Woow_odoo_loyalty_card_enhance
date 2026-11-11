@@ -80,11 +80,11 @@ class PosOrder(models.Model):
         allocation_hash = self._consign_request_hash(requests)
         if (
             self.consign_state == 'authorized'
-            and self.consign_hold_id.state == 'active'
+            and self.consign_hold_id.sudo().state == 'active'
             and self.consign_allocation_hash == allocation_hash
         ):
             return self.consign_authorize_operation_id
-        if self.consign_hold_id and self.consign_hold_id.state == 'active':
+        if self.consign_hold_id and self.consign_hold_id.sudo().state == 'active':
             self.env['loyalty.consign.engine']._release(
                 self, self.partner_id, self.consign_hold_id,
                 'pos-release-replaced-%s-%s' % (self.id, self.consign_hold_id.id),
@@ -111,7 +111,10 @@ class PosOrder(models.Model):
             return self.consign_capture_operation_id
         if self.consign_state != 'authorized' or not self.consign_hold_id:
             return False
-        hold = self.consign_hold_id
+        # POS cashiers can sell and redeem but do not have general ledger-Hold
+        # read access. Only inspect this Hold linked to the persisted order;
+        # the engine still validates its exact source, customer and company.
+        hold = self.consign_hold_id.sudo()
         if hold.state != 'active' or hold.expires_at <= fields.Datetime.now():
             self.sudo().write({'consign_state': 'exception'})
             raise ValidationError(_(
@@ -132,7 +135,7 @@ class PosOrder(models.Model):
         self.ensure_one()
         if self.consign_state != 'authorized' or not self.consign_hold_id:
             return False
-        hold = self.consign_hold_id
+        hold = self.consign_hold_id.sudo()
         if hold.state != 'active':
             return False
         operation = self.env['loyalty.consign.engine']._release(
@@ -156,7 +159,7 @@ class PosOrder(models.Model):
                 if pos_order.state in ('paid', 'done', 'invoiced'):
                     pos_order._capture_consign_redemption()
             elif pos_order.consign_state == 'authorized':
-                hold = pos_order.consign_hold_id
+                hold = pos_order.consign_hold_id.sudo()
                 if hold.state == 'active' and hold.partner_id != pos_order.partner_id:
                     raise ValidationError(_(
                         'The authorized consignment customer changed. Cancel '

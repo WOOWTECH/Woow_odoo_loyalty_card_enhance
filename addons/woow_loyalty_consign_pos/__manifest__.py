@@ -1,6 +1,6 @@
 {
     'name': 'Consignment Card - POS Integration',
-    'version': '18.0.1.0.1',
+    'version': '18.0.1.0.2',
     'category': 'Sales/Point of Sale',
     'summary': 'POS barcode scan and manual redemption for consignment cards',
     'author': 'Woow Tech',
